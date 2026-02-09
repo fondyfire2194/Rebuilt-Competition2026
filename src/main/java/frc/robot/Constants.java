@@ -6,6 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.RPM;
 
+import java.net.http.HttpResponse.PushPromiseHandler;
+
 import com.ctre.phoenix6.CANBus;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -108,7 +110,7 @@ public final class Constants {
   public static final class FeederSetpoints {
     public static final double kFeedRollerSetpoint = 0.95;
     public static final double kFeedBeltSetpoint = 0.95;
-    
+
     public static final double kFeedRollerJogSetpoint = 0.5;
     public static final double kFeedBeltJogSetpoint = 0.5;
 
@@ -121,8 +123,7 @@ public final class Constants {
 
   public static final class NeoMotorConstants {
     public static final double kFreeSpeedRpm = 5676;
-    public static final double kVortexKv = 565; // rpm/V
-
+    
   }
 
   public static final class CANIDConstants {
@@ -136,6 +137,8 @@ public final class Constants {
     public static final int leftShooterID = 14;
     public static final int centerShooterID = 15;
     public static final int rightShooterID = 16;
+
+    public static final int hoodMotorID = 17;
 
   }
 

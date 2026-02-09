@@ -47,10 +47,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-
     builder.setSmartDashboardType("Intake");
     builder.addDoubleProperty("Amps", () -> intakeMotor.getOutputCurrent(), null);
-
     builder.addBooleanProperty("Fault", () -> intakeMotor.hasActiveFault(), null);
   }
 

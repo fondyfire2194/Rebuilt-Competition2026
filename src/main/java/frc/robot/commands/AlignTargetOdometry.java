@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -80,14 +81,14 @@ public class AlignTargetOdometry extends Command {
       angleToTarget = getAngleDegreesToTarget(Constants.FieldConstants.blueHubPose,
           m_drivetrain.getState().Pose);
 
-      shooter.setDistanceToTarget(Constants.FieldConstants.blueHubPose.getTranslation()
+      shooter.setDistanceToHub(Constants.FieldConstants.blueHubPose.getTranslation()
           .getDistance(m_drivetrain.getState().Pose.getTranslation()));
     }
 
     if (AllianceUtil.isRedAlliance()) {
       angleToTarget = getAngleDegreesToTarget(Constants.FieldConstants.redHubPose,
           m_drivetrain.getState().Pose);
-      shooter.setDistanceToTarget(Constants.FieldConstants.redHubPose.getTranslation()
+      shooter.setDistanceToHub(Constants.FieldConstants.redHubPose.getTranslation()
           .getDistance(m_drivetrain.getState().Pose.getTranslation()));
     }
 

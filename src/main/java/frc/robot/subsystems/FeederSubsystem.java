@@ -9,6 +9,7 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -17,13 +18,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants;
 import frc.robot.Constants.FeederSetpoints;
-import frc.robot.Constants.IntakeSetpoints;
 
 public class FeederSubsystem extends SubsystemBase {
   /** Creates a new FeederSubsystem. */
   private SparkMax feederBeltMotor;
   private SparkMax feederRollerMotor;
-  
+
   private double feederRollerPowerSim;
   private double feederBeltPowerSim;
 
@@ -49,9 +49,18 @@ public class FeederSubsystem extends SubsystemBase {
         Configs.Feeder.feederBeltConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-        
+
     if (showData)
       SmartDashboard.putData(this);
+  }
+
+  @Override
+  public void initSendable(SendableBuilder builder) {
+    builder.setSmartDashboardType("Feeder");
+    builder.addDoubleProperty("Belt Motor Amps", () -> feederBeltMotor.getOutputCurrent(), null);
+    builder.addBooleanProperty("Belt Motor Fault", () -> feederBeltMotor.hasActiveFault(), null);
+    builder.addDoubleProperty("Roller Motor Amps", () -> feederRollerMotor.getOutputCurrent(), null);
+    builder.addBooleanProperty("Rolle Motor Fault", () -> feederRollerMotor.hasActiveFault(), null);
   }
 
   @Override
@@ -70,7 +79,7 @@ public class FeederSubsystem extends SubsystemBase {
   }
 
   public Command startFeederRollerCommand() {
-    return Commands.runOnce(() -> runFeederRollerMotor(IntakeSetpoints.kIntake));
+    return Commands.runOnce(() -> runFeederRollerMotor(FeederSetpoints.kFeedRollerSetpoint));
   }
 
   public Command stopFeederRollerCommand() {
@@ -85,7 +94,7 @@ public class FeederSubsystem extends SubsystemBase {
   public Command jogFeederRollerCommand() {
     return this.startEnd(
         () -> {
-          this.runFeederRollerMotor(Constants.IntakeSetpoints.kIntake);
+          this.runFeederRollerMotor(Constants.FeederSetpoints.kFeedRollerSetpoint);
         }, () -> {
           this.runFeederRollerMotor(0.0);
         }).withName("Jog FeederRoller");
@@ -99,7 +108,7 @@ public class FeederSubsystem extends SubsystemBase {
   public Command jogReverseFeederRollerCommand() {
     return this.startEnd(
         () -> {
-          this.runFeederRollerMotor(Constants.FeederSetpoints.kFeedRollerSetpoint);
+          this.runFeederRollerMotor(Constants.FeederSetpoints.kFeedRollerJogSetpoint);
         }, () -> {
           this.runFeederRollerMotor(0.0);
         }).withName("FeederRollerReversing");
@@ -120,9 +129,8 @@ public class FeederSubsystem extends SubsystemBase {
     return Math.abs(getFeederRollerAppliedOutput()) > .1;
   }
 
-//feeder belt
+  // feeder belt
 
-  
   private void runFeederBeltMotor(double power) {
     feederBeltMotor.set(power);
     feederBeltPowerSim = power;
@@ -149,7 +157,7 @@ public class FeederSubsystem extends SubsystemBase {
   public Command jogFeederBeltCommand() {
     return this.startEnd(
         () -> {
-          this.runFeederBeltMotor(Constants.FeederSetpoints.kFeedBeltSetpoint);
+          this.runFeederBeltMotor(Constants.FeederSetpoints.kFeedBeltJogSetpoint);
         }, () -> {
           this.runFeederBeltMotor(0.0);
         }).withName("JogFeederBelt");
@@ -183,6 +191,5 @@ public class FeederSubsystem extends SubsystemBase {
   public boolean feederBeltRunning() {
     return Math.abs(getFeederBeltAppliedOutput()) > .1;
   }
-
 
 }
