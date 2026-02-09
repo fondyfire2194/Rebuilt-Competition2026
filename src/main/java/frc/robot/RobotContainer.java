@@ -128,7 +128,7 @@ public class RobotContainer {
 
                 driver.rightBumper().onTrue(
                                 new SequentialCommandGroup(
-                                                m_shooter.stopCommand(),
+                                                m_shooter.stopAllShootersCommand(),
                                                 m_feeder.stopFeederRollerCommand(),
                                                 m_feeder.stopFeederBeltCommand(),
                                                 m_intake.stopIntakeCommand()));
