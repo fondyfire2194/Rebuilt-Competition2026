@@ -47,8 +47,6 @@ public class Robot extends TimedRobot {
 
     public Robot() {
         m_robotContainer = new RobotContainer();
-        bHposePublisher.set(Constants.FieldConstants.blueHubPose);
-        rHposePublisher.set(Constants.FieldConstants.redHubPose);
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
 
     }
@@ -97,6 +95,13 @@ public class Robot extends TimedRobot {
                     m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees(),
                     m_robotContainer.drivetrain.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
                     0);
+
+        if (CameraConstants.rightCamera.isUsed)
+            LimelightHelpers.SetRobotOrientation(CameraConstants.leftCamera.camname,
+                    m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees(),
+                    m_robotContainer.drivetrain.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
+                    0);
+
     }
 
     @Override
@@ -145,7 +150,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {
-    
 
     }
 

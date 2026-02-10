@@ -123,7 +123,7 @@ public final class Constants {
 
   public static final class NeoMotorConstants {
     public static final double kFreeSpeedRpm = 5676;
-    
+
   }
 
   public static final class CANIDConstants {
@@ -234,6 +234,26 @@ public final class Constants {
         960,
         false,
         false);
+
+    public static CameraValues rightCamera = new CameraValues(
+        "limelight-right",
+        "10.21.94.17",
+        false,
+        Units.inchesToMeters(0),
+        Units.inchesToMeters(17.25),
+        Units.inchesToMeters(9.0),
+        0,
+        5,
+        0,
+        63.3,
+        49.7,
+        1280,
+        960,
+        false,
+        false);
+
+    public static int apriltagPipeline = 0;
+    public static int viewFinderPipeline = 5;
 
   }
 

@@ -5,6 +5,9 @@
 package frc.robot.subsystems;
 
 import java.util.Optional;
+
+import com.fasterxml.jackson.databind.EnumNamingStrategies.CamelCaseStrategy;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -23,20 +26,13 @@ import frc.robot.utils.SD;
 public class LimelightVision extends SubsystemBase {
   /** Creates a new LimelightVision. */
 
-  public boolean limelightExistsFront;
-
   boolean allcamsok;
-
-  public boolean limelightExistsLeft;
-
-  public boolean inhibitFrontVision;
-  public boolean inhibitRearVision;
 
   public String frontName = Constants.CameraConstants.frontCamera.camname;
 
-  public String leftName = Constants.CameraConstants.leftCamera.camname;
+  public boolean limelightExistsFront;
 
-  Optional<Pose3d> temp;
+  public boolean inhibitFrontVision;
 
   public Pose2d frontAcceptedPose;
 
@@ -44,13 +40,36 @@ public class LimelightVision extends SubsystemBase {
 
   public boolean frontRejectUpdate;
 
-  public Pose2d rearAcceptedPose;
-  public int rearAcceptedCount;
+  public String leftName = Constants.CameraConstants.leftCamera.camname;
+
+  public boolean limelightExistsLeft;
+
+  public boolean inhibitLeftVision;
+
+  public Pose2d leftAcceptedPose;
+
+  public int leftAcceptedCount;
+
+  public boolean leftRejectUpdate;
+
+  public String rightName = Constants.CameraConstants.rightCamera.camname;
+
+  public boolean limelightExistsRight;
+
+  public boolean inhibitRightVision;
+
+  public Pose2d rightAcceptedPose;
+
+  public int rightAcceptedCount;
+
+  public boolean rightRejectUpdate;
+
+  Optional<Pose3d> temp;
 
   StructPublisher<Pose2d> wpiBluePosePublisher = NetworkTableInstance.getDefault()
       .getStructTopic("LLV/WPIBluePose", Pose2d.struct).publish();
 
-  public boolean showTelemetry=true;
+  public boolean showTelemetry = true;
 
   /**
    * Checks if the specified limelight is connected
@@ -107,18 +126,25 @@ public class LimelightVision extends SubsystemBase {
   public void periodic() {
 
     if (RobotBase.isReal()) {
-      limelightExistsFront = isLimelightConnected(CameraConstants.frontCamera.camname);
-      limelightExistsLeft = isLimelightConnected(CameraConstants.leftCamera.camname);
+      limelightExistsFront = isLimelightConnected(frontName);
+      limelightExistsLeft = isLimelightConnected(leftName);
+      limelightExistsRight = isLimelightConnected(rightName);
+
       CameraConstants.frontCamera.isActive = !inhibitFrontVision && limelightExistsFront;
-      CameraConstants.leftCamera.isActive = !inhibitRearVision && limelightExistsLeft;
+      CameraConstants.leftCamera.isActive = !inhibitLeftVision && limelightExistsLeft;
+      CameraConstants.rightCamera.isActive = !inhibitRightVision && limelightExistsRight;
 
       allcamsok = Constants.CameraConstants.frontCamera.isUsed && limelightExistsFront
-          && Constants.CameraConstants.leftCamera.isUsed && limelightExistsLeft;
+          && Constants.CameraConstants.leftCamera.isUsed && limelightExistsLeft
+          && Constants.CameraConstants.rightCamera.isUsed && limelightExistsRight;
 
       if (limelightExistsFront && LimelightHelpers.getTV(frontName))
         wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(frontName).toPose2d());
 
       if (limelightExistsLeft && LimelightHelpers.getTV(leftName))
+        wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(leftName).toPose2d());
+
+      if (limelightExistsRight && LimelightHelpers.getTV(leftName))
         wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(leftName).toPose2d());
 
       if (showTelemetry) {
@@ -187,12 +213,27 @@ public class LimelightVision extends SubsystemBase {
     return getIMUData().robotYaw;
   }
 
+  public void setAprilTagPipeline() {
+    LimelightHelpers.setPipelineIndex(frontName, CameraConstants.apriltagPipeline);
+    LimelightHelpers.setPipelineIndex(leftName, CameraConstants.apriltagPipeline);
+    LimelightHelpers.setPipelineIndex(rightName, CameraConstants.apriltagPipeline);
+  }
+
+  public void setViewfinderPipeline() {
+    if (CameraConstants.frontCamera.isLL4)
+      LimelightHelpers.setPipelineIndex(frontName, CameraConstants.viewFinderPipeline);
+    if (CameraConstants.leftCamera.isLL4)
+      LimelightHelpers.setPipelineIndex(leftName, CameraConstants.apriltagPipeline);
+    if (CameraConstants.rightCamera.isLL4)
+      LimelightHelpers.setPipelineIndex(rightName, CameraConstants.apriltagPipeline);
+  }
+
   private void showTelemetry() {
 
     SmartDashboard.putNumber("IMUMode#",
-      getIMUMode(Constants.CameraConstants.frontCamera.camname));
+        getIMUMode(Constants.CameraConstants.frontCamera.camname));
     SmartDashboard.putString("IMUMode",
-      getIMUModeName(Constants.CameraConstants.frontCamera.camname));
+        getIMUModeName(Constants.CameraConstants.frontCamera.camname));
 
     SmartDashboard.putString("PipelineType",
         LimelightHelpers.getCurrentPipelineType(Constants.CameraConstants.frontCamera.camname));
