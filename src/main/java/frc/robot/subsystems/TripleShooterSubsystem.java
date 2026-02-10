@@ -16,6 +16,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -38,8 +39,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   private final VoltageOut voltageRequest = new VoltageOut(0);
 
-  private double dashboardTargetRPM = 0.0;
-
   StatusCode statusL = StatusCode.StatusCodeNotInitialized;
   StatusCode statusM = StatusCode.StatusCodeNotInitialized;
   StatusCode statusR = StatusCode.StatusCodeNotInitialized;
@@ -55,9 +54,13 @@ public class TripleShooterSubsystem extends SubsystemBase {
   /* Keep a neutral out so we can disable the motor */
   private final NeutralOut m_brake = new NeutralOut();
 
-  private int tst;
-
   private Distance distanceToHub;
+
+  // private AngularVelocity targetVelocity = RPM.of(500);
+  private double targetRPM = 500;
+  private AngularAcceleration targetAcceleration = RotationsPerSecondPerSecond.of(50);
+
+  private int tst = 0;
 
   public TripleShooterSubsystem(boolean showData) {
 
@@ -135,32 +138,33 @@ public class TripleShooterSubsystem extends SubsystemBase {
     motor.setControl(
         velocityVoltage
             .withVelocity(RPM.of(rpm))
+            .withAcceleration(targetAcceleration)
             .withEnableFOC(true));
   }
 
-  public Command runVelocityVoltageCommand(TalonFX motor, double rpm) {
-    return run(() -> runVelocityVoltage(motor, rpm));
+  public Command runVelocityVoltageCommand(TalonFX motor) {
+    return run(() -> runVelocityVoltage(motor, targetRPM));
   }
 
-  public void runAllVelocityVoltage(double rpm) {
+  public void runAllVelocityVoltage() {
     leftMotor.setControl(
         velocityVoltage
-            .withVelocity(RPM.of(rpm))
+            .withVelocity(targetRPM)
             .withEnableFOC(true));
     middleMotor.setControl(
         velocityVoltage
-            .withVelocity(RPM.of(rpm))
+            .withVelocity(targetRPM)
             .withEnableFOC(true));
     rightMotor.setControl(
         velocityVoltage
-            .withVelocity(RPM.of(rpm))
+            .withVelocity(targetRPM)
             .withEnableFOC(true));
   }
 
-  public void runVelocityTorque(TalonFX motor, double rpm) {
+  public void runVelocityTorque(TalonFX motor) {
     motor.setControl(
         velocityTorque
-            .withVelocity(rpm));
+            .withVelocity(targetRPM));
   }
 
   public void setPercentOutput(TalonFX motor, double percentOutput) {
@@ -191,6 +195,23 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public Command disableAllShootersCommand() {
     return runOnce(this::disableAllShooters);
+  }
+
+  public void setTargetVelocity(double RPM) {
+    targetRPM = RPM;
+  }
+
+  public Command setTargetVelocityCommand(AngularVelocity vel) {
+    return Commands.runOnce(() -> setTargetVelocity(vel.in(RPM)));
+  }
+
+  public Command changeTargetVelocityCommand(double rpm) {
+    return Commands.runOnce(() -> changeTargetVelocity(rpm));
+  }
+
+  public void changeTargetVelocity(double rpm) {
+    targetRPM += rpm;
+    SmartDashboard.putNumber("TGTrpm", targetRPM);
   }
 
   public void setDutyCycleOut(TalonFX motor, double dutyCycle) {
@@ -226,6 +247,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     builder.addDoubleProperty(name + " RPM", () -> motor.getVelocity().getValue().in(RPM), null);
     builder.addDoubleProperty(name + " Stator Current", () -> motor.getStatorCurrent().getValue().in(Amps), null);
     builder.addDoubleProperty(name + " Supply Current", () -> motor.getSupplyCurrent().getValue().in(Amps), null);
+    builder.addDoubleProperty(name + " Supply Volts", () -> motor.getMotorVoltage().getValueAsDouble(), null);
     builder.addBooleanProperty(name + " At Speed", () -> isVelocityWithinTolerance(motor), null);
 
   }
@@ -237,13 +259,15 @@ public class TripleShooterSubsystem extends SubsystemBase {
     initSendable(builder, rightMotor, "Right");
     builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
-   builder.addDoubleProperty("Target RPM", () -> velocityVoltage.getVelocityMeasure().in(RPM), null);
+    builder.addDoubleProperty("Voltage Target RPM", () -> velocityVoltage.getVelocityMeasure().in(RPM), null);
+
+    builder.addDoubleProperty("Target Velocity RPM", () -> targetRPM, null);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-
+    SmartDashboard.putNumber("SHTRTST", tst);
   }
 
   public void setDistanceToHub(double distance) {

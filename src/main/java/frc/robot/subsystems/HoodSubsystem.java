@@ -1,10 +1,5 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Millimeters;
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Value;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -17,36 +12,27 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Servo;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class HoodSubsystem extends SubsystemBase {
-    private static final Distance kServoLength = Millimeters.of(100);
-    private static final LinearVelocity kMaxServoSpeed = Millimeters.of(20).per(Second);
-    private static final double kMinPosition = 0.01;
-    private static final double kMaxPosition = 0.77;
+    private static final double kMinPosition = 0.0;
+    private static final double kMaxPosition = 20;
     private static final double kPositionTolerance = 0.01;
+
+    private static double targetPosition;
 
     private final SparkMax hoodMotor;
 
     private SparkMaxConfig motorConfig;
     private SparkClosedLoopController closedLoopController;
     private RelativeEncoder encoder;
+    private double degreesPerEncoderRev = 3.6;
+    private double homePosition = 45;// degrees
 
-    private double currentPosition = 0.5;
-    private double targetPosition = 0.5;
-    private Time lastUpdateTime = Seconds.of(0);
-
-    public HoodSubsystem() {
+    public HoodSubsystem(boolean showData) {
         hoodMotor = new SparkMax(Constants.CANIDConstants.hoodMotorID, MotorType.kBrushless);
         closedLoopController = hoodMotor.getClosedLoopController();
         encoder = hoodMotor.getEncoder();
@@ -63,8 +49,8 @@ public class HoodSubsystem extends SubsystemBase {
          * factors.
          */
         motorConfig.encoder
-                .positionConversionFactor(1)
-                .velocityConversionFactor(1);
+                .positionConversionFactor(degreesPerEncoderRev)
+                .velocityConversionFactor(degreesPerEncoderRev / 60);
 
         /*
          * Configure the closed loop controller. We want to make sure we set the
@@ -97,9 +83,9 @@ public class HoodSubsystem extends SubsystemBase {
          * mid-operation.
          */
         hoodMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-
-        setPosition(currentPosition);
-        SmartDashboard.putData(this);
+        setPosition(homePosition);
+        if (showData)
+            SmartDashboard.putData(this);
     }
 
     /** Expects a position between 0.0 and 1.0 */
@@ -108,14 +94,8 @@ public class HoodSubsystem extends SubsystemBase {
         targetPosition = clampedPosition;
     }
 
-    /** Expects a position between 0.0 and 1.0 */
-    public Command positionCommand(double position) {
-        return runOnce(() -> setPosition(position))
-                .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
-    }
-
     public boolean isPositionWithinTolerance() {
-        return MathUtil.isNear(targetPosition, currentPosition, kPositionTolerance);
+        return MathUtil.isNear(targetPosition, encoder.getPosition(), kPositionTolerance);
     }
 
     private void closeLoop() {
@@ -132,7 +112,7 @@ public class HoodSubsystem extends SubsystemBase {
     public void initSendable(SendableBuilder builder) {
         builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
                 null);
-        builder.addDoubleProperty("Current Position", () -> currentPosition, null);
-        builder.addDoubleProperty("Target Position", () -> targetPosition, value -> setPosition(value));
+        builder.addDoubleProperty("Current Position", () -> encoder.getPosition(), null);
+        builder.addDoubleProperty("Target Position", () -> targetPosition, null);
     }
 }

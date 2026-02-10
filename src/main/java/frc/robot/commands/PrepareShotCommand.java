@@ -3,6 +3,8 @@ package frc.robot.commands;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import org.ejml.dense.row.misc.RrefGaussJordanRowPivot_DDRM;
+
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.Interpolator;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
@@ -13,22 +15,18 @@ import frc.robot.subsystems.TripleShooterSubsystem;
 
 public class PrepareShotCommand extends Command {
     private static final InterpolatingTreeMap<Distance, Shot> distanceToShotMap = new InterpolatingTreeMap<>(
-        (startValue, endValue, q) -> 
-            InverseInterpolator.forDouble()
-                .inverseInterpolate(startValue.in(Meters), endValue.in(Meters), q.in(Meters)),
-        (startValue, endValue, t) ->
-            new Shot(
-                Interpolator.forDouble()
-                    .interpolate(startValue.shooterRPM, endValue.shooterRPM, t),
-                Interpolator.forDouble()
-                    .interpolate(startValue.hoodPosition, endValue.hoodPosition, t)
-            )
-    );
+            (startValue, endValue, q) -> InverseInterpolator.forDouble()
+                    .inverseInterpolate(startValue.in(Meters), endValue.in(Meters), q.in(Meters)),
+            (startValue, endValue, t) -> new Shot(
+                    Interpolator.forDouble()
+                            .interpolate(startValue.shooterRPM, endValue.shooterRPM, t),
+                    Interpolator.forDouble()
+                            .interpolate(startValue.hoodPosition, endValue.hoodPosition, t)));
 
     static {
-        distanceToShotMap.put(Inches.of(52.0), new Shot(2800, 0.19));
-        distanceToShotMap.put(Inches.of(114.4), new Shot(3275, 0.40));
-        distanceToShotMap.put(Inches.of(165.5), new Shot(3650, 0.48));
+        distanceToShotMap.put(Inches.of(52.0), new Shot(2800, 45));
+        distanceToShotMap.put(Inches.of(114.4), new Shot(3275, 50));
+        distanceToShotMap.put(Inches.of(165.5), new Shot(3650, 55));
     }
 
     private final TripleShooterSubsystem shooter;
@@ -48,7 +46,8 @@ public class PrepareShotCommand extends Command {
     public void execute() {
         final Distance distanceToHub = shooter.getDistanceToHub();
         final Shot shot = distanceToShotMap.get(distanceToHub);
-        shooter.runAllVelocityVoltage(shot.shooterRPM);
+        shooter.setTargetVelocity(shot.shooterRPM);
+        shooter.runAllVelocityVoltage();
         hood.setPosition(shot.hoodPosition);
     }
 
@@ -59,7 +58,7 @@ public class PrepareShotCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        shooter.stopAllShooters();
+
     }
 
     public static class Shot {

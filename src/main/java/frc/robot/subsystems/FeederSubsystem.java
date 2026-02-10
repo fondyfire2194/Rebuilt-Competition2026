@@ -68,12 +68,12 @@ public class FeederSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-  private void runFeederRollerMotor(double power) {
+  public void runFeederRollerMotor(double power) {
     feederRollerMotor.set(power);
     feederRollerPowerSim = power;
   }
 
-  private void stopFeederRollerMotor() {
+  public void stopFeederRollerMotor() {
     feederRollerMotor.set(0);
     feederRollerPowerSim = 0;
   }
@@ -131,12 +131,12 @@ public class FeederSubsystem extends SubsystemBase {
 
   // feeder belt
 
-  private void runFeederBeltMotor(double power) {
+  public void runFeederBeltMotor(double power) {
     feederBeltMotor.set(power);
     feederBeltPowerSim = power;
   }
 
-  private void stopFeederBeltMotor() {
+  public void stopFeederBeltMotor() {
     feederBeltMotor.set(0);
     feederBeltPowerSim = 0;
   }

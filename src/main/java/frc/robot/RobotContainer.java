@@ -5,6 +5,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -25,9 +26,12 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AlignTargetOdometry;
+import frc.robot.commands.PrepareShotCommand;
+import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
+import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IntakeArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
@@ -63,6 +67,8 @@ public class RobotContainer {
 
         final TripleShooterSubsystem m_shooter = new TripleShooterSubsystem(true);
 
+        final HoodSubsystem m_hood = new HoodSubsystem(true);
+
         private final FeederSubsystem m_feeder = new FeederSubsystem(false);
 
         private final IntakeSubsystem m_intake = new IntakeSubsystem(true);
@@ -70,8 +76,6 @@ public class RobotContainer {
         private final IntakeArmSubsystem m_intakeArm = new IntakeArmSubsystem(true);
 
         public RobotContainer() {
-                autoChooser = AutoBuilder.buildAutoChooser();
-                SmartDashboard.putData("Auto Mode", autoChooser);
                 setDefaultCommands();
                 configureDriverBindings();
                 configureCodriverBindings();
@@ -122,7 +126,7 @@ public class RobotContainer {
                 // drivetrain.applyRequest(() ->
                 // forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
 
-                // driver.leftTrigger().onTrue(m_shooter.spinUpCommand(1000));
+                 driver.leftTrigger().onTrue(new ShootCommand(m_shooter, m_hood, m_feeder));
 
                 driver.rightTrigger().onTrue(m_intake.startIntakeCommand());
 
@@ -134,7 +138,9 @@ public class RobotContainer {
                                                 m_intake.stopIntakeCommand()));
 
                 driver.leftBumper().whileTrue(
-                                new AlignTargetOdometry(drivetrain, m_shooter, drive, driver, false));
+                                Commands.parallel(
+                                                new PrepareShotCommand(m_shooter, m_hood),
+                                                new AlignTargetOdometry(drivetrain, m_shooter, drive, driver, false)));
 
                 driver.y().onTrue(Commands.none());
 
@@ -159,30 +165,21 @@ public class RobotContainer {
                 codriver.start().and(codriver.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
                 codriver.start().and(codriver.povRight()).onTrue(Commands.runOnce(() -> SignalLogger.stop()));
 
-                codriver.y().onTrue(m_intakeArm.intakeArmToClearPositionCommand());
-
-                codriver.a().onTrue(m_intakeArm.intakeArmToIntakePositionCommand());
-
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
                 codriver.rightBumper().onTrue(
-                                m_shooter.runVelocityVoltageCommand(m_shooter.leftMotor, 100));
-                              
+                                m_shooter.runVelocityVoltageCommand(m_shooter.leftMotor));
+
                 codriver.y().onTrue(m_shooter.setDutyCycleCommand(m_shooter.leftMotor, .05))
                                 .onFalse(m_shooter.setDutyCycleCommand(m_shooter.leftMotor, .0));
                 codriver.a().onTrue(m_shooter.setVoltageCommand(m_shooter.leftMotor, .5))
                                 .onFalse(m_shooter.setVoltageCommand(m_shooter.leftMotor, .0));
 
-                // codriver.y().onTrue(m_shooter.changeFlywheelRPMCommand(100));
-                // codriver.a().onTrue(m_shooter.changeFlywheelRPMCommand(-100));
+                codriver.povUp().onTrue(m_shooter.changeTargetVelocityCommand(100));
+                codriver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
 
-                // codriver.y().onTrue(new InstantCommand(() -> flywheelPower += .05));
-                // codriver.a().onTrue(new InstantCommand(() -> flywheelPower -= .05));
-
-                // codriver.povUp().whileTrue(Commands.none());
-                codriver.povDown().whileTrue(Commands.none());
-                codriver.povLeft().whileTrue(m_intake.jogExtakeCommand());
-                codriver.povRight().whileTrue(m_intake.jogIntakeCommand());
+                codriver.povLeft().onTrue(m_shooter.setTargetVelocityCommand(RPM.of(400)));
+                codriver.povRight().onTrue(m_shooter.setTargetVelocityCommand(RPM.of(600)));
 
         }
 
@@ -191,7 +188,7 @@ public class RobotContainer {
                 // As an example, this will only show autos that start with "comp" while at
                 // competition as defined by the programmer
 
-                autoChooser = AutoBuilder.buildAutoChooser("NewAuto");
+                autoChooser = AutoBuilder.buildAutoChooser();
 
                 SmartDashboard.putData("PPAutoChooser", autoChooser);
         }
