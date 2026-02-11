@@ -52,7 +52,7 @@ public class AllianceUtil {
   }
 
   public static Pose2d getHubPose() {
-    return isRedAlliance() ? FieldConstants.blueHubPose : FieldConstants.redHubPose;
+    return isRedAlliance() ? FieldConstants.redHubPose : FieldConstants.blueHubPose;
   }
 
   // public static Pose2d getLobPose() {

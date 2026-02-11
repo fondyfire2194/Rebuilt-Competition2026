@@ -223,9 +223,9 @@ public class LimelightVision extends SubsystemBase {
     if (CameraConstants.frontCamera.isLL4)
       LimelightHelpers.setPipelineIndex(frontName, CameraConstants.viewFinderPipeline);
     if (CameraConstants.leftCamera.isLL4)
-      LimelightHelpers.setPipelineIndex(leftName, CameraConstants.apriltagPipeline);
+      LimelightHelpers.setPipelineIndex(leftName, CameraConstants.viewFinderPipeline);
     if (CameraConstants.rightCamera.isLL4)
-      LimelightHelpers.setPipelineIndex(rightName, CameraConstants.apriltagPipeline);
+      LimelightHelpers.setPipelineIndex(rightName, CameraConstants.viewFinderPipeline);
   }
 
   private void showTelemetry() {

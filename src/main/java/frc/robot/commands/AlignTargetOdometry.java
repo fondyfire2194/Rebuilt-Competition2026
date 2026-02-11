@@ -4,7 +4,6 @@
 
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -67,39 +66,24 @@ public class AlignTargetOdometry extends Command {
     // if (!lob) {
     targetPose = AllianceUtil.getHubPose();
     m_alignTargetPID.setTolerance(0.2);
-
     aligning = true;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    angleToTarget = 0;
-    SmartDashboard.putNumber("DriverX", m_controller.getLeftX());
 
-    if (AllianceUtil.isBlueAlliance()) {
-      angleToTarget = getAngleDegreesToTarget(Constants.FieldConstants.blueHubPose,
-          m_drivetrain.getState().Pose);
+    angleToTarget = getAngleDegreesToTarget(targetPose, m_drivetrain.getState().Pose);
 
-      shooter.setDistanceToHub(Constants.FieldConstants.blueHubPose.getTranslation()
-          .getDistance(m_drivetrain.getState().Pose.getTranslation()));
-    }
-
-    if (AllianceUtil.isRedAlliance()) {
-      angleToTarget = getAngleDegreesToTarget(Constants.FieldConstants.redHubPose,
-          m_drivetrain.getState().Pose);
-      shooter.setDistanceToHub(Constants.FieldConstants.redHubPose.getTranslation()
-          .getDistance(m_drivetrain.getState().Pose.getTranslation()));
-    }
+    shooter.setDistanceToHub(Constants.FieldConstants.blueHubPose.getTranslation()
+        .getDistance(m_drivetrain.getState().Pose.getTranslation()));
 
     rotationVal = m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
 
-    m_drivetrain.setControl(drive
-
-        .withVelocityX(-m_controller.getLeftY() * MaxSpeed)
-        .withVelocityY(-m_controller.getLeftX() * MaxSpeed)
-        // // negative X (left)
-        .withRotationalRate(rotationVal * MaxAngularRate));
+    m_drivetrain.setControl(
+        drive.withVelocityX(-m_controller.getLeftY() * MaxSpeed).withVelocityY(-m_controller.getLeftX() * MaxSpeed)
+            // // negative X (left)
+            .withRotationalRate(rotationVal * MaxAngularRate));
 
   }
 

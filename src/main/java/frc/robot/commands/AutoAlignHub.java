@@ -4,26 +4,46 @@
 
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
+import com.ctre.phoenix6.swerve.SwerveRequest;
+
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.TripleShooterSubsystem;
+import frc.robot.utils.AllianceUtil;
 
 public class AutoAlignHub extends Command {
 
   private final CommandSwerveDrivetrain m_swerve;
-  private final boolean m_endAtTargets;
+  private final TripleShooterSubsystem m_shooter;
   private final double m_toleranceDegrees;
   public PIDController m_alignTargetPID = new PIDController(0.03, 0, 0);
 
+  private SwerveRequest.FieldCentric drive;
+  public Pose2d targetPose = new Pose2d();
   private double rotationVal;
+  private boolean aligning;
   private Timer elapsedTime;
 
+  private double angleToTarget;
+
+  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
+  private boolean alignedToTarget;
+
   public AutoAlignHub(
-      CommandSwerveDrivetrain swerve, double toleranceDegrees, boolean endAtTargets) {
+      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, double toleranceDegrees) {
 
     m_swerve = swerve;
-    m_endAtTargets = endAtTargets;
+    m_shooter = shooter;
     m_toleranceDegrees = toleranceDegrees;
     addRequirements(m_swerve);
   }
@@ -37,7 +57,10 @@ public class AutoAlignHub extends Command {
     m_alignTargetPID.setIntegratorRange(-.01, .01);
     m_alignTargetPID.setI(.0001);
     m_alignTargetPID.reset();
-   // m_swerve.targetPose = AllianceUtil.getHubPose();
+    targetPose = AllianceUtil.getHubPose();
+    m_alignTargetPID.setTolerance(0.2);
+
+    aligning = true;
     elapsedTime = new Timer();
     elapsedTime.reset();
     elapsedTime.start();
@@ -47,28 +70,43 @@ public class AutoAlignHub extends Command {
   @Override
   public void execute() {
 
-   // rotationVal = m_alignTargetPID.calculate(m_swerve.getAngleDegrees(), m_swerve.getAngleDegreesToTarget());
+    angleToTarget = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
-   // m_swerve.alignedToTarget = m_alignTargetPID.atSetpoint();
+    m_shooter.setDistanceToHub(Constants.FieldConstants.blueHubPose.getTranslation()
+        .getDistance(m_swerve.getState().Pose.getTranslation()));
 
-    // m_swerve.drive(
-    //     0, 0,
-    //     rotationVal *= Constants.SwerveConstants.kmaxAngularVelocity,
-    //     true,
-    //     true,
-    //     false);
+    rotationVal = m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(), angleToTarget);
+
+    m_swerve.setControl(drive
+        .withVelocityX(0)
+        .withVelocityY(0)
+        .withRotationalRate(rotationVal * MaxAngularRate));
+
+    alignedToTarget = Math.abs(angleToTarget) < m_toleranceDegrees;
+
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
     m_alignTargetPID.reset();
-    //m_swerve.drive(0, 0, 0, false, true, false);
+   m_swerve.setControl(drive
+        .withVelocityX(0)
+        .withVelocityY(0)
+        .withRotationalRate(0));
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return m_endAtTargets;// && (m_swerve.alignedToTarget || elapsedTime.hasElapsed(2) || RobotBase.isSimulation());
+    return alignedToTarget || elapsedTime.hasElapsed(2) ||
+                          RobotBase.isSimulation();
+  }
+
+  public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
+    double XDiff = targetPose.getX() - robotPose.getX();
+    double YDiff = targetPose.getY() - robotPose.getY();
+    return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
+
   }
 }
