@@ -17,6 +17,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.event.BooleanEvent;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -75,7 +76,13 @@ public class RobotContainer {
 
         private final IntakeArmSubsystem m_intakeArm = new IntakeArmSubsystem(true);
 
+
+
         public RobotContainer() {
+                drivetrain.setFrontUseMegatag2(true);
+                drivetrain.setLeftUseMegatag2(true);
+                drivetrain.setRightUseMegatag2(true);
+
                 setDefaultCommands();
                 configureDriverBindings();
                 configureCodriverBindings();
@@ -126,7 +133,7 @@ public class RobotContainer {
                 // drivetrain.applyRequest(() ->
                 // forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
 
-                 driver.leftTrigger().onTrue(new ShootCommand(m_shooter, m_hood, m_feeder));
+                driver.leftTrigger().onTrue(new ShootCommand(m_shooter, m_hood, m_feeder));
 
                 driver.rightTrigger().onTrue(m_intake.startIntakeCommand());
 

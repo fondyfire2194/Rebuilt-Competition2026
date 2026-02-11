@@ -72,7 +72,7 @@ public class AutoAlignHub extends Command {
 
     angleToTarget = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
-    m_shooter.setDistanceToHub(Constants.FieldConstants.blueHubPose.getTranslation()
+    m_shooter.setDistanceToHub(targetPose.getTranslation()
         .getDistance(m_swerve.getState().Pose.getTranslation()));
 
     rotationVal = m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(), angleToTarget);
@@ -107,6 +107,5 @@ public class AutoAlignHub extends Command {
     double XDiff = targetPose.getX() - robotPose.getX();
     double YDiff = targetPose.getY() - robotPose.getY();
     return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
-
   }
 }

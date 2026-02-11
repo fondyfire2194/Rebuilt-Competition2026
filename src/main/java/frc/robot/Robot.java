@@ -4,9 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-
 import com.ctre.phoenix6.HootAutoReplay;
 import com.ctre.phoenix6.SignalLogger;
 
@@ -16,64 +13,57 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
-import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.LimelightHelpers;
-import frc.robot.utils.SD;
+import frc.robot.utils.LoopEvents;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
-
+    private final EventLoop m_eventLoop = new EventLoop();
     StructPublisher<Pose2d> rHposePublisher = NetworkTableInstance.getDefault()
             .getStructTopic("BlueHubPose", Pose2d.struct).publish();
     StructPublisher<Pose2d> bHposePublisher = NetworkTableInstance.getDefault()
             .getStructTopic("RedHubPose", Pose2d.struct).publish();
 
     private final RobotContainer m_robotContainer;
+    private LoopEvents loopEvents;
 
     /* log and replay timestamp and joystick data */
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
             .withTimestampReplay()
             .withJoystickReplay();
 
-    private double angleToTarget;
-
-    private double distanceToTarget;
-
     public Robot() {
         m_robotContainer = new RobotContainer();
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
+        loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
+        loopEvents.init();
 
     }
 
     @Override
     public void robotPeriodic() {
+
+        m_eventLoop.poll();
+
         m_timeAndJoystickReplay.update();
 
         CommandScheduler.getInstance().run();
 
-        if (AllianceUtil.isBlueAlliance()) {
-            angleToTarget = getAngleDegreesToTarget(Constants.FieldConstants.blueHubPose,
-                    m_robotContainer.drivetrain.getState().Pose);
-            distanceToTarget = Constants.FieldConstants.blueHubPose.getTranslation()
-                    .getDistance(m_robotContainer.drivetrain.getState().Pose.getTranslation());
-        }
+        // Pose2d targetPose = AllianceUtil.getHubPose();
+        // angleToTarget = getAngleDegreesToTarget(targetPose,
+        // m_robotContainer.drivetrain.getState().Pose);
+        // distanceToTarget = targetPose.getTranslation()
+        // .getDistance(m_robotContainer.drivetrain.getState().Pose.getTranslation());
 
-        if (AllianceUtil.isRedAlliance()) {
-            angleToTarget = getAngleDegreesToTarget(Constants.FieldConstants.redHubPose,
-                    m_robotContainer.drivetrain.getState().Pose);
-            distanceToTarget = Constants.FieldConstants.redHubPose.getTranslation()
-                    .getDistance(m_robotContainer.drivetrain.getState().Pose.getTranslation());
-        }
-
-        SD.sd2("AngleToTgt", angleToTarget
-                - m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
-        SD.sd2("DistToTgt", Units.metersToInches(distanceToTarget));
+        // SD.sd2("AngleToTgt", angleToTarget
+        // - m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
+        // SD.sd2("DistToTgt", Units.metersToInches(distanceToTarget));
 
     }
 
@@ -97,7 +87,7 @@ public class Robot extends TimedRobot {
                     0);
 
         if (CameraConstants.rightCamera.isUsed)
-            LimelightHelpers.SetRobotOrientation(CameraConstants.leftCamera.camname,
+            LimelightHelpers.SetRobotOrientation(CameraConstants.rightCamera.camname,
                     m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees(),
                     m_robotContainer.drivetrain.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
                     0);

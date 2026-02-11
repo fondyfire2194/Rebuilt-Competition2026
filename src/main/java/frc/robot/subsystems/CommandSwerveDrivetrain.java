@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.utils.CameraData;
 import frc.robot.utils.LimelightTagsUpdate;
 
 /**
@@ -144,11 +145,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        
+
     }
 
-    public LimelightTagsUpdate frontUpdate = new LimelightTagsUpdate(CameraConstants.frontCamera, this);
-    public LimelightTagsUpdate leftUpdate = new LimelightTagsUpdate(CameraConstants.leftCamera, this);
+    public CameraData frontData = new CameraData(CameraConstants.frontCamera.camname);
+    public CameraData leftData = new CameraData(CameraConstants.leftCamera.camname);
+    public CameraData rightData = new CameraData(CameraConstants.rightCamera.camname);
+
+    public LimelightTagsUpdate frontUpdate = new LimelightTagsUpdate(CameraConstants.frontCamera, frontData, this);
+    public LimelightTagsUpdate leftUpdate = new LimelightTagsUpdate(CameraConstants.leftCamera, leftData, this);
+    public LimelightTagsUpdate rightUpdate = new LimelightTagsUpdate(CameraConstants.rightCamera, rightData, this);
+    public boolean recoverFromBump;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -284,9 +291,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         if (CameraConstants.frontCamera.isUsed)
             frontUpdate.execute();
-         if (CameraConstants.leftCamera.isUsed)
+        if (CameraConstants.leftCamera.isUsed)
             leftUpdate.execute();
-
+        if (CameraConstants.rightCamera.isUsed)
+            rightUpdate.execute();
 
         /*
          * Periodically try to apply the operator perspective.
@@ -323,6 +331,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             updateSimState(deltaTime, RobotController.getBatteryVoltage());
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
+    }
+
+    public void setFrontUseMegatag2(boolean use) {
+        frontData.m_useMegaTag2 = use;
+    }
+
+    public void setLeftUseMegatag2(boolean use) {
+        leftData.m_useMegaTag2 = use;
+    }
+
+    public void setRightUseMegatag2(boolean use) {
+        rightData.m_useMegaTag2 = use;
     }
 
     /**

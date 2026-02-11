@@ -86,21 +86,6 @@ public final class Constants {
 
   }
 
-  public static InterpolatingDoubleTreeMap METERSTORPM = new InterpolatingDoubleTreeMap();
-  static {
-
-    METERSTORPM.put(.1, 2000.);
-    METERSTORPM.put(.25, 2300.);
-    METERSTORPM.put(.5, 2500.);
-    METERSTORPM.put(.75, 3000.);
-    METERSTORPM.put(1., 3200.);
-    METERSTORPM.put(1.25, 3500.);
-    METERSTORPM.put(1.5, 4000.);
-    METERSTORPM.put(1.75, 00.);
-    METERSTORPM.put(2., 5000.);
-
-  }
-
   public static final class IntakeSetpoints {
     public static final double kJogIntake = 0.25;
     public static final double kIntake = 0.6;
@@ -170,7 +155,6 @@ public final class Constants {
       public int horpixels;
       public int vertpixels;
       public boolean isUsed = true;
-      public boolean isActive = false;
       public int poseUpdateCount = 0;
       public boolean showTelemetry = false;
 
@@ -182,8 +166,7 @@ public final class Constants {
           final double pitch, final double yaw,
           final double hfov, double vfov,
           final int horpixels, final int vertpixels,
-          final boolean isUsed,
-          final boolean isActive) {
+          final boolean isUsed) {
         this.camname = camname;
         this.ipaddress = ipaddress;
         this.forward = forward;
@@ -197,7 +180,7 @@ public final class Constants {
         this.horpixels = horpixels;
         this.vertpixels = vertpixels;
         this.isUsed = isUsed;
-        this.isActive = true;// isActive;
+        
       }
     }
 
@@ -215,8 +198,7 @@ public final class Constants {
         49.7,
         1,
         1,
-        true,
-        false);
+        true);
 
     public static CameraValues leftCamera = new CameraValues(
         "limelight-left",
@@ -232,8 +214,7 @@ public final class Constants {
         49.7,
         1280,
         960,
-        false,
-        false);
+        true);
 
     public static CameraValues rightCamera = new CameraValues(
         "limelight-right",
@@ -249,8 +230,7 @@ public final class Constants {
         49.7,
         1280,
         960,
-        false,
-        false);
+        true);
 
     public static int apriltagPipeline = 0;
     public static int viewFinderPipeline = 5;

@@ -26,7 +26,6 @@ import frc.robot.utils.SD;
 public class LimelightVision extends SubsystemBase {
   /** Creates a new LimelightVision. */
 
-  boolean allcamsok;
 
   public String frontName = Constants.CameraConstants.frontCamera.camname;
 
@@ -125,19 +124,7 @@ public class LimelightVision extends SubsystemBase {
   @Override
   public void periodic() {
 
-    if (RobotBase.isReal()) {
-      limelightExistsFront = isLimelightConnected(frontName);
-      limelightExistsLeft = isLimelightConnected(leftName);
-      limelightExistsRight = isLimelightConnected(rightName);
-
-      CameraConstants.frontCamera.isActive = !inhibitFrontVision && limelightExistsFront;
-      CameraConstants.leftCamera.isActive = !inhibitLeftVision && limelightExistsLeft;
-      CameraConstants.rightCamera.isActive = !inhibitRightVision && limelightExistsRight;
-
-      allcamsok = Constants.CameraConstants.frontCamera.isUsed && limelightExistsFront
-          && Constants.CameraConstants.leftCamera.isUsed && limelightExistsLeft
-          && Constants.CameraConstants.rightCamera.isUsed && limelightExistsRight;
-
+    
       if (limelightExistsFront && LimelightHelpers.getTV(frontName))
         wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(frontName).toPose2d());
 

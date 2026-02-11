@@ -14,10 +14,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TripleShooterSubsystem;
@@ -75,7 +73,7 @@ public class AlignTargetOdometry extends Command {
 
     angleToTarget = getAngleDegreesToTarget(targetPose, m_drivetrain.getState().Pose);
 
-    shooter.setDistanceToHub(Constants.FieldConstants.blueHubPose.getTranslation()
+    shooter.setDistanceToHub(targetPose.getTranslation()
         .getDistance(m_drivetrain.getState().Pose.getTranslation()));
 
     rotationVal = m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
@@ -103,6 +101,5 @@ public class AlignTargetOdometry extends Command {
     double XDiff = targetPose.getX() - robotPose.getX();
     double YDiff = targetPose.getY() - robotPose.getY();
     return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
-
   }
 }
