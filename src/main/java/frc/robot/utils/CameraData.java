@@ -17,7 +17,7 @@ public class CameraData {
     public boolean inhibitVision;
 
     public double distToCamera;
-    public double ambiguity;
+    public double MT2ambiguity;
 
     public int numberMT2Pose;
     public int numberMT1Pose;

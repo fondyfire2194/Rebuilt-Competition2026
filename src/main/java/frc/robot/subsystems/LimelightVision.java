@@ -26,7 +26,6 @@ import frc.robot.utils.SD;
 public class LimelightVision extends SubsystemBase {
   /** Creates a new LimelightVision. */
 
-
   public String frontName = Constants.CameraConstants.frontCamera.camname;
 
   public boolean limelightExistsFront;
@@ -124,21 +123,19 @@ public class LimelightVision extends SubsystemBase {
   @Override
   public void periodic() {
 
-    
-      if (limelightExistsFront && LimelightHelpers.getTV(frontName))
-        wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(frontName).toPose2d());
+    if (limelightExistsFront && LimelightHelpers.getTV(frontName))
+      wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(frontName).toPose2d());
 
-      if (limelightExistsLeft && LimelightHelpers.getTV(leftName))
-        wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(leftName).toPose2d());
+    if (limelightExistsLeft && LimelightHelpers.getTV(leftName))
+      wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(leftName).toPose2d());
 
-      if (limelightExistsRight && LimelightHelpers.getTV(leftName))
-        wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(leftName).toPose2d());
+    if (limelightExistsRight && LimelightHelpers.getTV(leftName))
+      wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(leftName).toPose2d());
 
-      if (showTelemetry) {
-        showTelemetry();
-      }
-
+    if (showTelemetry) {
+      showTelemetry();
     }
+
   }
 
   public Command setIMUModeCommand(int n) {

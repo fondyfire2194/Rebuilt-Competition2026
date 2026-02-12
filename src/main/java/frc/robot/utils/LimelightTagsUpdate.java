@@ -79,7 +79,7 @@ public class LimelightTagsUpdate {
                 if (mt2.rawFiducials.length > 0)
                     m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
                 m_data.distToCamera = m_swerve.distanceLimelightToEstimator;
-                m_data.ambiguity = mt2.rawFiducials[0].ambiguity;
+                m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
                 rejectMT2Update = !m_data.inhibitVision && mt2.tagCount == 0
                         || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
                                 .getValueAsDouble()) > ROTATION_RATE_CUTOFF
@@ -102,14 +102,13 @@ public class LimelightTagsUpdate {
             } else {
 
                 rejectMT1Update = mt1.tagCount == 0
-                        || mt1.tagCount == 1 && mt1.rawFiducials.length == 1 &&
-                                mt1.rawFiducials[0].ambiguity > .7
+                        || mt1.tagCount == 1 && mt1.rawFiducials.length == 1
+                                && mt1.rawFiducials[0].ambiguity > .7
                                 && mt1.rawFiducials[0].distToCamera > 5;
                 mt1PosePublisher.set(mt1.pose);
                 m_data.rejectMT1Update = rejectMT1Update;
                 if (!rejectMT1Update) {
-                    m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.7,
-                            .7, 1));
+                    m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 1));
                     m_swerve.addVisionMeasurement(
                             mt1.pose,
                             mt1.timestampSeconds);

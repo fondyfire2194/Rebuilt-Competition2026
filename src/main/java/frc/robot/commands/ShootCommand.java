@@ -34,9 +34,11 @@ public class ShootCommand extends Command {
   @Override
   public void execute() {
     m_shooter.runAllVelocityVoltage();
-    if (m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance())
+
+    if (m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance()) {
       m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
-    m_feeder.runFeederRollerMotor(FeederSetpoints.kFeedRollerSetpoint);
+      m_feeder.runFeederRollerMotor(FeederSetpoints.kFeedRollerSetpoint);
+    }
   }
 
   // Called once the command ends or is interrupted.
