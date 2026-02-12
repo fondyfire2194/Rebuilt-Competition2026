@@ -33,9 +33,13 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public final TalonFX leftMotor;
 
-  private final TalonFX middleMotor;
+  public final TalonFX middleMotor;
 
   private final TalonFX rightMotor;
+
+  public boolean leftMotorActive;
+  public boolean middleMotorActive;
+  public boolean rightMotorActive;
 
   private final VoltageOut voltageRequest = new VoltageOut(0);
 
@@ -64,9 +68,9 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public TripleShooterSubsystem(boolean showData) {
 
-    leftMotor = new TalonFX(CANIDConstants.leftShooterID, CanbusConstants.kRoboRioCANBus);
-    middleMotor = new TalonFX(CANIDConstants.centerShooterID, CanbusConstants.kRoboRioCANBus);
-    rightMotor = new TalonFX(CANIDConstants.rightShooterID, CanbusConstants.kRoboRioCANBus);
+    leftMotor = new TalonFX(CANIDConstants.leftShooterID, CanbusConstants.kCANivoreCANBus);
+    middleMotor = new TalonFX(CANIDConstants.centerShooterID, CanbusConstants.kCANivoreCANBus);
+    rightMotor = new TalonFX(CANIDConstants.rightShooterID, CanbusConstants.kCANivoreCANBus);
 
     configureMotor(leftMotor, InvertedValue.CounterClockwise_Positive);
     configureMotor(middleMotor, InvertedValue.Clockwise_Positive);
@@ -134,31 +138,31 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   }
 
-  public void runVelocityVoltage(TalonFX motor, double rpm) {
+  public void runVelocityVoltage(TalonFX motor) {
     motor.setControl(
         velocityVoltage
-            .withVelocity(RPM.of(rpm))
+            .withVelocity(RPM.of(targetRPM))
             .withAcceleration(targetAcceleration)
             .withEnableFOC(true));
   }
 
   public Command runVelocityVoltageCommand(TalonFX motor) {
-    return run(() -> runVelocityVoltage(motor, targetRPM));
+    return run(() -> runVelocityVoltage(motor));
+  }
+
+  public Command runAllVelocityVoltageCommand() {
+    return run(() -> runAllVelocityVoltage());
   }
 
   public void runAllVelocityVoltage() {
-    leftMotor.setControl(
-        velocityVoltage
-            .withVelocity(targetRPM)
-            .withEnableFOC(true));
-    middleMotor.setControl(
-        velocityVoltage
-            .withVelocity(targetRPM)
-            .withEnableFOC(true));
-    rightMotor.setControl(
-        velocityVoltage
-            .withVelocity(targetRPM)
-            .withEnableFOC(true));
+    if (leftMotorActive)
+      runVelocityVoltage(leftMotor);
+
+    if (middleMotorActive)
+       runVelocityVoltage(middleMotor);
+
+    if (rightMotorActive)
+       runVelocityVoltage(rightMotor);
   }
 
   public void runVelocityTorque(TalonFX motor) {
@@ -238,9 +242,9 @@ public class TripleShooterSubsystem extends SubsystemBase {
   }
 
   public boolean allVelocityInTolerance() {
-    return isVelocityWithinTolerance(leftMotor)
-        && isVelocityWithinTolerance(middleMotor)
-        && isVelocityWithinTolerance(rightMotor);
+    return (isVelocityWithinTolerance(leftMotor) || !leftMotorActive)
+        && (isVelocityWithinTolerance(middleMotor) || !middleMotorActive)
+        && (isVelocityWithinTolerance(rightMotor) || !rightMotorActive);
   }
 
   private void initSendable(SendableBuilder builder, TalonFX motor, String name) {
@@ -249,18 +253,19 @@ public class TripleShooterSubsystem extends SubsystemBase {
     builder.addDoubleProperty(name + " Supply Current", () -> motor.getSupplyCurrent().getValue().in(Amps), null);
     builder.addDoubleProperty(name + " Supply Volts", () -> motor.getMotorVoltage().getValueAsDouble(), null);
     builder.addBooleanProperty(name + " At Speed", () -> isVelocityWithinTolerance(motor), null);
-
   }
 
   @Override
   public void initSendable(SendableBuilder builder) {
+    // if (leftMotorActive)
     initSendable(builder, leftMotor, "Left");
+    // if (middleMotorActive)
     initSendable(builder, middleMotor, "Middle");
-    initSendable(builder, rightMotor, "Right");
+    // if (rightMotorActive)
+    // initSendable(builder, rightMotor, "Right");
     builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
     builder.addDoubleProperty("Voltage Target RPM", () -> velocityVoltage.getVelocityMeasure().in(RPM), null);
-
     builder.addDoubleProperty("Target Velocity RPM", () -> targetRPM, null);
   }
 

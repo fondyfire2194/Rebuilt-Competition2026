@@ -70,18 +70,20 @@ public class RobotContainer {
 
         final HoodSubsystem m_hood = new HoodSubsystem(true);
 
-        private final FeederSubsystem m_feeder = new FeederSubsystem(false);
+        private final FeederSubsystem m_feeder = new FeederSubsystem(true);
 
         private final IntakeSubsystem m_intake = new IntakeSubsystem(true);
 
         private final IntakeArmSubsystem m_intakeArm = new IntakeArmSubsystem(true);
 
-
-
         public RobotContainer() {
                 drivetrain.setFrontUseMegatag2(true);
                 drivetrain.setLeftUseMegatag2(true);
                 drivetrain.setRightUseMegatag2(true);
+
+                m_shooter.leftMotorActive = true;
+                m_shooter.middleMotorActive = true;
+                m_shooter.rightMotorActive = false;
 
                 setDefaultCommands();
                 configureDriverBindings();
@@ -175,18 +177,22 @@ public class RobotContainer {
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
                 codriver.rightBumper().onTrue(
-                                m_shooter.runVelocityVoltageCommand(m_shooter.leftMotor));
+                                m_shooter.runAllVelocityVoltageCommand());
 
-                codriver.y().onTrue(m_shooter.setDutyCycleCommand(m_shooter.leftMotor, .05))
-                                .onFalse(m_shooter.setDutyCycleCommand(m_shooter.leftMotor, .0));
-                codriver.a().onTrue(m_shooter.setVoltageCommand(m_shooter.leftMotor, .5))
-                                .onFalse(m_shooter.setVoltageCommand(m_shooter.leftMotor, .0));
+                codriver.y().onTrue(m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .5))
+                                .onFalse(m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .0));
+
+                codriver.a().onTrue(m_shooter.setVoltageCommand(m_shooter.middleMotor, 5))
+                                .onFalse(m_shooter.setVoltageCommand(m_shooter.middleMotor, .0));
 
                 codriver.povUp().onTrue(m_shooter.changeTargetVelocityCommand(100));
+
                 codriver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
 
-                codriver.povLeft().onTrue(m_shooter.setTargetVelocityCommand(RPM.of(400)));
-                codriver.povRight().onTrue(m_shooter.setTargetVelocityCommand(RPM.of(600)));
+                codriver.povLeft().onTrue(m_feeder.jogFeederBeltCommand())
+                                .onFalse(m_feeder.stopFeederBeltCommand());
+                codriver.povRight().onTrue(m_feeder.jogFeederRollerCommand())
+                                .onFalse(m_feeder.stopFeederRollerCommand());
 
         }
 

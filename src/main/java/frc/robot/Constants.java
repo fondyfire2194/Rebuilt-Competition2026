@@ -118,12 +118,15 @@ public final class Constants {
 
     public static final int feederBeltID = 12;
     public static final int feederRollerID = 13;
+    public static final int hoodMotorID = 14;
 
-    public static final int leftShooterID = 14;
-    public static final int centerShooterID = 15;
-    public static final int rightShooterID = 16;
 
-    public static final int hoodMotorID = 17;
+//these are CV1 addresses
+    public static final int leftShooterID = 10;
+    public static final int centerShooterID = 11;
+    public static final int rightShooterID = 12;
+
+    
 
   }
 
