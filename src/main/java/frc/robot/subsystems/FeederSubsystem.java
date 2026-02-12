@@ -165,13 +165,12 @@ public class FeederSubsystem extends SubsystemBase {
 
   /**
    * Command to reverse the feeder belt motor. When the command is
-   * interrupted, e.g. the button is
-   * released, the motors will stop.
+   * interrupted, e.g. the button is released, the motors will stop.
    */
   public Command jogReverseFeederBeltCommand() {
     return this.startEnd(
         () -> {
-          this.runFeederBeltMotor(Constants.FeederSetpoints.kFeedBeltSetpoint);
+          this.runFeederBeltMotor(-Constants.FeederSetpoints.kFeedBeltSetpoint);
         }, () -> {
           this.runFeederBeltMotor(0.0);
         }).withName("FeederBeltReversing");

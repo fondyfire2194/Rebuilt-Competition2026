@@ -189,10 +189,9 @@ public class RobotContainer {
 
                 codriver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
 
-                codriver.povLeft().onTrue(m_feeder.jogFeederBeltCommand())
-                                .onFalse(m_feeder.stopFeederBeltCommand());
-                codriver.povRight().onTrue(m_feeder.jogFeederRollerCommand())
-                                .onFalse(m_feeder.stopFeederRollerCommand());
+                codriver.povLeft().whileTrue(m_feeder.jogFeederBeltCommand());
+                         
+                codriver.povRight().whileTrue(m_feeder.jogFeederRollerCommand());
 
         }
 
