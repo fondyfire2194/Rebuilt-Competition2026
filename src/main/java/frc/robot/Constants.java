@@ -6,16 +6,17 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.RPM;
 
-import java.net.http.HttpResponse.PushPromiseHandler;
-
 import com.ctre.phoenix6.CANBus;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 /**
@@ -120,13 +121,10 @@ public final class Constants {
     public static final int feederRollerID = 13;
     public static final int hoodMotorID = 14;
 
-
-//these are CV1 addresses
+    // these are CV1 addresses
     public static final int leftShooterID = 10;
     public static final int centerShooterID = 11;
     public static final int rightShooterID = 12;
-
-    
 
   }
 
@@ -147,12 +145,7 @@ public final class Constants {
       public String camname = "name";
       public String ipaddress = "ip";
       public boolean isLL4;
-      public double forward;
-      public double side;
-      public double up;
-      public double roll;
-      public double pitch;
-      public double yaw;
+      public Pose3d camPose;
       public double hfov;
       public double vfov;
       public int horpixels;
@@ -165,38 +158,43 @@ public final class Constants {
           final String camname,
           final String ipaddress,
           final boolean isLL4,
-          final double forward, final double side, final double up, final double roll,
-          final double pitch, final double yaw,
+          final Pose3d camPose,
           final double hfov, double vfov,
           final int horpixels, final int vertpixels,
           final boolean isUsed) {
         this.camname = camname;
         this.ipaddress = ipaddress;
-        this.forward = forward;
-        this.side = side;
-        this.up = up;
-        this.roll = roll;
-        this.pitch = pitch;
-        this.yaw = yaw;
+        this.isLL4 = isLL4;
+        this.camPose = camPose;
         this.hfov = hfov;
         this.vfov = vfov;
         this.horpixels = horpixels;
         this.vertpixels = vertpixels;
         this.isUsed = isUsed;
-        
+
       }
     }
 
+    /**
+     * //https://youtu.be/unX1PsPi0VA?si=D1i4hf6OA0_LXidt
+     * Pose3d rotation Parameters:
+     * Roll is CCW angle around X in radians (normally 0()
+     * Pitch is CCW angle around Y in radians (0 is parallel to ground)
+     * Yaw is CCW angle around Z axis in radians 90 is pointing left
+     * 
+     */
     public static CameraValues frontCamera = new CameraValues(
         "limelight-front",
         "10.21.94.15",
         true,
-        Units.inchesToMeters(9.5), // 9.5
-        Units.inchesToMeters(0),
-        Units.inchesToMeters(12),
-        0,
-        15, // deg 19
-        -5,
+        new Pose3d(
+            Units.inchesToMeters(9.5), // front of robot
+            Units.inchesToMeters(0), // on LR center
+            Units.inchesToMeters(8), // high
+            new Rotation3d(
+                Units.degreesToRadians(0), // no roll
+                Units.degreesToRadians (20), // angled up
+                Units.degreesToRadians(0))), // facing forward
         63.3,
         49.7,
         1,
@@ -207,12 +205,14 @@ public final class Constants {
         "limelight-left",
         "10.21.94.16",
         false,
-        Units.inchesToMeters(0),
-        Units.inchesToMeters(-17.25),
-        Units.inchesToMeters(9.0),
-        0,
-        5,
-        0,
+        new Pose3d(
+            Units.inchesToMeters(0),
+            Units.inchesToMeters(10),
+            Units.inchesToMeters(8),
+            new Rotation3d(
+                Units.degreesToRadians(0),
+                Units.degreesToRadians(20),
+                Units.degreesToRadians(100))),
         63.3,
         49.7,
         1280,
@@ -223,17 +223,26 @@ public final class Constants {
         "limelight-right",
         "10.21.94.17",
         false,
-        Units.inchesToMeters(0),
-        Units.inchesToMeters(17.25),
-        Units.inchesToMeters(9.0),
-        0,
-        5,
-        0,
+        new Pose3d(
+            0.08255,
+            0.127,
+            0.16256,
+            new Rotation3d(
+                .08255,
+                Units.degreesToRadians(20),
+                Units.degreesToRadians(-100))),
         63.3,
         49.7,
         1280,
         960,
         true);
+
+    public static StructPublisher<Pose2d> frontCamPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("CamPoseFront", Pose2d.struct).publish();
+    public static StructPublisher<Pose2d> leftCamPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("CamPoseLeft", Pose2d.struct).publish();
+    public static StructPublisher<Pose2d> rightCamPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("CamPoseRight", Pose2d.struct).publish();
 
     public static int apriltagPipeline = 0;
     public static int viewFinderPipeline = 5;

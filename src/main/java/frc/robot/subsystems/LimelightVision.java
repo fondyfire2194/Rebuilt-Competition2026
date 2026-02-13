@@ -6,13 +6,10 @@ package frc.robot.subsystems;
 
 import java.util.Optional;
 
-import com.fasterxml.jackson.databind.EnumNamingStrategies.CamelCaseStrategy;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -64,9 +61,6 @@ public class LimelightVision extends SubsystemBase {
 
   Optional<Pose3d> temp;
 
-  StructPublisher<Pose2d> wpiBluePosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LLV/WPIBluePose", Pose2d.struct).publish();
-
   public boolean showTelemetry = true;
 
   /**
@@ -110,27 +104,11 @@ public class LimelightVision extends SubsystemBase {
   }
 
   public LimelightVision() {
-    if (CameraConstants.frontCamera.isUsed) {
-      setCamToRobotOffset(Constants.CameraConstants.frontCamera);
-      LimelightHelpers.SetIMUMode(frontName, ImuMode.ExternalImu.ordinal());
-    }
-    if (CameraConstants.leftCamera.isUsed) {
-      setCamToRobotOffset(Constants.CameraConstants.leftCamera);
-      LimelightHelpers.SetIMUMode(leftName, ImuMode.ExternalImu.ordinal());
-    }
+
   }
 
   @Override
   public void periodic() {
-
-    if (limelightExistsFront && LimelightHelpers.getTV(frontName))
-      wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(frontName).toPose2d());
-
-    if (limelightExistsLeft && LimelightHelpers.getTV(leftName))
-      wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(leftName).toPose2d());
-
-    if (limelightExistsRight && LimelightHelpers.getTV(leftName))
-      wpiBluePosePublisher.set(LimelightHelpers.getBotPose3d_wpiBlue(leftName).toPose2d());
 
     if (showTelemetry) {
       showTelemetry();
@@ -143,7 +121,14 @@ public class LimelightVision extends SubsystemBase {
   }
 
   public void setCamToRobotOffset(Constants.CameraConstants.CameraValues cam) {
-    LimelightHelpers.setCameraPose_RobotSpace(cam.camname, cam.forward, cam.side, cam.up, cam.roll, cam.pitch, cam.yaw);
+    LimelightHelpers.setCameraPose_RobotSpace(
+        cam.camname,
+        cam.camPose.getX(),
+        cam.camPose.getY(),
+        cam.camPose.getZ(),
+        cam.camPose.getRotation().getY(),
+        cam.camPose.getRotation().getX(),
+        cam.camPose.getRotation().getZ());
   }
 
   public int getIMUMode(String camName) {

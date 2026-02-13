@@ -11,8 +11,6 @@ import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,10 +23,10 @@ import frc.robot.utils.LoopEvents;
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
     private final EventLoop m_eventLoop = new EventLoop();
-    StructPublisher<Pose2d> rHposePublisher = NetworkTableInstance.getDefault()
-            .getStructTopic("BlueHubPose", Pose2d.struct).publish();
-    StructPublisher<Pose2d> bHposePublisher = NetworkTableInstance.getDefault()
-            .getStructTopic("RedHubPose", Pose2d.struct).publish();
+    // StructPublisher<Pose2d> rHposePublisher = NetworkTableInstance.getDefault()
+    // .getStructTopic("BlueHubPose", Pose2d.struct).publish();
+    // StructPublisher<Pose2d> bHposePublisher = NetworkTableInstance.getDefault()
+    // .getStructTopic("RedHubPose", Pose2d.struct).publish();
 
     private final RobotContainer m_robotContainer;
     private LoopEvents loopEvents;
@@ -43,7 +41,6 @@ public class Robot extends TimedRobot {
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
         loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
         loopEvents.init();
-
     }
 
     @Override
@@ -117,6 +114,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
+        LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname, CameraConstants.apriltagPipeline);
+        LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname, CameraConstants.apriltagPipeline);
+        LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname, CameraConstants.apriltagPipeline);
 
         SignalLogger.setPath("media/sda1/logs");
         if (m_autonomousCommand != null) {
