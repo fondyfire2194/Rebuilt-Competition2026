@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.Radian;
+import static edu.wpi.first.units.Units.Radians;
 
 import java.util.function.DoubleSupplier;
 
@@ -41,7 +42,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
   private static double maxArmRadsPerSec = Units.degreesToRadians(maxMotorRPS * 360. / gearRatio);
 
-  public static double positionConversionFactor = 360. / gearRatio;// degreed per motor rev
+  public static double positionConversionFactor = 2 * Math.PI / gearRatio;// rads per motor rev
   public static double velocityConversionFactor = positionConversionFactor / 60; // degrees per sec
 
   private static double kDt = 0.02;
@@ -49,7 +50,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
   private static double kMaxTrapVelocity = Units.degreesToRadians(100.);
   private static double kMaxTrapAcceleration = Units.degreesToRadians(200.);
 
-  private static double kP = .001;
+  private static double kP = .05;
   private static double kI = 0.0;
   private static double kD = 0.0;
 
@@ -75,13 +76,16 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
   public IntakeArmSubsystem(boolean showData) {
 
-    m_controller.setGoal(0);
+    m_controller.setGoal(minAngle.in(Radians));
+
     intakeArmMotor.configure(
         Configs.IntakeArm.intakeArmConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
     if (showData)
       SmartDashboard.putData(this);
+
+    intakeArmMotor.getEncoder().setPosition(minAngle.in(Radians));
   }
 
   @Override
@@ -103,6 +107,10 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
   }
 
+  public boolean armInPosition() {
+    return Math.abs(m_controller.getGoal().position - intakeArmMotor.getEncoder().getPosition()) < .25;
+  }
+
   public Command intakeArmToIntakePositionCommand() {
     return Commands.runOnce(() -> m_controller.setGoal(intakingAngle.in(Radian)));
   }
@@ -117,10 +125,10 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
   public void positionIntakeArm() {
     tst++;
+    SmartDashboard.putNumber("IATEST", tst);
     double feedforward = m_feedforward.calculate(m_controller.getSetpoint().position,
         m_controller.getSetpoint().velocity);
     double pidout = m_controller.calculate(getIntakeArmAngle().in(Radian));
-
     intakeArmMotor.setVoltage(feedforward + pidout);
   }
 

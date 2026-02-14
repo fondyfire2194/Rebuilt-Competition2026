@@ -27,15 +27,16 @@ public class ShootCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-
+    
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_shooter.runAllVelocityVoltage();
 
-    if (m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance()) {
+    m_shooter.runAllVelocityVoltage();
+    boolean bypass = true;
+    if (bypass || m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance()) {
       m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
       m_feeder.runFeederRollerMotor(FeederSetpoints.kFeedRollerSetpoint);
     }

@@ -93,7 +93,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public Command jogExtakeCommand() {
     return this.startEnd(
         () -> {
-          this.runIntakeMotor(Constants.IntakeSetpoints.kJogIntake);
+          this.runIntakeMotor(-Constants.IntakeSetpoints.kJogIntake);
         }, () -> {
           this.runIntakeMotor(0.0);
         }).withName("Extaking");

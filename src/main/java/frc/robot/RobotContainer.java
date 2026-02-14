@@ -138,25 +138,34 @@ public class RobotContainer {
                 // drivetrain.applyRequest(() ->
                 // forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
 
-                driver.leftTrigger().onTrue(new ShootCommand(m_shooter, m_hood, m_feeder));
+                driver.leftTrigger().whileTrue(new ShootCommand(m_shooter, m_hood, m_feeder));
 
-                driver.rightTrigger().onTrue(m_intake.startIntakeCommand());
+                driver.rightTrigger().whileTrue(
+                                Commands.parallel(
+                                                m_intakeArm.intakeArmToIntakePositionCommand(),
+                                                m_intake.startIntakeCommand()))
+                                .onFalse(
+                                                Commands.sequence(
+                                                                Commands.waitSeconds(5),
+                                                                m_intakeArm.intakeArmToClearPositionCommand(),
+                                                                m_intake.stopIntakeCommand()));
 
                 driver.rightBumper().onTrue(
-                                new SequentialCommandGroup(
+                                Commands.parallel(
                                                 m_shooter.stopAllShootersCommand(),
                                                 m_feeder.stopFeederRollerCommand(),
                                                 m_feeder.stopFeederBeltCommand(),
                                                 m_intake.stopIntakeCommand()));
 
-                driver.leftBumper().whileTrue(
-                                Commands.parallel(
-                                                new PrepareShotCommand(m_shooter, m_hood),
-                                                new AlignTargetOdometry(drivetrain, m_shooter, drive, driver, false)));
+                // driver.leftBumper().whileTrue(
+                // Commands.parallel(
+                // new PrepareShotCommand(m_shooter, m_hood),
+                // new AlignTargetOdometry(drivetrain, m_shooter, drive, driver, false)));
+                driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand());
 
-                driver.y().onTrue(Commands.none());
+                driver.y().whileTrue(m_intake.jogIntakeCommand());
 
-                driver.a().onTrue(Commands.none());
+                driver.a().whileTrue(m_intakeArm.jogIntakeArmCommand(() -> driver.getLeftX()));
 
                 driver.b().onTrue(Commands.none());
 
@@ -192,9 +201,9 @@ public class RobotContainer {
 
                 codriver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
 
-                codriver.povLeft().whileTrue(m_feeder.jogFeederBeltCommand());
+                codriver.povLeft().onTrue(m_hood.positionToHomeCommand());
 
-                codriver.povRight().whileTrue(m_feeder.jogFeederRollerCommand());
+                codriver.povRight().whileTrue(m_hood.positionTestCommand());
 
                 codriver.b().whileTrue(m_hood.jogHoodUpCommand());
                 codriver.x().whileTrue(m_hood.jogHoodDownCommand());

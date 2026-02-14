@@ -66,6 +66,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   private int tst = 0;
 
+  public boolean endShooterCommand;
+
   public TripleShooterSubsystem(boolean showData) {
 
     leftMotor = new TalonFX(CANIDConstants.leftShooterID, CanbusConstants.kCANivoreCANBus);
@@ -181,6 +183,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     leftMotor.stopMotor();
     setPercentOutput(middleMotor, 0.0);
     setPercentOutput(rightMotor, 0.0);
+    endShooterCommand= true;
   }
 
   public Command stopAllShootersCommand() {

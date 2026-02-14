@@ -24,9 +24,9 @@ public class PrepareShotCommand extends Command {
                             .interpolate(startValue.hoodPosition, endValue.hoodPosition, t)));
 
     static {
-        distanceToShotMap.put(Inches.of(52.0), new Shot(2800, 45));
-        distanceToShotMap.put(Inches.of(114.4), new Shot(3275, 50));
-        distanceToShotMap.put(Inches.of(165.5), new Shot(3650, 55));
+        distanceToShotMap.put(Inches.of(52.0), new Shot(2800, 10));
+        distanceToShotMap.put(Inches.of(114.4), new Shot(3275, 15));
+        distanceToShotMap.put(Inches.of(165.5), new Shot(3650, 18));
     }
 
     private final TripleShooterSubsystem shooter;

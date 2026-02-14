@@ -95,29 +95,35 @@ public class LimelightTagsUpdate {
             mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_cam.camname);
             m_data.mt1Pose = mt1.pose;
             m_data.MT1tagCount = mt1.tagCount;
-            m_data.MT1ambiguity = mt1.rawFiducials[0].ambiguity;
-            m_data.MT1distToCamera = mt1.rawFiducials[0].distToCamera;
-            if (showData) {
-                mt1PosePublisher.set(mt1.pose);
-                SmartDashboard.putNumber(m_cam.camname + " MT1 Tag Count", mt1.tagCount);
-                SmartDashboard.putNumber(m_cam.camname + " MT1 Abiguity", m_data.MT1ambiguity);
-                SmartDashboard.putNumber(m_cam.camname + " MT1 Dist To Cam", m_data.MT1distToCamera);
-                SmartDashboard.putNumber(m_cam.camname + " MT1 Rotation To Cam",
-                        m_data.mt1Pose.getRotation().getDegrees());
+            if (mt1.rawFiducials.length > 0) {
+                m_data.MT1ambiguity = mt1.rawFiducials[0].ambiguity;
+                m_data.MT1distToCamera = mt1.rawFiducials[0].distToCamera;
+                if (showData) {
+                    mt1PosePublisher.set(mt1.pose);
+                    SmartDashboard.putNumber(m_cam.camname + " MT1 Tag Count", mt1.tagCount);
+                    SmartDashboard.putNumber(m_cam.camname + " MT1 Abiguity", m_data.MT1ambiguity);
+                    SmartDashboard.putNumber(m_cam.camname + " MT1 Dist To Cam", m_data.MT1distToCamera);
+                    SmartDashboard.putNumber(m_cam.camname + " MT1 Rotation To Cam",
+                            m_data.mt1Pose.getRotation().getDegrees());
+                }
             }
         }
         setLLRobotOrientation();
         LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_cam.camname);
         m_data.mt2Pose = mt2.pose;
-        m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
-        m_data.MT2distToCamera = m_swerve.distanceLimelightToEstimator;
-        m_data.numberMT2Pose = mt2.tagCount;
-        if (showData) {
-            mt2PosePublisher.set(mt2.pose);// send to network tables
-            SmartDashboard.putNumber(m_cam.camname + " MT2 Tag Count", mt2.tagCount);
-            SmartDashboard.putNumber(m_cam.camname + " MT2 Abiguity", m_data.MT2ambiguity);
-            SmartDashboard.putNumber(m_cam.camname + " MT2 Dist To Cam", m_data.MT2distToCamera);
-            SmartDashboard.putNumber(m_cam.camname + " MT2 Rotation To Cam", m_data.mt2Pose.getRotation().getDegrees());
+        if (mt2.rawFiducials.length > 0) {
+            m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
+            m_data.MT2distToCamera = m_swerve.distanceLimelightToEstimator;
+            m_data.numberMT2Pose = mt2.tagCount;
+
+            if (showData) {
+                mt2PosePublisher.set(mt2.pose);// send to network tables
+                SmartDashboard.putNumber(m_cam.camname + " MT2 Tag Count", mt2.tagCount);
+                SmartDashboard.putNumber(m_cam.camname + " MT2 Abiguity", m_data.MT2ambiguity);
+                SmartDashboard.putNumber(m_cam.camname + " MT2 Dist To Cam", m_data.MT2distToCamera);
+                SmartDashboard.putNumber(m_cam.camname + " MT2 Rotation To Cam",
+                        m_data.mt2Pose.getRotation().getDegrees());
+            }
         }
         setUseMegatag2(m_data.m_useMegaTag2);
 
