@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.AngularVelocity;
 
@@ -102,8 +103,8 @@ public final class Constants {
 
   }
 
-  public static final class HoodSetpoints{
-    public static final double jogHoodMotor=.075;
+  public static final class HoodSetpoints {
+    public static final double jogHoodMotor = .075;
   }
 
   public static final class FlywheelSetpoints {
@@ -187,66 +188,74 @@ public final class Constants {
      * Yaw is CCW angle around Z axis in radians 90 is pointing left
      * 
      */
+    static Pose3d frontCamPose = new Pose3d(
+        Units.inchesToMeters(9.5), // front of robot
+        Units.inchesToMeters(0), // on LR center
+        Units.inchesToMeters(8), // high
+        new Rotation3d(
+            Units.degreesToRadians(0), // no roll
+            Units.degreesToRadians(20), // angled up
+            Units.degreesToRadians(0)));// facing forward
+
     public static CameraValues frontCamera = new CameraValues(
         "limelight-front",
         "10.21.94.15",
         true,
-        new Pose3d(
-            Units.inchesToMeters(9.5), // front of robot
-            Units.inchesToMeters(0), // on LR center
-            Units.inchesToMeters(8), // high
-            new Rotation3d(
-                Units.degreesToRadians(0), // no roll
-                Units.degreesToRadians (20), // angled up
-                Units.degreesToRadians(0))), // facing forward
+        frontCamPose,
         63.3,
         49.7,
         1,
         1,
         true);
+
+    static Pose3d leftCamPose = new Pose3d(
+        Units.inchesToMeters(0),
+        Units.inchesToMeters(10),
+        Units.inchesToMeters(8),
+        new Rotation3d(
+            Units.degreesToRadians(0),
+            Units.degreesToRadians(20),
+            Units.degreesToRadians(100)));
 
     public static CameraValues leftCamera = new CameraValues(
         "limelight-left",
         "10.21.94.16",
         false,
-        new Pose3d(
-            Units.inchesToMeters(0),
-            Units.inchesToMeters(10),
-            Units.inchesToMeters(8),
-            new Rotation3d(
-                Units.degreesToRadians(0),
-                Units.degreesToRadians(20),
-                Units.degreesToRadians(100))),
+       leftCamPose,
         63.3,
         49.7,
         1280,
         960,
         true);
+
+    static Pose3d rightCamPose = new Pose3d(
+        0.08255,
+        0.127,
+        0.16256,
+        new Rotation3d(
+            .08255,
+            Units.degreesToRadians(20),
+            Units.degreesToRadians(-100)));
 
     public static CameraValues rightCamera = new CameraValues(
         "limelight-right",
         "10.21.94.17",
         false,
-        new Pose3d(
-            0.08255,
-            0.127,
-            0.16256,
-            new Rotation3d(
-                .08255,
-                Units.degreesToRadians(20),
-                Units.degreesToRadians(-100))),
+        rightCamPose,
         63.3,
         49.7,
         1280,
         960,
         true);
 
-    public static StructPublisher<Pose2d> frontCamPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("CamPoseFront", Pose2d.struct).publish();
-    public static StructPublisher<Pose2d> leftCamPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("CamPoseLeft", Pose2d.struct).publish();
-    public static StructPublisher<Pose2d> rightCamPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("CamPoseRight", Pose2d.struct).publish();
+    public static StructArrayPublisher<Pose3d> arrayPublisher = NetworkTableInstance.getDefault()
+        .getStructArrayTopic("Camposes", Pose3d.struct).publish();
+
+    public static Pose3d[] camPoses = {
+        CameraConstants.frontCamera.camPose,
+        CameraConstants.leftCamera.camPose,
+        CameraConstants.rightCamera.camPose };
+
 
     public static int apriltagPipeline = 0;
     public static int viewFinderPipeline = 5;

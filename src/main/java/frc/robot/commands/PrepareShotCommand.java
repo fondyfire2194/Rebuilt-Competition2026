@@ -48,7 +48,7 @@ public class PrepareShotCommand extends Command {
         final Shot shot = distanceToShotMap.get(distanceToHub);
         shooter.setTargetVelocity(shot.shooterRPM);
         shooter.runAllVelocityVoltage();
-        hood.setPosition(shot.hoodPosition);
+        hood.setTargetCommand(shot.hoodPosition);
     }
 
     @Override

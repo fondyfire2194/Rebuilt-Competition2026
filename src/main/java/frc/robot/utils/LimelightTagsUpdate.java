@@ -4,17 +4,12 @@
 
 package frc.robot.utils;
 
-import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayEntry;
-import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -37,9 +32,6 @@ public class LimelightTagsUpdate {
     // private StructArrayPublisher<AprilTag> arrayPublisher =
     // NetworkTableInstance.getDefault()
     // .getStructArrayTopic("AprilTags", new AprilTagStruct()).publish();
-    private StructArrayPublisher<Pose3d> arrayPublisher = NetworkTableInstance.getDefault()
-            .getStructArrayTopic("P3d", Pose3d.struct).publish();
-    Pose3d[] camPoses = new Pose3d[4];
 
     StructPublisher<Pose2d> mt2PosePublisher;
 
@@ -51,58 +43,15 @@ public class LimelightTagsUpdate {
         m_data = data;
         m_data.inhibitVision = false;
         setCamToRobotOffset(m_cam);
-        if (m_cam.camname == CameraConstants.frontCamera.camname)
-            CameraConstants.frontCamPosePublisher.set(CameraConstants.frontCamera.camPose.toPose2d());
-        if (m_cam.camname == CameraConstants.leftCamera.camname)
-            CameraConstants.leftCamPosePublisher.set(CameraConstants.leftCamera.camPose.toPose2d());
-        if (m_cam.camname == CameraConstants.rightCamera.camname)
-            CameraConstants.rightCamPosePublisher.set(CameraConstants.rightCamera.camPose.toPose2d());
+        if (m_cam.camname == "limelight-front") {
+            CameraConstants.arrayPublisher.accept(CameraConstants.camPoses);
+        }
 
         mt2PosePublisher = NetworkTableInstance.getDefault()
-                .getStructTopic("MT2Pose " + m_cam.camname, Pose2d.struct).publish();
+                .getStructTopic(m_cam.camname + " MT2Pose", Pose2d.struct).publish();
         mt1PosePublisher = NetworkTableInstance.getDefault()
-                .getStructTopic("MT1Pose " + m_cam.camname, Pose2d.struct).publish();
+                .getStructTopic(m_cam.camname + " MT1Pose", Pose2d.struct).publish();
 
-        if (m_cam.camname == "limelight-front") {
-
-            camPoses[0] = new Pose3d(
-                    Units.inchesToMeters(9.5), // front of robot
-                    Units.inchesToMeters(0), // on LR center
-                    Units.inchesToMeters(8), // high
-                    new Rotation3d(
-                            Units.degreesToRadians(0), // no roll
-                            Units.degreesToRadians(120), // angled up
-                            Units.degreesToRadians(0))); // facing forward
-
-            camPoses[1] = new Pose3d(
-                    Units.inchesToMeters(0),
-                    Units.inchesToMeters(10),
-                    Units.inchesToMeters(8),
-                    new Rotation3d(
-                            Units.degreesToRadians(0),
-                            Units.degreesToRadians(120),
-                            Units.degreesToRadians(100)));
-
-            camPoses[2] = new Pose3d(
-                    Units.inchesToMeters(-0),
-                    Units.inchesToMeters(-10),
-                    Units.inchesToMeters(8),
-                    new Rotation3d(
-                            Units.degreesToRadians(0),
-                            Units.degreesToRadians(120),
-                            Units.degreesToRadians(-100)));
-
-            camPoses[3] = new Pose3d(
-                    Units.inchesToMeters(-0),
-                    Units.inchesToMeters(-10),
-                    Units.inchesToMeters(8),
-                    new Rotation3d(
-                            Units.degreesToRadians(-16.875),
-                            Units.degreesToRadians(0),
-                            Units.degreesToRadians(-4.7)));
-
-            arrayPublisher.accept(camPoses);
-        }
     }
 
     public void setCamToRobotOffset(Constants.CameraConstants.CameraValues cam) {
@@ -145,12 +94,13 @@ public class LimelightTagsUpdate {
             m_data.mt1Pose = mt1.pose;
             mt1PosePublisher.set(mt1.pose);
             m_data.numberMT1Pose = mt1.tagCount;
-
+            SmartDashboard.putNumber(m_cam.camname + " Tag Count", mt1.tagCount);
             setLLRobotOrientation();
             LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_cam.camname);
             m_data.mt2Pose = mt2.pose;
             mt2PosePublisher.set(mt2.pose);// send to network tables
             m_data.numberMT2Pose = mt2.tagCount;
+            SmartDashboard.putNumber(m_cam.camname + " Tag Count", mt2.tagCount);
 
             setUseMegatag2(m_data.m_useMegaTag2);
 
