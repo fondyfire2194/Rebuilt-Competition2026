@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -14,6 +16,9 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -30,7 +35,7 @@ public class HoodSubsystem extends SubsystemBase {
     private SparkClosedLoopController closedLoopController;
     private RelativeEncoder encoder;
     private double degreesPerEncoderRev = 3.6;
-    private double homePosition = 45;// degrees
+    private double homePosition = 0;// degrees
 
     public HoodSubsystem(boolean showData) {
         hoodMotor = new SparkMax(Constants.CANIDConstants.hoodMotorID, MotorType.kBrushless);
@@ -52,6 +57,12 @@ public class HoodSubsystem extends SubsystemBase {
                 .positionConversionFactor(degreesPerEncoderRev)
                 .velocityConversionFactor(degreesPerEncoderRev / 60);
 
+        motorConfig.softLimit
+                .forwardSoftLimit(kMaxPosition)
+                .forwardSoftLimitEnabled(true)
+                .reverseSoftLimit(kMinPosition)
+                .reverseSoftLimitEnabled(true);
+
         /*
          * Configure the closed loop controller. We want to make sure we set the
          * feedback sensor as the primary encoder.
@@ -60,17 +71,10 @@ public class HoodSubsystem extends SubsystemBase {
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 // Set PID values for position control. We don't need to pass a closed loop
                 // slot, as it will default to slot 0.
-                .p(0.1)
+                .p(0.01)
                 .i(0)
                 .d(0)
-                .outputRange(-1, 1)
-                // Set PID values for velocity control in slot 1
-                .p(0.0001, ClosedLoopSlot.kSlot1)
-                .i(0, ClosedLoopSlot.kSlot1)
-                .d(0, ClosedLoopSlot.kSlot1)
-                .outputRange(-1, 1, ClosedLoopSlot.kSlot1).feedForward
-                // kV is now in Volts, so we multiply by the nominal voltage (12V)
-                .kV(12.0 / 5767, ClosedLoopSlot.kSlot1);
+                .outputRange(-.2, .25);
 
         /*
          * Apply the configuration to the SPARK MAX.
@@ -88,24 +92,76 @@ public class HoodSubsystem extends SubsystemBase {
             SmartDashboard.putData(this);
     }
 
-    /** Expects a position between 0.0 and 1.0 */
+    /** Expects a position between min and max */
     public void setPosition(double position) {
         final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
-        targetPosition = clampedPosition;
+        encoder.setPosition(clampedPosition);
     }
 
     public boolean isPositionWithinTolerance() {
-        return MathUtil.isNear(targetPosition, encoder.getPosition(), kPositionTolerance);
+        return MathUtil.isNear(targetPosition, getHoodPosition(), kPositionTolerance);
     }
 
-    private void closeLoop() {
-        closedLoopController.setSetpoint(targetPosition, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+    public Command positionToHomeCommand() {
+        return Commands.runOnce(()->targetPosition=5);
+    }
 
+    public Command positionHoodCommand() {
+        return new FunctionalCommand(
+                () -> {targetPosition=getHoodPosition();
+                }, // init
+                () -> {
+                    closedLoopController.setSetpoint(targetPosition, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+                }, // execute
+                (interrupted) -> hoodMotor.set(0), // end
+                () -> false, // isFinished
+                this);// requirements
+    }
+
+    public void setTargetPosition(double position) {
+        
+        MathUtil.clamp(targetPosition, kMinPosition, kMaxPosition);
+    }
+
+    public Command setTargetCommand(double position) {
+        return Commands.runOnce(() -> setTargetPosition(position));
+    }
+
+    public double getHoodPosition() {
+        return hoodMotor.getEncoder().getPosition();
+    }
+
+    public void runHoodMotor(double power) {
+        hoodMotor.set(power);
+    }
+
+    public void stopHoodMotor() {
+        hoodMotor.set(0);
+    }
+
+    public Command jogHoodUpCommand() {
+        return this.startEnd(
+                () -> {
+                    if (getHoodPosition() > kMinPosition)
+                        this.runHoodMotor(-Constants.HoodSetpoints.jogHoodMotor);
+                }, () -> {
+                    this.runHoodMotor(0.0);
+                }).withName("JogHoodUp");
+    }
+
+    public Command jogHoodDownCommand() {
+        return this.startEnd(
+                () -> {
+                    if (getHoodPosition() < kMaxPosition)
+                        this.runHoodMotor(Constants.HoodSetpoints.jogHoodMotor);
+                }, () -> {
+                    this.runHoodMotor(0.0);
+                }).withName("JogHoodDown");
     }
 
     @Override
     public void periodic() {
-        closeLoop();
+        // closeLoop();
     }
 
     @Override
@@ -114,5 +170,8 @@ public class HoodSubsystem extends SubsystemBase {
                 null);
         builder.addDoubleProperty("Current Position", () -> encoder.getPosition(), null);
         builder.addDoubleProperty("Target Position", () -> targetPosition, null);
+        builder.addBooleanProperty("MaxTravelLimitReached", (() -> getHoodPosition() >= kMaxPosition), null);
+        builder.addBooleanProperty("MinTravelLimitReached", (() -> getHoodPosition() <= kMinPosition), null);
+
     }
 }

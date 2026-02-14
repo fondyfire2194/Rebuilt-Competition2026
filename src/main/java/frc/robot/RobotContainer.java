@@ -113,6 +113,8 @@ public class RobotContainer {
 
                 m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
 
+                m_hood.setDefaultCommand(m_hood.positionHoodCommand());
+
         }
 
         private void configureDriverBindings() {
@@ -193,8 +195,14 @@ public class RobotContainer {
                 codriver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
 
                 codriver.povLeft().whileTrue(m_feeder.jogFeederBeltCommand());
-                         
+
                 codriver.povRight().whileTrue(m_feeder.jogFeederRollerCommand());
+
+                codriver.b().whileTrue(m_hood.jogHoodUpCommand());
+                codriver.x().whileTrue(m_hood.jogHoodDownCommand());
+
+                codriver.back().onTrue(
+                                m_hood.positionToHomeCommand());
 
         }
 

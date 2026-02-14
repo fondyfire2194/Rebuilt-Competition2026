@@ -102,6 +102,10 @@ public final class Constants {
 
   }
 
+  public static final class HoodSetpoints{
+    public static final double jogHoodMotor=.075;
+  }
+
   public static final class FlywheelSetpoints {
     public static final double kShootRpm = 1000;
     public static final double kVelocityTolerance = 100;
