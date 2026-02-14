@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.CameraConstants;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.utils.LimelightHelpers.IMUData;
 
@@ -28,7 +29,7 @@ public class LimelightTagsUpdate {
     private final double DISTANCE_CUTOFF = 4.0;
     private final double DISTANCE_STDDEVS_SCALAR = 2;
     private final double ROTATION_RATE_CUTOFF = 720;
-
+    LimelightHelpers.PoseEstimate mt1;
     // private StructArrayPublisher<AprilTag> arrayPublisher =
     // NetworkTableInstance.getDefault()
     // .getStructArrayTopic("AprilTags", new AprilTagStruct()).publish();
@@ -36,6 +37,8 @@ public class LimelightTagsUpdate {
     StructPublisher<Pose2d> mt2PosePublisher;
 
     StructPublisher<Pose2d> mt1PosePublisher;
+
+    private boolean showData = true;
 
     public LimelightTagsUpdate(CameraConstants.CameraValues cam, CameraData data, CommandSwerveDrivetrain swerve) {
         m_cam = cam;
@@ -89,73 +92,77 @@ public class LimelightTagsUpdate {
         m_data.isActive = m_data.limeLightExists;
 
         if (m_data.isActive && LimelightHelpers.getTV(m_cam.camname)) {
-
-            LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_cam.camname);
+            mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_cam.camname);
             m_data.mt1Pose = mt1.pose;
-            mt1PosePublisher.set(mt1.pose);
-            m_data.numberMT1Pose = mt1.tagCount;
-            SmartDashboard.putNumber(m_cam.camname + " Tag Count", mt1.tagCount);
-            setLLRobotOrientation();
-            LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_cam.camname);
-            m_data.mt2Pose = mt2.pose;
-            mt2PosePublisher.set(mt2.pose);// send to network tables
-            m_data.numberMT2Pose = mt2.tagCount;
-            SmartDashboard.putNumber(m_cam.camname + " Tag Count", mt2.tagCount);
-
-            setUseMegatag2(m_data.m_useMegaTag2);
-
-            if (m_useMegaTag2) {
-                if (mt2.rawFiducials.length > 0)
-                    m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
-                m_data.distToCamera = m_swerve.distanceLimelightToEstimator;
-                m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
-                rejectMT2Update = !m_data.inhibitVision && mt2.tagCount == 0
-                        || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
-                                .getValueAsDouble()) > ROTATION_RATE_CUTOFF
-                        || (mt2.tagCount == 1 && mt2.rawFiducials[0].ambiguity > AMBIGUITY_CUTOFF)
-                        || mt2.rawFiducials[0].distToCamera > DISTANCE_CUTOFF;
-                m_data.rejectMT2Update = rejectMT2Update;
-
-                if (!rejectMT2Update) {
-                    double standard_devs = mt2.rawFiducials[0].distToCamera / DISTANCE_STDDEVS_SCALAR;
-                    m_swerve.setVisionMeasurementStdDevs(
-                            VecBuilder.fill(standard_devs,
-                                    standard_devs, 9999999));
-                    m_swerve.addVisionMeasurement(
-                            mt2.pose,
-                            mt2.timestampSeconds);
-                }
-
-            } else {
-
-                rejectMT1Update = mt1.tagCount == 0
-                        || mt1.tagCount == 1 && mt1.rawFiducials.length == 1
-                                && mt1.rawFiducials[0].ambiguity > .7
-                                && mt1.rawFiducials[0].distToCamera > 5;
-
-                m_data.rejectMT1Update = rejectMT1Update;
-                if (!rejectMT1Update) {
-                    m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 1));
-                    m_swerve.addVisionMeasurement(
-                            mt1.pose,
-                            mt1.timestampSeconds);
-                }
+            m_data.MT1tagCount = mt1.tagCount;
+            m_data.MT1ambiguity = mt1.rawFiducials[0].ambiguity;
+            m_data.MT1distToCamera = mt1.rawFiducials[0].distToCamera;
+            if (showData) {
+                mt1PosePublisher.set(mt1.pose);
+                SmartDashboard.putNumber(m_cam.camname + " MT1 Tag Count", mt1.tagCount);
+                SmartDashboard.putNumber(m_cam.camname + " MT1 Abiguity", m_data.MT1ambiguity);
+                SmartDashboard.putNumber(m_cam.camname + " MT1 Dist To Cam", m_data.MT1distToCamera);
+                SmartDashboard.putNumber(m_cam.camname + " MT1 Rotation To Cam",
+                        m_data.mt1Pose.getRotation().getDegrees());
             }
         }
+        setLLRobotOrientation();
+        LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_cam.camname);
+        m_data.mt2Pose = mt2.pose;
+        m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
+        m_data.MT2distToCamera = m_swerve.distanceLimelightToEstimator;
+        m_data.numberMT2Pose = mt2.tagCount;
+        if (showData) {
+            mt2PosePublisher.set(mt2.pose);// send to network tables
+            SmartDashboard.putNumber(m_cam.camname + " MT2 Tag Count", mt2.tagCount);
+            SmartDashboard.putNumber(m_cam.camname + " MT2 Abiguity", m_data.MT2ambiguity);
+            SmartDashboard.putNumber(m_cam.camname + " MT2 Dist To Cam", m_data.MT2distToCamera);
+            SmartDashboard.putNumber(m_cam.camname + " MT2 Rotation To Cam", m_data.mt2Pose.getRotation().getDegrees());
+        }
+        setUseMegatag2(m_data.m_useMegaTag2);
+
+        if (m_useMegaTag2) {
+            if (mt2.rawFiducials.length > 0)
+                m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
+
+            rejectMT2Update = m_data.inhibitVision || mt2.tagCount == 0 | !!inFieldCheck(m_data.mt2Pose)
+                    || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
+                            .getValueAsDouble()) > ROTATION_RATE_CUTOFF
+                    || (mt2.tagCount == 1 && mt2.rawFiducials[0].ambiguity > AMBIGUITY_CUTOFF)
+                    || mt2.rawFiducials[0].distToCamera > DISTANCE_CUTOFF;
+            m_data.rejectMT2Update = rejectMT2Update;
+
+            if (!rejectMT2Update) {
+                double standard_devs = mt2.rawFiducials[0].distToCamera / DISTANCE_STDDEVS_SCALAR;
+                m_swerve.setVisionMeasurementStdDevs(
+                        VecBuilder.fill(standard_devs,
+                                standard_devs, 9999999));
+                m_swerve.addVisionMeasurement(
+                        mt2.pose,
+                        mt2.timestampSeconds);
+            }
+
+        } else {
+
+            rejectMT1Update = m_data.inhibitVision || mt1.tagCount == 0 || !inFieldCheck(m_data.mt1Pose)
+                    || mt1.tagCount == 1 && mt1.rawFiducials.length == 1
+                            && mt1.rawFiducials[0].ambiguity > .7
+                            && mt1.rawFiducials[0].distToCamera > 5;
+
+            m_data.rejectMT1Update = rejectMT1Update;
+            if (!rejectMT1Update) {
+                m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 1));
+                m_swerve.addVisionMeasurement(
+                        mt1.pose,
+                        mt1.timestampSeconds);
+            }
+        }
+
     }
 
-    private double getLLToRobotPoseError(Pose2d ll) {
-        Translation2d robtrans = m_swerve.getState().Pose.getTranslation();
-        Translation2d lltrans = ll.getTranslation();
-        return robtrans.getDistance(lltrans);
+    private boolean inFieldCheck(Pose2d pose) {
+        boolean inLength = pose.getX() > 0 && pose.getX() < FieldConstants.fieldLength;
+        boolean inWidth = pose.getY() > 0 && pose.getX() < FieldConstants.fieldWidth;
+        return inLength && inWidth;
     }
-
-    // private boolean inFieldCheck(Pose2d pose) {
-    // boolean inLength = pose.getX() > 0 && pose.getX() <
-    // FieldConstants.FIELD_LENGTH;
-    // boolean inWidth = pose.getY() > 0 && pose.getX() <
-    // FieldConstants.FIELD_WIDTH;
-
-    // return inLength && inWidth;
-    // }
 }

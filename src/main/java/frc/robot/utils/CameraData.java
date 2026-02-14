@@ -16,11 +16,14 @@ public class CameraData {
 
     public boolean inhibitVision;
 
-    public double distToCamera;
+    public double MT1distToCamera;
+    public double MT1ambiguity;
+
+    public double MT2distToCamera;
     public double MT2ambiguity;
 
     public int numberMT2Pose;
-    public int numberMT1Pose;
+    public int MT1tagCount;
 
     public Pose2d mt1Pose = new Pose2d();
     public Pose2d mt2Pose = new Pose2d();

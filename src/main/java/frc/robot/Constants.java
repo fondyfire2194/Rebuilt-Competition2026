@@ -204,8 +204,8 @@ public final class Constants {
         frontCamPose,
         63.3,
         49.7,
-        1,
-        1,
+        1280,
+        960,
         true);
 
     static Pose3d leftCamPose = new Pose3d(
@@ -221,7 +221,7 @@ public final class Constants {
         "limelight-left",
         "10.21.94.16",
         false,
-       leftCamPose,
+        leftCamPose,
         63.3,
         49.7,
         1280,
@@ -255,7 +255,6 @@ public final class Constants {
         CameraConstants.frontCamera.camPose,
         CameraConstants.leftCamera.camPose,
         CameraConstants.rightCamera.camPose };
-
 
     public static int apriltagPipeline = 0;
     public static int viewFinderPipeline = 5;
