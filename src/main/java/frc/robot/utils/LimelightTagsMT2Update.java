@@ -17,7 +17,7 @@ import frc.robot.utils.LimelightHelpers.IMUData;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
 
 /** Add your docs here. */
-public class LimelightTagsUpdate {
+public class LimelightTagsMT2Update {
 
     private final CommandSwerveDrivetrain m_swerve;
     private final CameraConstants.CameraValues m_cam;
@@ -29,16 +29,14 @@ public class LimelightTagsUpdate {
     private final double DISTANCE_CUTOFF = 4.0;
     private final double DISTANCE_STDDEVS_SCALAR = 2;
     private final double ROTATION_RATE_CUTOFF = 720;
-    LimelightHelpers.PoseEstimate mt1 = new PoseEstimate();
+
     LimelightHelpers.PoseEstimate mt2 = new PoseEstimate();
 
     StructPublisher<Pose2d> mt2PosePublisher;
 
-    StructPublisher<Pose2d> mt1PosePublisher;
-
     private boolean showData = true;
 
-    public LimelightTagsUpdate(CameraConstants.CameraValues cam, CameraData data, CommandSwerveDrivetrain swerve) {
+    public LimelightTagsMT2Update(CameraConstants.CameraValues cam, CameraData data, CommandSwerveDrivetrain swerve) {
         m_cam = cam;
         m_swerve = swerve;
         m_data = data;
@@ -50,8 +48,6 @@ public class LimelightTagsUpdate {
 
         mt2PosePublisher = NetworkTableInstance.getDefault()
                 .getStructTopic(m_cam.camname + " MT2Pose", Pose2d.struct).publish();
-        mt1PosePublisher = NetworkTableInstance.getDefault()
-                .getStructTopic(m_cam.camname + " MT1Pose", Pose2d.struct).publish();
 
     }
 
@@ -80,14 +76,6 @@ public class LimelightTagsUpdate {
                 m_swerve.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0, 0); // m_swerve.getPoseEstimator().getEstimatedPosition().getRotation().getDegrees()
     }
 
-    public void setLLRotationFromMT1(String camName) {
-        LimelightHelpers.SetRobotOrientation(m_cam.camname,
-                m_data.mt1Pose.getRotation().getDegrees(),
-                m_swerve.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0, 0); // m_swerve.getPoseEstimator().getEstimatedPosition().getRotation().getDegrees()
-        m_data.setMT2toMT1Rotation = false;
-        // m_data.m_useMegaTag2 = true;
-    }
-
     public void setLLRobotOrientationLL4IMU() {
         IMUData imuData = LimelightHelpers.getIMUData(m_cam.camname);
         LimelightHelpers.SetRobotOrientation(m_cam.camname, imuData.Yaw, 0, 0, 0, 0, 0);
@@ -98,51 +86,25 @@ public class LimelightTagsUpdate {
         m_data.limeLightExists = LimelightHelpers.getLimelightNTTable(m_cam.camname).containsKey("tv");
         m_data.isActive = m_data.limeLightExists;
 
-        if (m_data.isActive && LimelightHelpers.getTV(m_cam.camname)) {
-            mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_cam.camname);
-            m_data.mt1Pose = mt1.pose;
-            m_data.MT1tagCount = mt1.tagCount;
-            if (mt1.rawFiducials.length > 0) {
-                m_data.MT1ambiguity = mt1.rawFiducials[0].ambiguity;
-                m_data.MT1distToCamera = mt1.rawFiducials[0].distToCamera;
-                if (showData) {
-                    mt1PosePublisher.set(mt1.pose);
-                    SmartDashboard.putNumber(m_cam.camname + " MT1 Tag Count", mt1.tagCount);
-                    SmartDashboard.putNumber(m_cam.camname + " MT1 Abiguity", m_data.MT1ambiguity);
-                    SmartDashboard.putNumber(m_cam.camname + " MT1 Dist To Cam", m_data.MT1distToCamera);
-                    SmartDashboard.putNumber(m_cam.camname + " MT1 Rotation To Cam",
-                            m_data.mt1Pose.getRotation().getDegrees());
-                    SmartDashboard.putBoolean(m_cam.camname + " MT1RejectUpdate", rejectMT1Update);
-                }
+        setLLRobotOrientation();
+        mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_cam.camname);
+        m_data.mt2Pose = mt2.pose;
+        if (mt2.rawFiducials.length > 0) {
+            m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
+            m_data.MT2distToCamera = m_swerve.distanceLimelightToEstimator;
+            m_data.numberMT2Pose = mt2.tagCount;
+
+            if (showData) {
+                mt2PosePublisher.set(mt2.pose);// send to network tables
+                SmartDashboard.putNumber(m_cam.camname + " MT2 Tag Count", mt2.tagCount);
+                SmartDashboard.putNumber(m_cam.camname + " MT2 Abiguity", m_data.MT2ambiguity);
+                SmartDashboard.putNumber(m_cam.camname + " MT2 Dist To Cam", m_data.MT2distToCamera);
+                SmartDashboard.putNumber(m_cam.camname + " MT2 Rotation To Cam",
+                        m_data.mt2Pose.getRotation().getDegrees());
+
             }
         }
 
-        if (m_data.setMT2toMT1Rotation) {
-            setLLRotationFromMT1(m_cam.camname);
-            m_data.orientationSet = true;
-        }
-
-        
-        if (m_data.orientationSet) {
-             setLLRobotOrientation();
-            mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_cam.camname);
-            m_data.mt2Pose = mt2.pose;
-            if (mt2.rawFiducials.length > 0) {
-                m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
-                m_data.MT2distToCamera = m_swerve.distanceLimelightToEstimator;
-                m_data.numberMT2Pose = mt2.tagCount;
-
-                if (showData) {
-                    mt2PosePublisher.set(mt2.pose);// send to network tables
-                    SmartDashboard.putNumber(m_cam.camname + " MT2 Tag Count", mt2.tagCount);
-                    SmartDashboard.putNumber(m_cam.camname + " MT2 Abiguity", m_data.MT2ambiguity);
-                    SmartDashboard.putNumber(m_cam.camname + " MT2 Dist To Cam", m_data.MT2distToCamera);
-                    SmartDashboard.putNumber(m_cam.camname + " MT2 Rotation To Cam",
-                            m_data.mt2Pose.getRotation().getDegrees());
-
-                }
-            }
-        }
         setUseMegatag2(m_data.m_useMegaTag2);
 
         if (m_useMegaTag2) {
@@ -166,20 +128,6 @@ public class LimelightTagsUpdate {
                         mt2.timestampSeconds);
             }
 
-        } else {
-
-            rejectMT1Update = m_data.inhibitVision || mt1.tagCount == 0 || inFieldCheck(m_data.mt1Pose)
-                    || mt1.tagCount == 1 && mt1.rawFiducials.length == 1
-                            && mt1.rawFiducials[0].ambiguity > .7
-                            && mt1.rawFiducials[0].distToCamera > 5;
-
-            m_data.rejectMT1Update = rejectMT1Update;
-            if (!rejectMT1Update) {
-                m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 1));
-                m_swerve.addVisionMeasurement(
-                        mt1.pose,
-                        mt1.timestampSeconds);
-            }
         }
 
     }
