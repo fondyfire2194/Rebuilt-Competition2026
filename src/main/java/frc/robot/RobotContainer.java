@@ -13,6 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -25,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AlignTargetOdometry;
+import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.PrepareShotCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
@@ -78,7 +80,7 @@ public class RobotContainer {
         private final LimelightVision m_ll = new LimelightVision();
 
         public RobotContainer() {
-                drivetrain.setFrontUseMegatag2(true);
+                drivetrain.setFrontUseMegatag2(false);
                 drivetrain.setLeftUseMegatag2(true);
                 drivetrain.setRightUseMegatag2(true);
 
@@ -167,7 +169,7 @@ public class RobotContainer {
 
                 driver.a().whileTrue(m_intakeArm.jogIntakeArmCommand(() -> driver.getLeftX()));
 
-                driver.b().onTrue(Commands.none());
+                driver.b().onTrue(Commands.runOnce(() -> drivetrain.frontData.setMT2toMT1Rotation = true));
 
                 // Reset the field-centric heading on left bumper press.
                 driver.start().onTrue(
@@ -224,6 +226,26 @@ public class RobotContainer {
         }
 
         private void registerNamedCommands() {
+
+                NamedCommands.registerCommand("USEMT1", Commands.none());
+                NamedCommands.registerCommand("USEMT2", Commands.none());
+
+                NamedCommands.registerCommand("STARTINTAKE", m_intake.startIntakeCommand());
+                NamedCommands.registerCommand("STOPINTAKE", m_intake.stopIntakeCommand());
+
+                                NamedCommands.registerCommand("INTAKEARMDOWN", m_intakeArm.intakeArmToIntakePositionCommand());
+                NamedCommands.registerCommand("INTAKEARMUP", m_intakeArm.intakeArmToClearPositionCommand());
+
+                NamedCommands.registerCommand("ALIGNTOHUB", new AutoAlignHub(drivetrain, m_shooter, 1));
+
+                NamedCommands.registerCommand("SHOOTCOMMAND", new ShootCommand(m_shooter, m_hood, m_feeder));
+                NamedCommands.registerCommand("STOPSHOOTCOMMAND", m_shooter.stopAllShootersCommand());
+
+                NamedCommands.registerCommand("STARTTRIPLESHOOTER", m_shooter.runAllVelocityVoltageCommand());
+                NamedCommands.registerCommand("STOPTRIPLESHOOTER", m_shooter.stopAllShootersCommand());
+
+                NamedCommands.registerCommand("STARTCLIMBER", Commands.none());
+                NamedCommands.registerCommand("STOPCLIMBER", Commands.none());
 
         }
 

@@ -6,7 +6,6 @@ package frc.robot.utils;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,6 +14,7 @@ import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.utils.LimelightHelpers.IMUData;
+import frc.robot.utils.LimelightHelpers.PoseEstimate;
 
 /** Add your docs here. */
 public class LimelightTagsUpdate {
@@ -29,7 +29,9 @@ public class LimelightTagsUpdate {
     private final double DISTANCE_CUTOFF = 4.0;
     private final double DISTANCE_STDDEVS_SCALAR = 2;
     private final double ROTATION_RATE_CUTOFF = 720;
-    LimelightHelpers.PoseEstimate mt1;
+    LimelightHelpers.PoseEstimate mt1 = new PoseEstimate();
+     LimelightHelpers.PoseEstimate mt2=new PoseEstimate();
+    
     // private StructArrayPublisher<AprilTag> arrayPublisher =
     // NetworkTableInstance.getDefault()
     // .getStructArrayTopic("AprilTags", new AprilTagStruct()).publish();
@@ -82,12 +84,21 @@ public class LimelightTagsUpdate {
                 m_swerve.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0, 0); // m_swerve.getPoseEstimator().getEstimatedPosition().getRotation().getDegrees()
     }
 
+    public void setLLRotationFromMT1(String camName) {
+        LimelightHelpers.SetRobotOrientation(m_cam.camname,
+                m_data.mt1Pose.getRotation().getDegrees(),
+                m_swerve.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0, 0); // m_swerve.getPoseEstimator().getEstimatedPosition().getRotation().getDegrees()
+        m_data.setMT2toMT1Rotation = false;
+        // m_data.m_useMegaTag2 = true;
+    }
+
     public void setLLRobotOrientationLL4IMU() {
         IMUData imuData = LimelightHelpers.getIMUData(m_cam.camname);
         LimelightHelpers.SetRobotOrientation(m_cam.camname, imuData.Yaw, 0, 0, 0, 0, 0);
     }
 
     public void execute() {
+
         m_data.limeLightExists = LimelightHelpers.getLimelightNTTable(m_cam.camname).containsKey("tv");
         m_data.isActive = m_data.limeLightExists;
 
@@ -105,24 +116,33 @@ public class LimelightTagsUpdate {
                     SmartDashboard.putNumber(m_cam.camname + " MT1 Dist To Cam", m_data.MT1distToCamera);
                     SmartDashboard.putNumber(m_cam.camname + " MT1 Rotation To Cam",
                             m_data.mt1Pose.getRotation().getDegrees());
+                    SmartDashboard.putBoolean(m_cam.camname + " MT1RejectUpdate", rejectMT1Update);
                 }
             }
         }
-        setLLRobotOrientation();
-        LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_cam.camname);
-        m_data.mt2Pose = mt2.pose;
-        if (mt2.rawFiducials.length > 0) {
-            m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
-            m_data.MT2distToCamera = m_swerve.distanceLimelightToEstimator;
-            m_data.numberMT2Pose = mt2.tagCount;
 
-            if (showData) {
-                mt2PosePublisher.set(mt2.pose);// send to network tables
-                SmartDashboard.putNumber(m_cam.camname + " MT2 Tag Count", mt2.tagCount);
-                SmartDashboard.putNumber(m_cam.camname + " MT2 Abiguity", m_data.MT2ambiguity);
-                SmartDashboard.putNumber(m_cam.camname + " MT2 Dist To Cam", m_data.MT2distToCamera);
-                SmartDashboard.putNumber(m_cam.camname + " MT2 Rotation To Cam",
-                        m_data.mt2Pose.getRotation().getDegrees());
+        if (m_data.setMT2toMT1Rotation) {
+            setLLRotationFromMT1(m_cam.camname);
+            m_data.orientationSet = true;
+        }
+        // setLLRobotOrientation();
+        if (m_data.orientationSet) {
+         mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_cam.camname);
+            m_data.mt2Pose = mt2.pose;
+            if (mt2.rawFiducials.length > 0) {
+                m_data.MT2ambiguity = mt2.rawFiducials[0].ambiguity;
+                m_data.MT2distToCamera = m_swerve.distanceLimelightToEstimator;
+                m_data.numberMT2Pose = mt2.tagCount;
+
+                if (showData) {
+                    mt2PosePublisher.set(mt2.pose);// send to network tables
+                    SmartDashboard.putNumber(m_cam.camname + " MT2 Tag Count", mt2.tagCount);
+                    SmartDashboard.putNumber(m_cam.camname + " MT2 Abiguity", m_data.MT2ambiguity);
+                    SmartDashboard.putNumber(m_cam.camname + " MT2 Dist To Cam", m_data.MT2distToCamera);
+                    SmartDashboard.putNumber(m_cam.camname + " MT2 Rotation To Cam",
+                            m_data.mt2Pose.getRotation().getDegrees());
+
+                }
             }
         }
         setUseMegatag2(m_data.m_useMegaTag2);
@@ -131,7 +151,7 @@ public class LimelightTagsUpdate {
             if (mt2.rawFiducials.length > 0)
                 m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
 
-            rejectMT2Update = m_data.inhibitVision || mt2.tagCount == 0 | !!inFieldCheck(m_data.mt2Pose)
+            rejectMT2Update = m_data.inhibitVision || mt2.tagCount == 0 || inFieldCheck(m_data.mt2Pose)
                     || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
                             .getValueAsDouble()) > ROTATION_RATE_CUTOFF
                     || (mt2.tagCount == 1 && mt2.rawFiducials[0].ambiguity > AMBIGUITY_CUTOFF)
@@ -150,7 +170,7 @@ public class LimelightTagsUpdate {
 
         } else {
 
-            rejectMT1Update = m_data.inhibitVision || mt1.tagCount == 0 || !inFieldCheck(m_data.mt1Pose)
+            rejectMT1Update = m_data.inhibitVision || mt1.tagCount == 0 || inFieldCheck(m_data.mt1Pose)
                     || mt1.tagCount == 1 && mt1.rawFiducials.length == 1
                             && mt1.rawFiducials[0].ambiguity > .7
                             && mt1.rawFiducials[0].distToCamera > 5;

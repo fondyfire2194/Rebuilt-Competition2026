@@ -24,7 +24,7 @@
         "y": 5.75
       },
       "nextControl": {
-        "x": 6.312984089997657,
+        "x": 6.312608630952381,
         "y": 5.75
       },
       "isLocked": false,
@@ -58,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "DepotStart",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

@@ -32,12 +32,12 @@
     },
     {
       "anchor": {
-        "x": 2.2602008928571427,
-        "y": 5.248705357142858
+        "x": 2.0579166666666664,
+        "y": 5.242180059523809
       },
       "prevControl": {
-        "x": 2.8996800595238086,
-        "y": 5.24218005952381
+        "x": 2.6973958333333323,
+        "y": 5.235654761904762
       },
       "nextControl": null,
       "isLocked": false,
@@ -46,8 +46,8 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.6901960784313683,
-      "rotationDegrees": 0.0
+      "waypointRelativePos": 1.6647058823529413,
+      "rotationDegrees": 90.0
     }
   ],
   "constraintZones": [],
@@ -69,7 +69,7 @@
   "folder": "DepotStart",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

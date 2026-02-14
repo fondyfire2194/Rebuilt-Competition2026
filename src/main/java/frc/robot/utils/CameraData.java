@@ -14,6 +14,8 @@ public class CameraData {
     public boolean rejectMT2Update;
     public boolean m_useMegaTag2;
 
+    public boolean setMT2toMT1Rotation;
+
     public boolean inhibitVision;
 
     public double MT1distToCamera;
@@ -27,6 +29,7 @@ public class CameraData {
 
     public Pose2d mt1Pose = new Pose2d();
     public Pose2d mt2Pose = new Pose2d();
+    public boolean orientationSet;
 
     public CameraData(String cameraName) {
 
