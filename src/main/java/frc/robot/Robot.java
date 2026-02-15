@@ -57,16 +57,6 @@ public class Robot extends TimedRobot {
 
         CommandScheduler.getInstance().run();
 
-        // Pose2d targetPose = AllianceUtil.getHubPose();
-        // angleToTarget = getAngleDegreesToTarget(targetPose,
-        // m_robotContainer.drivetrain.getState().Pose);
-        // distanceToTarget = targetPose.getTranslation()
-        // .getDistance(m_robotContainer.drivetrain.getState().Pose.getTranslation());
-
-        // SD.sd2("AngleToTgt", angleToTarget
-        // - m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
-        // SD.sd2("DistToTgt", Units.metersToInches(distanceToTarget));
-
     }
 
     @Override
@@ -89,6 +79,14 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+        CommandScheduler.getInstance().schedule(
+                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
+                        m_robotContainer.drivetrain),
+                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
+                        m_robotContainer.drivetrain),
+                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
+                        m_robotContainer.drivetrain));
+
     }
 
     @Override

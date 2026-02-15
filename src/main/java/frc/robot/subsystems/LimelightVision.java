@@ -63,6 +63,8 @@ public class LimelightVision extends SubsystemBase {
 
   public Pose2d[] acceptedPose = { new Pose2d(), new Pose2d(), new Pose2d() };
   public boolean mt1PoseSet;
+  
+  public boolean useMT2;
 
   /**
    * Checks if the specified limelight is connected
@@ -117,6 +119,11 @@ public class LimelightVision extends SubsystemBase {
     setCamToRobotOffset(cameras[leftCam]);
     setCamToRobotOffset(cameras[rightCam]);
 
+
+  }
+
+  public Command startMT2UpdatesCommand() {
+    return Commands.runOnce(() -> useMT2 = true);
   }
 
   @Override

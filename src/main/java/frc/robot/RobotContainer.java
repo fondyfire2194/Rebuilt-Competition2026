@@ -16,22 +16,16 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.math.MathUsageId;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.Constants.CameraConstants;
-import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
-import frc.robot.commands.PrepareShotCommand;
-import frc.robot.commands.RecoverFromBump;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -41,6 +35,8 @@ import frc.robot.subsystems.IntakeArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
+import frc.robot.utils.CaptureMT1Values;
+import frc.robot.utils.PickAndSetPosetoMT1;
 
 public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
@@ -198,7 +194,7 @@ public class RobotContainer {
 
                 codriver.a().onTrue(m_shooter.setVoltageCommand(m_shooter.middleMotor, 5))
                                 .onFalse(m_shooter.setVoltageCommand(m_shooter.middleMotor, .0));
-                
+
                 codriver.povUp().onTrue(m_shooter.changeTargetVelocityCommand(100));
 
                 codriver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
@@ -226,32 +222,32 @@ public class RobotContainer {
         }
 
         private void registerNamedCommands() {
+                NamedCommands.registerCommand("USE_MT1",
+                                Commands.sequence(
+                                                new CaptureMT1Values(m_llv),
+                                                new PickAndSetPosetoMT1(m_llv, drivetrain)));
 
-                NamedCommands.registerCommand("USEMT1",
-                                
-                                                Commands.waitSeconds(.75));
+                NamedCommands.registerCommand("USE_MT2", Commands.runOnce(() -> m_llv.useMT2 = true));
 
-                NamedCommands.registerCommand("SEEDMT2", new RecoverFromBump());
-                NamedCommands.registerCommand("USEMT2",Commands.none());
-                NamedCommands.registerCommand("MOVETODEPOTINTAKEPOSE",
+                NamedCommands.registerCommand("MOVE_TO_DEPOT_INTAKE_POSE",
                                 drivetrain.pathFindToPose(new Pose2d(), drivetrain.pathConstraints));
 
-                NamedCommands.registerCommand("STARTINTAKE", m_intake.startIntakeCommand());
-                NamedCommands.registerCommand("STOPINTAKE", m_intake.stopIntakeCommand());
+                NamedCommands.registerCommand("START_INTAKE", m_intake.startIntakeCommand());
+                NamedCommands.registerCommand("STOP_INTAKE", m_intake.stopIntakeCommand());
 
-                NamedCommands.registerCommand("INTAKEARMDOWN", m_intakeArm.intakeArmToIntakePositionCommand());
-                NamedCommands.registerCommand("INTAKEARMUP", m_intakeArm.intakeArmToClearPositionCommand());
+                NamedCommands.registerCommand("INTAKE_ARM_DOWN", m_intakeArm.intakeArmToIntakePositionCommand());
+                NamedCommands.registerCommand("INTAKE_ARM_UP", m_intakeArm.intakeArmToClearPositionCommand());
 
-                NamedCommands.registerCommand("ALIGNTOHUB", new AutoAlignHub(drivetrain, m_shooter, 1));
+                NamedCommands.registerCommand("ALIGN_TO_HUB", new AutoAlignHub(drivetrain, m_shooter, 1));
 
-                NamedCommands.registerCommand("SHOOTCOMMAND", new ShootCommand(m_shooter, m_hood, m_feeder));
-                NamedCommands.registerCommand("STOPSHOOTCOMMAND", m_shooter.stopAllShootersCommand());
+                NamedCommands.registerCommand("SHOOT_COMMAND", new ShootCommand(m_shooter, m_hood, m_feeder));
+                NamedCommands.registerCommand("END_SHOOT_COMMAND", m_shooter.stopAllShootersCommand());
 
-                NamedCommands.registerCommand("STARTTRIPLESHOOTER", m_shooter.runAllVelocityVoltageCommand());
-                NamedCommands.registerCommand("STOPTRIPLESHOOTER", m_shooter.stopAllShootersCommand());
+                NamedCommands.registerCommand("START_SHOOTERS", m_shooter.runAllVelocityVoltageCommand());
+                NamedCommands.registerCommand("STOP_SHOOTERS", m_shooter.stopAllShootersCommand());
 
-                NamedCommands.registerCommand("STARTCLIMBER", Commands.none());
-                NamedCommands.registerCommand("STOPCLIMBER", Commands.none());
+                NamedCommands.registerCommand("START CLIMBER", Commands.none());
+                NamedCommands.registerCommand("STOP_CLIMBER", Commands.none());
 
         }
 
