@@ -6,8 +6,6 @@ package frc.robot.utils;
 
 import edu.wpi.first.wpilibj.event.BooleanEvent;
 import edu.wpi.first.wpilibj.event.EventLoop;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.commands.RecoverFromBump;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TripleShooterSubsystem;
 
@@ -29,10 +27,6 @@ public class LoopEvents {
                 m_loop, () -> Math.abs(m_drivetrain.getPigeon2().getPitch().getValueAsDouble()) > 10)
                 .debounce(.2);
 
-        hitBump.ifHigh(() -> m_drivetrain.frontData.inhibitVision = true);
-        hitBump.ifHigh(() -> m_drivetrain.leftData.inhibitVision = true);
-        hitBump.ifHigh(() -> m_drivetrain.rightData.inhibitVision = true);
-        hitBump.ifHigh(() -> new RecoverFromBump().execute());
 
     }
 

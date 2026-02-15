@@ -41,8 +41,6 @@ import frc.robot.subsystems.IntakeArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
-import frc.robot.utils.LimelightTagsMT1Update;
-import frc.robot.utils.LimelightTagsMT2Update;
 
 public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
@@ -86,9 +84,6 @@ public class RobotContainer {
         public final LimelightVision m_llv = new LimelightVision();
 
         public RobotContainer() {
-                drivetrain.setFrontUseMegatag2(false);
-                drivetrain.setLeftUseMegatag2(true);
-                drivetrain.setRightUseMegatag2(true);
 
                 m_shooter.leftMotorActive = true;
                 m_shooter.middleMotorActive = true;
@@ -175,8 +170,7 @@ public class RobotContainer {
 
                 driver.a().whileTrue(m_intakeArm.jogIntakeArmCommand(() -> driver.getLeftX()));
 
-                driver.b().onTrue(Commands.runOnce(() -> drivetrain.frontData.setMT2toMT1Rotation = true));
-
+                driver.b().onTrue(Commands.none());
                 // Reset the field-centric heading on left bumper press.
                 driver.start().onTrue(
                                 drivetrain.runOnce(drivetrain::seedFieldCentric));
@@ -204,7 +198,7 @@ public class RobotContainer {
 
                 codriver.a().onTrue(m_shooter.setVoltageCommand(m_shooter.middleMotor, 5))
                                 .onFalse(m_shooter.setVoltageCommand(m_shooter.middleMotor, .0));
-
+                
                 codriver.povUp().onTrue(m_shooter.changeTargetVelocityCommand(100));
 
                 codriver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
@@ -234,27 +228,11 @@ public class RobotContainer {
         private void registerNamedCommands() {
 
                 NamedCommands.registerCommand("USEMT1",
-                                Commands.deadline(
-                                                Commands.waitSeconds(.75),
-                                                new LimelightTagsMT1Update(CameraConstants.frontCamera, m_llv.frontData,
-                                                                drivetrain),
-                                                new LimelightTagsMT1Update(CameraConstants.leftCamera, m_llv.leftData,
-                                                                drivetrain),
-                                                new LimelightTagsMT1Update(CameraConstants.rightCamera, m_llv.rightData,
-                                                                drivetrain)));
+                                
+                                                Commands.waitSeconds(.75));
 
                 NamedCommands.registerCommand("SEEDMT2", new RecoverFromBump());
-                NamedCommands.registerCommand("USEMT2",
-                                Commands.parallel(
-                                                new LimelightTagsMT2Update(
-                                                                CameraConstants.frontCamera, m_llv.frontData,
-                                                                drivetrain),
-                                                new LimelightTagsMT2Update(
-                                                                CameraConstants.leftCamera, m_llv.leftData,
-                                                                drivetrain),
-                                                new LimelightTagsMT2Update(
-                                                                CameraConstants.rightCamera, m_llv.rightData,
-                                                                drivetrain)));
+                NamedCommands.registerCommand("USEMT2",Commands.none());
                 NamedCommands.registerCommand("MOVETODEPOTINTAKEPOSE",
                                 drivetrain.pathFindToPose(new Pose2d(), drivetrain.pathConstraints));
 

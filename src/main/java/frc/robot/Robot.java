@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.utils.LimelightHelpers;
-import frc.robot.utils.LimelightTagsMT1Update;
+import frc.robot.utils.LimelightTagsMT2Update;
 import frc.robot.utils.LoopEvents;
 
 public class Robot extends TimedRobot {
@@ -33,6 +33,7 @@ public class Robot extends TimedRobot {
 
     private final RobotContainer m_robotContainer;
     private LoopEvents loopEvents;
+    private boolean autoHasRun;
 
     /* log and replay timestamp and joystick data */
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -44,6 +45,7 @@ public class Robot extends TimedRobot {
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
         loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
         loopEvents.init();
+        autoHasRun = false;
     }
 
     @Override
@@ -74,24 +76,6 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledPeriodic() {
 
-        if (CameraConstants.frontCamera.isUsed)
-            LimelightHelpers.SetRobotOrientation(CameraConstants.frontCamera.camname,
-                    m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees(),
-                    m_robotContainer.drivetrain.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
-                    0);
-
-        if (CameraConstants.leftCamera.isUsed)
-            LimelightHelpers.SetRobotOrientation(CameraConstants.leftCamera.camname,
-                    m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees(),
-                    m_robotContainer.drivetrain.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
-                    0);
-
-        if (CameraConstants.rightCamera.isUsed)
-            LimelightHelpers.SetRobotOrientation(CameraConstants.rightCamera.camname,
-                    m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees(),
-                    m_robotContainer.drivetrain.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
-                    0);
-
     }
 
     @Override
@@ -101,12 +85,10 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-        SmartDashboard.putString("AutName", m_autonomousCommand.getName());
+        SmartDashboard.putString("AutoName", m_autonomousCommand.getName());
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
-
-             
     }
 
     @Override
@@ -115,6 +97,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousExit() {
+        autoHasRun = true;
     }
 
     @Override
@@ -126,6 +109,16 @@ public class Robot extends TimedRobot {
         SignalLogger.setPath("media/sda1/logs");
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
+        }
+
+        if (!autoHasRun) {
+            CommandScheduler.getInstance().schedule(
+                    new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
+                            m_robotContainer.drivetrain),
+                    new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.leftCam,
+                            m_robotContainer.drivetrain),
+                    new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.rightCam,
+                            m_robotContainer.drivetrain));
         }
 
         if (RobotBase.isSimulation())

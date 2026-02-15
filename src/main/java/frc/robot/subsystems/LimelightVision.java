@@ -4,17 +4,16 @@
 
 package frc.robot.subsystems;
 
-import java.util.Optional;
-
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.CameraConstants;
-import frc.robot.utils.CameraData;
+import frc.robot.Constants.CameraConstants.Cameras;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.IMUData;
 import frc.robot.utils.SD;
@@ -22,51 +21,48 @@ import frc.robot.utils.SD;
 public class LimelightVision extends SubsystemBase {
   /** Creates a new LimelightVision. */
 
-  public String frontName = Constants.CameraConstants.frontCamera.camname;
+  public int frontCam = 0;
+  public int leftCam = 1;
+  public int rightCam = 2;
 
-  public boolean limelightExistsFront;
+  public Cameras[] cameras = { CameraConstants.frontCamera, CameraConstants.leftCamera, CameraConstants.rightCamera };
 
-  public boolean inhibitFrontVision;
+  public String frontName = cameras[frontCam].camname;
 
-  public Pose2d frontAcceptedPose;
+  public String leftName = cameras[leftCam].camname;
 
-  public int frontAcceptedCount;
+  public String rightName = cameras[rightCam].camname;
 
-  public boolean frontRejectUpdate;
+  public boolean[] limelightExists;
 
-  public String leftName = Constants.CameraConstants.leftCamera.camname;
-
-  public boolean limelightExistsLeft;
-
-  public boolean inhibitLeftVision;
-
-  public Pose2d leftAcceptedPose;
-
-  public int leftAcceptedCount;
-
-  public boolean leftRejectUpdate;
-
-  public String rightName = Constants.CameraConstants.rightCamera.camname;
-
-  public boolean limelightExistsRight;
-
-  public boolean inhibitRightVision;
-
-  public Pose2d rightAcceptedPose;
-
-  public int rightAcceptedCount;
-
-  public boolean rightRejectUpdate;
-
-  Optional<Pose3d> temp;
+  public boolean[] inhibitVision;
 
   public boolean showTelemetry = true;
 
-  
-    public CameraData frontData = new CameraData(CameraConstants.frontCamera.camname);
-    public CameraData leftData = new CameraData(CameraConstants.leftCamera.camname);
-    public CameraData rightData = new CameraData(CameraConstants.rightCamera.camname);
+  public Pose2d[] mt1Pose = { new Pose2d(), new Pose2d(), new Pose2d() };
 
+  public int[] mt1TagCount;
+
+  public double[] mt1Ambiguity;
+
+  public double[] mt1DistToCamera;
+
+  public double[] mt1TimeStampSeconds;
+
+  StructPublisher<Pose2d> mt1FrontPosePublisher;
+  StructPublisher<Pose2d> mt1LeftPosePublisher;
+  StructPublisher<Pose2d> mt1RightPosePublisher;
+
+  public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d() };
+
+  public double[] mt2ambiguity;
+
+  public double[] mt2distToCamera;
+
+  public int[] numberMT2Pose;
+
+  public Pose2d[] acceptedPose = { new Pose2d(), new Pose2d(), new Pose2d() };
+  public boolean mt1PoseSet;
 
   /**
    * Checks if the specified limelight is connected
@@ -110,14 +106,21 @@ public class LimelightVision extends SubsystemBase {
 
   public LimelightVision() {
 
+    mt1FrontPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic(frontName + " MT1FrontPose", Pose2d.struct).publish();
+    mt1LeftPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic(leftName + " MT1LeftPose", Pose2d.struct).publish();
+    mt1RightPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic(rightName + " MT1RightPose", Pose2d.struct).publish();
+
+    setCamToRobotOffset(cameras[frontCam]);
+    setCamToRobotOffset(cameras[leftCam]);
+    setCamToRobotOffset(cameras[rightCam]);
+
   }
 
   @Override
   public void periodic() {
-
-    if (showTelemetry) {
-      showTelemetry();
-    }
 
   }
 
@@ -125,7 +128,7 @@ public class LimelightVision extends SubsystemBase {
     return Commands.runOnce(() -> LimelightHelpers.SetIMUMode(frontName, n));
   }
 
-  public void setCamToRobotOffset(Constants.CameraConstants.CameraValues cam) {
+  public void setCamToRobotOffset(Cameras cam) {
     LimelightHelpers.setCameraPose_RobotSpace(
         cam.camname,
         cam.camPose.getX(),

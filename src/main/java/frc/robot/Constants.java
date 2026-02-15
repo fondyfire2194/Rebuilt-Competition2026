@@ -17,7 +17,6 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 /**
@@ -146,7 +145,7 @@ public final class Constants {
 
   public static final class CameraConstants {
 
-    public static class CameraValues {
+    public static class Cameras {
       public String camname = "name";
       public String ipaddress = "ip";
       public boolean isLL4;
@@ -159,7 +158,7 @@ public final class Constants {
       public int poseUpdateCount = 0;
       public boolean showTelemetry = false;
 
-      public CameraValues(
+      public Cameras(
           final String camname,
           final String ipaddress,
           final boolean isLL4,
@@ -197,7 +196,7 @@ public final class Constants {
             Units.degreesToRadians(20), // angled up
             Units.degreesToRadians(0)));// facing forward
 
-    public static CameraValues frontCamera = new CameraValues(
+    public static Cameras frontCamera = new Cameras(
         "limelight-front",
         "10.21.94.15",
         true,
@@ -217,7 +216,7 @@ public final class Constants {
             Units.degreesToRadians(20),
             Units.degreesToRadians(100)));
 
-    public static CameraValues leftCamera = new CameraValues(
+    public static Cameras leftCamera = new Cameras(
         "limelight-left",
         "10.21.94.16",
         false,
@@ -237,7 +236,7 @@ public final class Constants {
             Units.degreesToRadians(20),
             Units.degreesToRadians(-100)));
 
-    public static CameraValues rightCamera = new CameraValues(
+    public static Cameras rightCamera = new Cameras(
         "limelight-right",
         "10.21.94.17",
         false,
