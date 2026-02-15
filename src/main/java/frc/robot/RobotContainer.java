@@ -16,6 +16,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import dev.doglog.DogLog;
+import edu.wpi.first.math.MathUsageId;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,9 +27,11 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Constants.CameraConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.PrepareShotCommand;
+import frc.robot.commands.RecoverFromBump;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -37,6 +41,8 @@ import frc.robot.subsystems.IntakeArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
+import frc.robot.utils.LimelightTagsMT1Update;
+import frc.robot.utils.LimelightTagsMT2Update;
 
 public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
@@ -77,7 +83,7 @@ public class RobotContainer {
 
         private final IntakeArmSubsystem m_intakeArm = new IntakeArmSubsystem(true);
 
-        private final LimelightVision m_ll = new LimelightVision();
+        public final LimelightVision m_llv = new LimelightVision();
 
         public RobotContainer() {
                 drivetrain.setFrontUseMegatag2(false);
@@ -227,13 +233,35 @@ public class RobotContainer {
 
         private void registerNamedCommands() {
 
-                NamedCommands.registerCommand("USEMT1", Commands.none());
-                NamedCommands.registerCommand("USEMT2", Commands.none());
+                NamedCommands.registerCommand("USEMT1",
+                                Commands.deadline(
+                                                Commands.waitSeconds(.75),
+                                                new LimelightTagsMT1Update(CameraConstants.frontCamera, m_llv.frontData,
+                                                                drivetrain),
+                                                new LimelightTagsMT1Update(CameraConstants.leftCamera, m_llv.leftData,
+                                                                drivetrain),
+                                                new LimelightTagsMT1Update(CameraConstants.rightCamera, m_llv.rightData,
+                                                                drivetrain)));
+
+                NamedCommands.registerCommand("SEEDMT2", new RecoverFromBump());
+                NamedCommands.registerCommand("USEMT2",
+                                Commands.parallel(
+                                                new LimelightTagsMT2Update(
+                                                                CameraConstants.frontCamera, m_llv.frontData,
+                                                                drivetrain),
+                                                new LimelightTagsMT2Update(
+                                                                CameraConstants.leftCamera, m_llv.leftData,
+                                                                drivetrain),
+                                                new LimelightTagsMT2Update(
+                                                                CameraConstants.rightCamera, m_llv.rightData,
+                                                                drivetrain)));
+                NamedCommands.registerCommand("MOVETODEPOTINTAKEPOSE",
+                                drivetrain.pathFindToPose(new Pose2d(), drivetrain.pathConstraints));
 
                 NamedCommands.registerCommand("STARTINTAKE", m_intake.startIntakeCommand());
                 NamedCommands.registerCommand("STOPINTAKE", m_intake.stopIntakeCommand());
 
-                                NamedCommands.registerCommand("INTAKEARMDOWN", m_intakeArm.intakeArmToIntakePositionCommand());
+                NamedCommands.registerCommand("INTAKEARMDOWN", m_intakeArm.intakeArmToIntakePositionCommand());
                 NamedCommands.registerCommand("INTAKEARMUP", m_intakeArm.intakeArmToClearPositionCommand());
 
                 NamedCommands.registerCommand("ALIGNTOHUB", new AutoAlignHub(drivetrain, m_shooter, 1));

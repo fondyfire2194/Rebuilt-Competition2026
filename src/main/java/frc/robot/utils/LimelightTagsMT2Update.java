@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.FieldConstants;
@@ -17,7 +18,7 @@ import frc.robot.utils.LimelightHelpers.IMUData;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
 
 /** Add your docs here. */
-public class LimelightTagsMT2Update {
+public class LimelightTagsMT2Update extends Command {
 
     private final CommandSwerveDrivetrain m_swerve;
     private final CameraConstants.CameraValues m_cam;
@@ -81,6 +82,12 @@ public class LimelightTagsMT2Update {
         LimelightHelpers.SetRobotOrientation(m_cam.camname, imuData.Yaw, 0, 0, 0, 0, 0);
     }
 
+    @Override
+    public void initialize() {
+
+    }
+
+    @Override
     public void execute() {
 
         m_data.limeLightExists = LimelightHelpers.getLimelightNTTable(m_cam.camname).containsKey("tv");
@@ -130,6 +137,18 @@ public class LimelightTagsMT2Update {
 
         }
 
+    }
+
+    // Called once the command ends or is interrupted.
+    @Override
+    public void end(boolean interrupted) {
+
+    }
+
+    // Returns true when the command should end.
+    @Override
+    public boolean isFinished() {
+        return false;
     }
 
     private boolean inFieldCheck(Pose2d pose) {

@@ -8,14 +8,13 @@ import java.util.Optional;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.CameraConstants;
+import frc.robot.utils.CameraData;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.IMUData;
 import frc.robot.utils.SD;
@@ -62,6 +61,12 @@ public class LimelightVision extends SubsystemBase {
   Optional<Pose3d> temp;
 
   public boolean showTelemetry = true;
+
+  
+    public CameraData frontData = new CameraData(CameraConstants.frontCamera.camname);
+    public CameraData leftData = new CameraData(CameraConstants.leftCamera.camname);
+    public CameraData rightData = new CameraData(CameraConstants.rightCamera.camname);
+
 
   /**
    * Checks if the specified limelight is connected

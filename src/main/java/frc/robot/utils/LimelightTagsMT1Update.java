@@ -9,18 +9,19 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.LimelightVision;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
 
 /** Add your docs here. */
-public class LimelightTagsMT1Update {
+public class LimelightTagsMT1Update extends Command {
 
     private final CommandSwerveDrivetrain m_swerve;
     private final CameraConstants.CameraValues m_cam;
-
     boolean rejectMT1Update;
     CameraData m_data;
     private final double AMBIGUITY_CUTOFF = 0.7;
@@ -33,10 +34,10 @@ public class LimelightTagsMT1Update {
 
     private boolean showData = true;
 
-    public LimelightTagsMT1Update(CameraConstants.CameraValues cam, CameraData data, CommandSwerveDrivetrain swerve) {
+    public LimelightTagsMT1Update(CameraConstants.CameraValues cam,CameraData data,
+            CommandSwerveDrivetrain swerve) {
         m_cam = cam;
         m_swerve = swerve;
-        m_data = data;
         m_data.inhibitVision = false;
         setCamToRobotOffset(m_cam);
         if (m_cam.camname == "limelight-front") {
@@ -46,6 +47,11 @@ public class LimelightTagsMT1Update {
         mt1PosePublisher = NetworkTableInstance.getDefault()
                 .getStructTopic(m_cam.camname + " MT1Pose", Pose2d.struct).publish();
 
+    }
+
+    @Override
+    public void initialize() {
+    
     }
 
     public void setCamToRobotOffset(Constants.CameraConstants.CameraValues cam) {
@@ -71,6 +77,7 @@ public class LimelightTagsMT1Update {
         // m_data.m_useMegaTag2 = true;
     }
 
+    @Override
     public void execute() {
 
         m_data.limeLightExists = LimelightHelpers.getLimelightNTTable(m_cam.camname).containsKey("tv");
@@ -107,13 +114,25 @@ public class LimelightTagsMT1Update {
                 || mt1.rawFiducials[0].distToCamera > DISTANCE_CUTOFF;
 
         m_data.rejectMT1Update = rejectMT1Update;
-        
+
         if (!rejectMT1Update) {
             m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 1));
             m_swerve.addVisionMeasurement(
                     mt1.pose,
                     mt1.timestampSeconds);
         }
+    }
+
+    // Called once the command ends or is interrupted.
+    @Override
+    public void end(boolean interrupted) {
+
+    }
+
+    // Returns true when the command should end.
+    @Override
+    public boolean isFinished() {
+        return false;
     }
 
     private boolean inFieldCheck(Pose2d pose) {

@@ -15,6 +15,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -62,7 +63,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
-
+    public final PathConstraints pathConstraints = new PathConstraints(2, 4, Math.PI, 2 * Math.PI);
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
      * for the drive motors.
@@ -397,5 +398,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public Optional<Pose2d> samplePoseAt(double timestampSeconds) {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
+    }
+
+    public Command pathFindToPose(Pose2d targetPose, PathConstraints constraints) {
+        return AutoBuilder.pathfindToPose(
+                targetPose,
+                constraints,
+                0.0 // Goal end velocity in meters/sec
+        );
+
     }
 }
