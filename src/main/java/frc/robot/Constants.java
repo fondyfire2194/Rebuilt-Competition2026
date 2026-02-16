@@ -154,17 +154,17 @@ public final class Constants {
       public double vfov;
       public int horpixels;
       public int vertpixels;
-      public boolean isUsed = true;
-      public int poseUpdateCount = 0;
-      public boolean showTelemetry = false;
+      public boolean isUsed;
 
       public Cameras(
           final String camname,
           final String ipaddress,
           final boolean isLL4,
           final Pose3d camPose,
-          final double hfov, double vfov,
-          final int horpixels, final int vertpixels,
+          final double hfov,
+          final double vfov,
+          final int horpixels, 
+          final int vertpixels,
           final boolean isUsed) {
         this.camname = camname;
         this.ipaddress = ipaddress;

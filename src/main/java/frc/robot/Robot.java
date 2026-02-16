@@ -117,6 +117,7 @@ public class Robot extends TimedRobot {
                             m_robotContainer.drivetrain),
                     new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.rightCam,
                             m_robotContainer.drivetrain));
+            m_robotContainer.m_llv.useMT2 = true;
         }
 
         if (RobotBase.isSimulation())

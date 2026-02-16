@@ -4,9 +4,12 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.hardware.TalonFX;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -16,7 +19,6 @@ import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.CameraConstants.Cameras;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.IMUData;
-import frc.robot.utils.SD;
 
 public class LimelightVision extends SubsystemBase {
   /** Creates a new LimelightVision. */
@@ -25,13 +27,13 @@ public class LimelightVision extends SubsystemBase {
   public int leftCam = 1;
   public int rightCam = 2;
 
-  public Cameras[] cameras = { CameraConstants.frontCamera, CameraConstants.leftCamera, CameraConstants.rightCamera };
+  public Cameras[] cameras = new Cameras[3];
 
-  public String frontName = cameras[frontCam].camname;
+  public String frontName;
 
-  public String leftName = cameras[leftCam].camname;
+  public String leftName;
 
-  public String rightName = cameras[rightCam].camname;
+  public String rightName;
 
   public boolean[] limelightExists;
 
@@ -53,6 +55,10 @@ public class LimelightVision extends SubsystemBase {
   StructPublisher<Pose2d> mt1LeftPosePublisher;
   StructPublisher<Pose2d> mt1RightPosePublisher;
 
+  StructPublisher<Pose2d> mt2FrontPosePublisher;
+  StructPublisher<Pose2d> mt2LeftPosePublisher;
+  StructPublisher<Pose2d> mt2RightPosePublisher;
+
   public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d() };
 
   public double[] mt2ambiguity;
@@ -63,8 +69,10 @@ public class LimelightVision extends SubsystemBase {
 
   public Pose2d[] acceptedPose = { new Pose2d(), new Pose2d(), new Pose2d() };
   public boolean mt1PoseSet;
-  
+
   public boolean useMT2;
+  private boolean showData;
+  double[] vals = { 0, 0, 0, 0 };
 
   /**
    * Checks if the specified limelight is connected
@@ -106,7 +114,17 @@ public class LimelightVision extends SubsystemBase {
     InternalImuExternalAssist
   }
 
-  public LimelightVision() {
+  public LimelightVision(boolean showData) {
+
+    cameras[0] = CameraConstants.frontCamera;
+    cameras[1] = CameraConstants.leftCamera;
+    cameras[2] = CameraConstants.rightCamera;
+
+    frontName = cameras[frontCam].camname;
+
+    leftName = cameras[leftCam].camname;
+
+    rightName = cameras[rightCam].camname;
 
     mt1FrontPosePublisher = NetworkTableInstance.getDefault()
         .getStructTopic(frontName + " MT1FrontPose", Pose2d.struct).publish();
@@ -115,10 +133,19 @@ public class LimelightVision extends SubsystemBase {
     mt1RightPosePublisher = NetworkTableInstance.getDefault()
         .getStructTopic(rightName + " MT1RightPose", Pose2d.struct).publish();
 
+    mt2FrontPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic(frontName + " MT2FrontPose", Pose2d.struct).publish();
+    mt2LeftPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic(leftName + " MT2LeftPose", Pose2d.struct).publish();
+    mt2RightPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic(rightName + " MT2RightPose", Pose2d.struct).publish();
+
     setCamToRobotOffset(cameras[frontCam]);
     setCamToRobotOffset(cameras[leftCam]);
     setCamToRobotOffset(cameras[rightCam]);
 
+    if (showData)
+      SmartDashboard.putData(this);
 
   }
 
@@ -128,6 +155,19 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
+    mt1FrontPosePublisher.accept(mt1Pose[frontCam]);
+    mt1LeftPosePublisher.accept(mt1Pose[leftCam]);
+    mt1RightPosePublisher.accept(mt1Pose[rightCam]);
+
+    mt2FrontPosePublisher.accept(mt2Pose[frontCam]);
+    mt2LeftPosePublisher.accept(mt2Pose[leftCam]);
+    mt2RightPosePublisher.accept(mt2Pose[rightCam]);
+
+    if (showData) {
+
+      if (getLLHW(Constants.CameraConstants.frontCamera.camname).length > 0)
+        vals = getLLHW(Constants.CameraConstants.frontCamera.camname);
+    }
 
   }
 
@@ -212,37 +252,35 @@ public class LimelightVision extends SubsystemBase {
       LimelightHelpers.setPipelineIndex(rightName, CameraConstants.viewFinderPipeline);
   }
 
-  private void showTelemetry() {
+  private void initSendable(SendableBuilder builder, String name) {
+    builder.addDoubleProperty(name + " Pipeline", () -> LimelightHelpers.getCurrentPipelineIndex(name), null);
+    builder.addStringProperty(name + " Pipeline Type", () -> LimelightHelpers.getCurrentPipelineType(name), null);
+    builder.addBooleanProperty(name + " Tag Seen", () -> LimelightHelpers.getTV(name), null);
+  }
 
-    SmartDashboard.putNumber("IMUMode#",
-        getIMUMode(Constants.CameraConstants.frontCamera.camname));
-    SmartDashboard.putString("IMUMode",
-        getIMUModeName(Constants.CameraConstants.frontCamera.camname));
+  private void initSendableLL4(SendableBuilder builder, String name) {
+    builder.addDoubleProperty(name + " Pipeline", () -> LimelightHelpers.getCurrentPipelineIndex(name), null);
+    builder.addStringProperty(name + " Pipeline Type", () -> LimelightHelpers.getCurrentPipelineType(name), null);
+    builder.addBooleanProperty(name + " Tag Seen", () -> LimelightHelpers.getTV(name), null);
+    builder.addDoubleProperty(name + " IMU Yaw", () -> getIMUYaw(), null);
+    builder.addDoubleProperty(name + " IMU Robot Yaw", () -> getIMUDataRobotYaw(), null);
+    builder.addDoubleProperty(name + " IMU Pitch", () -> getIMUPitch(), null);
+    builder.addDoubleProperty(name + " IMU Roll", () -> getIMURoll(), null);
+    builder.addStringProperty(name + " IMU Mode", () -> getIMUModeName(name), null);
+    builder.addDoubleProperty(name + " IMU Yaw", () -> getIMUYaw(), null);
 
-    SmartDashboard.putString("PipelineType",
-        LimelightHelpers.getCurrentPipelineType(Constants.CameraConstants.frontCamera.camname));
-    SmartDashboard.putNumber("Pipeline #",
-        LimelightHelpers.getCurrentPipelineIndex(Constants.CameraConstants.frontCamera.camname));
-
-    SD.sd2("IMUYaw", getIMUYaw());
-    SD.sd2("IMUPitch", getIMUPitch());
-    SD.sd2("IMURoll", getIMURoll());
-    SD.sd2("IMUDataRobotYaw", getIMUDataRobotYaw());
-
-    SmartDashboard.putBoolean("TagSeen",
-        LimelightHelpers.getTV(Constants.CameraConstants.frontCamera.camname));
-    SmartDashboard.putNumber("TagNumber",
-        LimelightHelpers.getFiducialID(Constants.CameraConstants.frontCamera.camname));
-
-    double[] vals = { 0, 0, 0, 0 };
-
-    if (getLLHW(Constants.CameraConstants.frontCamera.camname).length > 0)
-      vals = getLLHW(Constants.CameraConstants.frontCamera.camname);
-    SD.sd1("LLTemperature", vals[0]);
-    SD.sd1("LLCPU", vals[1]);
-    SD.sd1("LLRam", vals[2]);
-    SD.sd1("LLFPS", vals[3]);
+    builder.addDoubleProperty(name + "  Temperature", () -> vals[0], null);
+    builder.addDoubleProperty(name + " CPU", () -> vals[1], null);
+    builder.addDoubleProperty(name + " Ram", () -> vals[2], null);
+    builder.addDoubleProperty(name + " FPS", () -> vals[2], null);
 
   }
 
+  @Override
+  public void initSendable(SendableBuilder builder) {
+    initSendableLL4(builder, frontName);
+    initSendable(builder, leftName);
+    initSendable(builder, rightName);
+
+  }
 }

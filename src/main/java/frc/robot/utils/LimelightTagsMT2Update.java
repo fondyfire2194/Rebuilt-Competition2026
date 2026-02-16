@@ -6,8 +6,6 @@ package frc.robot.utils;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -27,18 +25,12 @@ public class LimelightTagsMT2Update extends Command {
 
     LimelightHelpers.PoseEstimate mt2 = new PoseEstimate();
 
-    StructPublisher<Pose2d> mt2PosePublisher;
-
     private int m_cameraIndex;
 
     public LimelightTagsMT2Update(LimelightVision llv, int cameraIndex, CommandSwerveDrivetrain swerve) {
         m_swerve = swerve;
         m_llv = llv;
         m_cameraIndex = cameraIndex;
-
-        mt2PosePublisher = NetworkTableInstance.getDefault()
-                .getStructTopic(m_llv.frontName + " MT2Pose", Pose2d.struct).publish();
-
     }
 
     @Override
@@ -97,12 +89,7 @@ public class LimelightTagsMT2Update extends Command {
         return (int) LimelightHelpers.getLimelightNTDouble(camName, "imu_set");
     }
 
-    public void setLLRobotOrientation(int cameraNumber) {
-        LimelightHelpers.SetRobotOrientation(m_llv.cameras[cameraNumber].camname,
-                m_swerve.getState().Pose.getRotation().getDegrees(),
-                m_swerve.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0, 0); // m_swerve.getPoseEstimator().getEstimatedPosition().getRotation().getDegrees()
-    }
-
+  
     private boolean inFieldCheck(Pose2d pose) {
         boolean inLength = pose.getX() > 0 && pose.getX() < FieldConstants.fieldLength;
         boolean inWidth = pose.getY() > 0 && pose.getX() < FieldConstants.fieldWidth;

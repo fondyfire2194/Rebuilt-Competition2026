@@ -77,7 +77,7 @@ public class RobotContainer {
 
         private final IntakeArmSubsystem m_intakeArm = new IntakeArmSubsystem(true);
 
-        public final LimelightVision m_llv = new LimelightVision();
+        public final LimelightVision m_llv = new LimelightVision(true);
 
         public RobotContainer() {
 
