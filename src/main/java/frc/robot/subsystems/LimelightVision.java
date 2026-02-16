@@ -19,6 +19,7 @@ import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.CameraConstants.Cameras;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.IMUData;
+import frc.robot.utils.LimelightHelpers.RawFiducial;
 
 public class LimelightVision extends SubsystemBase {
   /** Creates a new LimelightVision. */
@@ -39,11 +40,13 @@ public class LimelightVision extends SubsystemBase {
 
   public boolean[] inhibitVision;
 
-  public boolean showTelemetry = true;
-
   public Pose2d[] mt1Pose = { new Pose2d(), new Pose2d(), new Pose2d() };
 
   public int[] mt1TagCount;
+
+  public double[][] mt1TagsSeen = new double[3][5];
+
+  public double[][] mt2TagsSeen = new double[3][5];
 
   public double[] mt1Ambiguity;
 
@@ -68,10 +71,13 @@ public class LimelightVision extends SubsystemBase {
   public int[] numberMT2Pose;
 
   public Pose2d[] acceptedPose = { new Pose2d(), new Pose2d(), new Pose2d() };
+
   public boolean mt1PoseSet;
 
   public boolean useMT2;
+
   private boolean showData;
+
   double[] vals = { 0, 0, 0, 0 };
 
   /**
@@ -237,6 +243,24 @@ public class LimelightVision extends SubsystemBase {
     return getIMUData().robotYaw;
   }
 
+  public void getMT1TagsSeen(int cameraPointer, RawFiducial[] rawFiducial) {
+    for (int i = 0; i < mt1TagsSeen.length; i++) {
+      mt1TagsSeen[cameraPointer][i] = 0;
+    }
+    // for (int i = 0; i < rawFiducial.length; i++) {
+    // mt1TagsSeen[cameraPointer][i] = rawFiducial[i].id;
+    // }
+  }
+
+  public void getMT2TagsSeen(int cameraPointer, RawFiducial[] rawFiducial) {
+    for (int i = 0; i < mt1TagsSeen.length; i++) {
+      mt2TagsSeen[cameraPointer][i] = 0;
+    }
+    // for (int i = 0; i < rawFiducial.length; i++) {
+    // mt1TagsSeen[cameraPointer][i] = rawFiducial[i].id;
+    // }
+  }
+
   public void setAprilTagPipeline() {
     LimelightHelpers.setPipelineIndex(frontName, CameraConstants.apriltagPipeline);
     LimelightHelpers.setPipelineIndex(leftName, CameraConstants.apriltagPipeline);
@@ -252,10 +276,16 @@ public class LimelightVision extends SubsystemBase {
       LimelightHelpers.setPipelineIndex(rightName, CameraConstants.viewFinderPipeline);
   }
 
-  private void initSendable(SendableBuilder builder, String name) {
-    builder.addDoubleProperty(name + " Pipeline", () -> LimelightHelpers.getCurrentPipelineIndex(name), null);
-    builder.addStringProperty(name + " Pipeline Type", () -> LimelightHelpers.getCurrentPipelineType(name), null);
-    builder.addBooleanProperty(name + " Tag Seen", () -> LimelightHelpers.getTV(name), null);
+  private void initSendable(SendableBuilder builder, int cameraIndex) {
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " Pipeline",
+        () -> LimelightHelpers.getCurrentPipelineIndex(cameras[cameraIndex].camname), null);
+    builder.addStringProperty(cameras[cameraIndex].camname + " Pipeline Type",
+        () -> LimelightHelpers.getCurrentPipelineType(cameras[cameraIndex].camname), null);
+    builder.addBooleanProperty(cameras[cameraIndex].camname + " Tag Seen",
+        () -> LimelightHelpers.getTV(cameras[cameraIndex].camname), null);
+    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT1TagsSeen", () -> mt1TagsSeen[cameraIndex], null);
+    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT2TagsSeen", () -> mt2TagsSeen[cameraIndex], null);
+
   }
 
   private void initSendableLL4(SendableBuilder builder, String name) {
@@ -278,9 +308,9 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-    initSendableLL4(builder, frontName);
-    initSendable(builder, leftName);
-    initSendable(builder, rightName);
+    // initSendableLL4(builder, frontName);
+    initSendable(builder, 1);
+    initSendable(builder, 2);
 
   }
 }

@@ -98,11 +98,10 @@ public class HoodSubsystem extends SubsystemBase {
     public Command positionToHomeCommand() {
         return Commands.runOnce(() -> targetPosition = kMinPosition);
     }
-  public Command positionTestCommand() {
-        return Commands.runOnce(() -> targetPosition = kMinPosition+10);
+
+    public Command positionTestCommand() {
+        return Commands.runOnce(() -> targetPosition = kMinPosition + 10);
     }
-
-
 
     public Command positionHoodCommand() {
         return new FunctionalCommand(

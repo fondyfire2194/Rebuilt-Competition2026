@@ -118,6 +118,8 @@ public final class Constants {
 
   public static final class CANIDConstants {
 
+    public static final int pdh = 1;
+
     public static final int intakeID = 10;
     public static final int intakeArmID = 11;
 
@@ -163,7 +165,7 @@ public final class Constants {
           final Pose3d camPose,
           final double hfov,
           final double vfov,
-          final int horpixels, 
+          final int horpixels,
           final int vertpixels,
           final boolean isUsed) {
         this.camname = camname;

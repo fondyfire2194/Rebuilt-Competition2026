@@ -68,6 +68,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public boolean endShooterCommand;
 
+  public boolean bypassShootInterlocks;
+
   public TripleShooterSubsystem(boolean showData) {
 
     leftMotor = new TalonFX(CANIDConstants.leftShooterID, CanbusConstants.kCANivoreCANBus);

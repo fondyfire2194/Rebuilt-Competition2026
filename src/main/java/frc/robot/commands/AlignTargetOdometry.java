@@ -83,6 +83,8 @@ public class AlignTargetOdometry extends Command {
             // // negative X (left)
             .withRotationalRate(rotationVal * MaxAngularRate));
 
+    m_drivetrain.alignedToTarget = Math.abs(angleToTarget) < m_drivetrain.shootTolerance;
+
   }
 
   // Called once the command ends or is interrupted.

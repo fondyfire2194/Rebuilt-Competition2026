@@ -18,6 +18,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -25,7 +26,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Constants.CANIDConstants;
+import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
+import frc.robot.commands.PrepareShotCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -67,19 +71,35 @@ public class RobotContainer {
         /* Path follower */
         private SendableChooser<Command> autoChooser;
 
-        final TripleShooterSubsystem m_shooter = new TripleShooterSubsystem(true);
+        final TripleShooterSubsystem m_shooter;
 
-        final HoodSubsystem m_hood = new HoodSubsystem(true);
+        final HoodSubsystem m_hood;
 
-        private final FeederSubsystem m_feeder = new FeederSubsystem(true);
+        private final FeederSubsystem m_feeder;
 
-        private final IntakeSubsystem m_intake = new IntakeSubsystem(true);
+        private final IntakeSubsystem m_intake;
 
-        private final IntakeArmSubsystem m_intakeArm = new IntakeArmSubsystem(true);
+        private final IntakeArmSubsystem m_intakeArm;
 
-        public final LimelightVision m_llv = new LimelightVision(true);
+        public final LimelightVision m_llv;
+
+        public final PowerDistribution pdh;
+
+        private boolean showAllData = true;
 
         public RobotContainer() {
+
+                m_shooter = new TripleShooterSubsystem(showAllData);
+                m_hood = new HoodSubsystem(showAllData);
+                m_feeder = new FeederSubsystem(showAllData);
+                m_intake = new IntakeSubsystem(showAllData);
+                m_intakeArm = new IntakeArmSubsystem(showAllData);
+                m_llv = new LimelightVision(showAllData);
+                pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
+
+                registerNamedCommands();
+
+                configurePDH();
 
                 m_shooter.leftMotorActive = true;
                 m_shooter.middleMotorActive = true;
@@ -91,11 +111,13 @@ public class RobotContainer {
 
                 buildAutoChooser();
 
-                registerNamedCommands();
                 SignalLogger.setPath("media/sda1/ctre-logs");
                 DogLog.setPdh(new PowerDistribution());
-                DogLog.setPdh(null);
+                drivetrain.registerTelemetry(logger::telemeterize);
+        }
 
+        private void configurePDH() {
+                SmartDashboard.putData("Power Hub", pdh);
         }
 
         private void setDefaultCommands() {
@@ -137,7 +159,7 @@ public class RobotContainer {
                 // drivetrain.applyRequest(() ->
                 // forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
 
-                driver.leftTrigger().whileTrue(new ShootCommand(m_shooter, m_hood, m_feeder));
+                driver.leftTrigger().whileTrue(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
@@ -156,22 +178,30 @@ public class RobotContainer {
                                                 m_feeder.stopFeederBeltCommand(),
                                                 m_intake.stopIntakeCommand()));
 
-                // driver.leftBumper().whileTrue(
-                // Commands.parallel(
-                // new PrepareShotCommand(m_shooter, m_hood),
-                // new AlignTargetOdometry(drivetrain, m_shooter, drive, driver, false)));
-                driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand());
+                driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand())
+                                .whileTrue(
+                                                Commands.parallel(new PrepareShotCommand(m_shooter, m_hood),
+                                                                new AlignTargetOdometry(drivetrain, m_shooter, drive,
+                                                                                driver, false)));
 
                 driver.y().whileTrue(m_intake.jogIntakeCommand());
 
                 driver.a().whileTrue(m_intakeArm.jogIntakeArmCommand(() -> driver.getLeftX()));
 
                 driver.b().onTrue(Commands.none());
-                // Reset the field-centric heading on left bumper press.
+
+                driver.povUp().onTrue(m_shooter.changeTargetVelocityCommand(100));
+
+                driver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
+
+                driver.povLeft().onTrue(Commands.runOnce(() -> m_shooter.bypassShootInterlocks = true));
+
+                codriver.povRight().onTrue(Commands.runOnce(() -> m_shooter.bypassShootInterlocks = false));
+
+                // Reset the field-centric heading
                 driver.start().onTrue(
                                 drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-                drivetrain.registerTelemetry(logger::telemeterize);
         }
 
         private void configureCodriverBindings() {
@@ -186,8 +216,7 @@ public class RobotContainer {
 
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
-                codriver.rightBumper().onTrue(
-                                m_shooter.runAllVelocityVoltageCommand());
+                codriver.rightBumper().onTrue(Commands.none());
 
                 codriver.y().onTrue(m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .5))
                                 .onFalse(m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .0));
@@ -240,7 +269,7 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("ALIGN_TO_HUB", new AutoAlignHub(drivetrain, m_shooter, 1));
 
-                NamedCommands.registerCommand("SHOOT_COMMAND", new ShootCommand(m_shooter, m_hood, m_feeder));
+                NamedCommands.registerCommand("SHOOT_COMMAND", new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain));
                 NamedCommands.registerCommand("END_SHOOT_COMMAND", m_shooter.stopAllShootersCommand());
 
                 NamedCommands.registerCommand("START_SHOOTERS", m_shooter.runAllVelocityVoltageCommand());

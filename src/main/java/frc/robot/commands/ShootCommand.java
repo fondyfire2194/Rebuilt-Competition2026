@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FeederSetpoints;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
@@ -16,18 +17,21 @@ public class ShootCommand extends Command {
   private final TripleShooterSubsystem m_shooter;
   private final HoodSubsystem m_hood;
   private final FeederSubsystem m_feeder;
+  private final CommandSwerveDrivetrain m_swerve;
 
-  public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder) {
+  public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
+      CommandSwerveDrivetrain swerve) {
     // Use addRequirements() here to declare subsystem dependencies.
     m_shooter = shooter;
     m_hood = hood;
     m_feeder = feeder;
+    m_swerve = swerve;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    
+
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -35,8 +39,9 @@ public class ShootCommand extends Command {
   public void execute() {
 
     m_shooter.runAllVelocityVoltage();
-    boolean bypass = true;
-    if (bypass || m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance()) {
+
+    if (m_shooter.bypassShootInterlocks
+        || m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance() && m_swerve.alignedToTarget) {
       m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
       m_feeder.runFeederRollerMotor(FeederSetpoints.kFeedRollerSetpoint);
     }

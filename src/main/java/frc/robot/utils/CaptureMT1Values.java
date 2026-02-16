@@ -7,6 +7,7 @@ package frc.robot.utils;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
+import frc.robot.utils.LimelightHelpers.RawFiducial;
 
 /** Add your docs here. */
 public class CaptureMT1Values extends Command {
@@ -37,10 +38,11 @@ public class CaptureMT1Values extends Command {
             mt1Left = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_llv.leftName);
             m_llv.mt1Pose[m_llv.leftCam] = mt1Left.pose;
             m_llv.mt1TagCount[m_llv.leftCam] = mt1Left.tagCount;
-            m_llv.mt1TimeStampSeconds[m_llv.leftCam] = mt1Left.timestampSeconds;
             if (mt1Left.rawFiducials.length > 0) {
                 m_llv.mt1Ambiguity[m_llv.leftCam] = mt1Left.rawFiducials[0].ambiguity;
                 m_llv.mt1DistToCamera[m_llv.leftCam] = mt1Left.rawFiducials[0].distToCamera;
+                m_llv.mt1TimeStampSeconds[m_llv.leftCam] = mt1Left.timestampSeconds;
+                m_llv.getMT1TagsSeen(1, mt1Left.rawFiducials);
             }
         }
         if (LimelightHelpers.getTV(m_llv.rightName)) {
@@ -51,6 +53,7 @@ public class CaptureMT1Values extends Command {
             if (mt1Right.rawFiducials.length > 0) {
                 m_llv.mt1Ambiguity[m_llv.rightCam] = mt1Right.rawFiducials[0].ambiguity;
                 m_llv.mt1DistToCamera[m_llv.rightCam] = mt1Right.rawFiducials[0].distToCamera;
+                m_llv.getMT1TagsSeen(2, mt1Left.rawFiducials);
             }
         }
 
@@ -62,6 +65,7 @@ public class CaptureMT1Values extends Command {
             if (mt1Front.rawFiducials.length > 0) {
                 m_llv.mt1Ambiguity[m_llv.frontCam] = mt1Front.rawFiducials[0].ambiguity;
                 m_llv.mt1DistToCamera[m_llv.frontCam] = mt1Front.rawFiducials[0].distToCamera;
+                m_llv.getMT1TagsSeen(0, mt1Left.rawFiducials);
             }
         }
 
