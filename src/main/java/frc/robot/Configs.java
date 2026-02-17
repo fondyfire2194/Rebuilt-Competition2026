@@ -5,9 +5,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degree;
-import static edu.wpi.first.units.Units.Radians;
-
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 

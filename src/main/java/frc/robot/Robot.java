@@ -121,7 +121,7 @@ public class Robot extends TimedRobot {
         }
 
         if (RobotBase.isSimulation())
-            m_robotContainer.drivetrain.resetPose(new Pose2d(13.5, 3.1, new Rotation2d(Math.PI)));
+            m_robotContainer.drivetrain.resetPose(new Pose2d(14, 3.5, new Rotation2d(Math.PI)));
     }
 
     @Override

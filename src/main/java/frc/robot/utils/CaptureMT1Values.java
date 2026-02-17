@@ -7,7 +7,6 @@ package frc.robot.utils;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
-import frc.robot.utils.LimelightHelpers.RawFiducial;
 
 /** Add your docs here. */
 public class CaptureMT1Values extends Command {

@@ -133,18 +133,18 @@ public class LimelightVision extends SubsystemBase {
     rightName = cameras[rightCam].camname;
 
     mt1FrontPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic(frontName + " MT1FrontPose", Pose2d.struct).publish();
+        .getStructTopic("LimelightPoses/" + frontName + " MT1FrontPose", Pose2d.struct).publish();
     mt1LeftPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic(leftName + " MT1LeftPose", Pose2d.struct).publish();
+        .getStructTopic("LimelightPoses/" + leftName + " MT1LeftPose", Pose2d.struct).publish();
     mt1RightPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic(rightName + " MT1RightPose", Pose2d.struct).publish();
+        .getStructTopic("LimelightPoses/" + rightName + " MT1RightPose", Pose2d.struct).publish();
 
     mt2FrontPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic(frontName + " MT2FrontPose", Pose2d.struct).publish();
+        .getStructTopic("LimelightPoses/" + frontName + " MT2FrontPose", Pose2d.struct).publish();
     mt2LeftPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic(leftName + " MT2LeftPose", Pose2d.struct).publish();
+        .getStructTopic("LimelightPoses/" + leftName + " MT2LeftPose", Pose2d.struct).publish();
     mt2RightPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic(rightName + " MT2RightPose", Pose2d.struct).publish();
+        .getStructTopic("LimelightPoses/" + rightName + " MT2RightPose", Pose2d.struct).publish();
 
     setCamToRobotOffset(cameras[frontCam]);
     setCamToRobotOffset(cameras[leftCam]);
@@ -288,7 +288,7 @@ public class LimelightVision extends SubsystemBase {
 
   }
 
-  private void initSendableLL4(SendableBuilder builder, String name) {
+  private void initSendableLL4(SendableBuilder builder, String name, int cameraIndex) {
     builder.addDoubleProperty(name + " Pipeline", () -> LimelightHelpers.getCurrentPipelineIndex(name), null);
     builder.addStringProperty(name + " Pipeline Type", () -> LimelightHelpers.getCurrentPipelineType(name), null);
     builder.addBooleanProperty(name + " Tag Seen", () -> LimelightHelpers.getTV(name), null);
@@ -298,6 +298,8 @@ public class LimelightVision extends SubsystemBase {
     builder.addDoubleProperty(name + " IMU Roll", () -> getIMURoll(), null);
     builder.addStringProperty(name + " IMU Mode", () -> getIMUModeName(name), null);
     builder.addDoubleProperty(name + " IMU Yaw", () -> getIMUYaw(), null);
+    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT1TagsSeen", () -> mt1TagsSeen[cameraIndex], null);
+    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT2TagsSeen", () -> mt2TagsSeen[cameraIndex], null);
 
     builder.addDoubleProperty(name + "  Temperature", () -> vals[0], null);
     builder.addDoubleProperty(name + " CPU", () -> vals[1], null);
@@ -308,7 +310,7 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-    // initSendableLL4(builder, frontName);
+    initSendableLL4(builder, frontName, 0);
     initSendable(builder, 1);
     initSendable(builder, 2);
 
