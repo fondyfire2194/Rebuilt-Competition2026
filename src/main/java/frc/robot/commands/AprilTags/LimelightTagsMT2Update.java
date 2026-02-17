@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.utils;
+package frc.robot.commands.AprilTags;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LimelightVision;
+import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
 
 /** Add your docs here. */
@@ -42,7 +43,8 @@ public class LimelightTagsMT2Update extends Command {
     public void execute() {
         if (m_llv.useMT2) {
             LimelightHelpers.SetRobotOrientation(m_llv.cameras[m_cameraIndex].camname,
-                    m_swerve.getState().Pose.getRotation().getDegrees(),
+                    // m_swerve.getState().Pose.getRotation().getDegrees(),
+                    m_swerve.getPigeon2().getYaw().getValueAsDouble();
                     m_swerve.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
                     0);
             mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_llv.cameras[m_cameraIndex].camname);
@@ -53,8 +55,7 @@ public class LimelightTagsMT2Update extends Command {
                 m_llv.mt2distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
                 m_llv.numberMT2Pose[m_cameraIndex] = mt2.tagCount;
                 m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
-                 m_llv.getMT2TagsSeen(m_cameraIndex, mt2.rawFiducials);
-        
+                m_llv.getMT2TagsSeen(m_cameraIndex, mt2.rawFiducials);
             }
 
             rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
@@ -91,7 +92,6 @@ public class LimelightTagsMT2Update extends Command {
         return (int) LimelightHelpers.getLimelightNTDouble(camName, "imu_set");
     }
 
-  
     private boolean inFieldCheck(Pose2d pose) {
         boolean inLength = pose.getX() > 0 && pose.getX() < FieldConstants.fieldLength;
         boolean inWidth = pose.getY() > 0 && pose.getX() < FieldConstants.fieldWidth;

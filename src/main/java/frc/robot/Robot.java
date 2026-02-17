@@ -19,8 +19,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
+import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.LimelightHelpers;
-import frc.robot.utils.LimelightTagsMT2Update;
 import frc.robot.utils.LoopEvents;
 
 public class Robot extends TimedRobot {

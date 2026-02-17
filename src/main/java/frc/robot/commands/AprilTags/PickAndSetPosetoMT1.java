@@ -2,7 +2,9 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.utils;
+package frc.robot.commands.AprilTags;
+
+import static edu.wpi.first.units.Units.Degrees;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -11,6 +13,7 @@ import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LimelightVision;
+import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
 
 /** Add your docs here. */
@@ -73,6 +76,7 @@ public class PickAndSetPosetoMT1 extends Command {
         }
 
         if (useLeftCameraResult) {
+            m_swerve.getPigeon2().setYaw(Degrees.of(m_llv.mt1Pose[m_llv.leftCam].getRotation().getDegrees()));
             m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.1, .1, .1));
             m_swerve.addVisionMeasurement(
                     m_llv.acceptedPose[m_llv.leftCam],
@@ -80,6 +84,7 @@ public class PickAndSetPosetoMT1 extends Command {
         }
 
         if (useRightCameraResult) {
+            m_swerve.getPigeon2().setYaw(Degrees.of(m_llv.mt1Pose[m_llv.rightCam].getRotation().getDegrees()));
             m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.1, .1, .1));
             m_swerve.addVisionMeasurement(
                     m_llv.acceptedPose[m_llv.rightCam],
@@ -87,6 +92,7 @@ public class PickAndSetPosetoMT1 extends Command {
         }
 
         if (useFrontCameraResult) {
+            m_swerve.getPigeon2().setYaw(Degrees.of(m_llv.mt1Pose[m_llv.frontCam].getRotation().getDegrees()));
             m_swerve.setVisionMeasurementStdDevs(VecBuilder.fill(.1, .1, .1));
             m_swerve.addVisionMeasurement(
                     m_llv.acceptedPose[m_llv.frontCam],
