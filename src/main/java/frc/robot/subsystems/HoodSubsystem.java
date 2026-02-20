@@ -36,6 +36,8 @@ public class HoodSubsystem extends SubsystemBase {
     private RelativeEncoder encoder;
     private double degreesPerEncoderRev = 3.6;
 
+    public boolean showData;
+
     public HoodSubsystem(boolean showData) {
         hoodMotor = new SparkMax(Constants.CANIDConstants.hoodMotorID, MotorType.kBrushless);
         closedLoopController = hoodMotor.getClosedLoopController();
@@ -87,6 +89,7 @@ public class HoodSubsystem extends SubsystemBase {
          */
         hoodMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         encoder.setPosition(kMinPosition);
+        this.showData = showData;
         if (showData)
             SmartDashboard.putData(this);
     }

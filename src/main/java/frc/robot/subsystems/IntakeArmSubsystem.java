@@ -73,6 +73,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
   public Angle clearAngle = Degrees.of(-20);
 
   private int tst;
+  
+  public boolean showData;
 
   public IntakeArmSubsystem(boolean showData) {
 
@@ -82,6 +84,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
         Configs.IntakeArm.intakeArmConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
+        this.showData = showData;
     if (showData)
       SmartDashboard.putData(this);
 

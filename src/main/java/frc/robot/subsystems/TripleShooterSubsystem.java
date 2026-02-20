@@ -41,6 +41,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public boolean middleMotorActive;
   public boolean rightMotorActive;
 
+  private boolean showData;
+
   private final VoltageOut voltageRequest = new VoltageOut(0);
 
   StatusCode statusL = StatusCode.StatusCodeNotInitialized;
@@ -71,7 +73,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public boolean bypassShootInterlocks;
 
   public TripleShooterSubsystem(boolean showData) {
-
+    this.showData = showData;
     leftMotor = new TalonFX(CANIDConstants.leftShooterID, CanbusConstants.kCANivoreCANBus);
     middleMotor = new TalonFX(CANIDConstants.centerShooterID, CanbusConstants.kCANivoreCANBus);
     rightMotor = new TalonFX(CANIDConstants.rightShooterID, CanbusConstants.kCANivoreCANBus);
@@ -163,10 +165,10 @@ public class TripleShooterSubsystem extends SubsystemBase {
       runVelocityVoltage(leftMotor);
 
     if (middleMotorActive)
-       runVelocityVoltage(middleMotor);
+      runVelocityVoltage(middleMotor);
 
     if (rightMotorActive)
-       runVelocityVoltage(rightMotor);
+      runVelocityVoltage(rightMotor);
   }
 
   public void runVelocityTorque(TalonFX motor) {
@@ -185,7 +187,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     leftMotor.stopMotor();
     setPercentOutput(middleMotor, 0.0);
     setPercentOutput(rightMotor, 0.0);
-    endShooterCommand= true;
+    endShooterCommand = true;
   }
 
   public Command stopAllShootersCommand() {

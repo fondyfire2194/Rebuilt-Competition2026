@@ -23,7 +23,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // Initialize intake SPARK. We will use open loop control for this.
   private SparkMax intakeMotor = new SparkMax(Constants.CANIDConstants.intakeID, MotorType.kBrushless);
   private double intakePowerSim;
-  public boolean showTelemetry;
+  public boolean showData;
 
   /** Creates a new IntakeSubsystem. */
   public IntakeSubsystem(boolean showData) {
@@ -41,6 +41,7 @@ public class IntakeSubsystem extends SubsystemBase {
         Configs.Intake.intakeConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
+        this.showData = showData;
     if (showData)
       SmartDashboard.putData(this);
   }

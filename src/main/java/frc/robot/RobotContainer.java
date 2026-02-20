@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
+import frc.robot.commands.PIDDriveToPose;
 import frc.robot.commands.PrepareShotCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
@@ -46,8 +47,8 @@ public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
                                                                                             // top // speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
-                                                                                          // second
-                                                                                          // max angular velocity
+                                                                                          // second // max angular
+                                                                                          // velocity
 
         /* Setting up bindings for necessary control of the swerve drive platform */
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -83,7 +84,7 @@ public class RobotContainer {
 
         public final LimelightVision m_llv;
 
-        public final PowerDistribution pdh;
+        // public final PowerDistribution pdh;
 
         private boolean showAllData = true;
 
@@ -95,11 +96,11 @@ public class RobotContainer {
                 m_intake = new IntakeSubsystem(showAllData);
                 m_intakeArm = new IntakeArmSubsystem(showAllData);
                 m_llv = new LimelightVision(showAllData);
-                pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
+                // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
 
                 registerNamedCommands();
 
-                configurePDH();
+                // configurePDH();
 
                 m_shooter.leftMotorActive = true;
                 m_shooter.middleMotorActive = true;
@@ -116,9 +117,9 @@ public class RobotContainer {
                 drivetrain.registerTelemetry(logger::telemeterize);
         }
 
-        private void configurePDH() {
-                SmartDashboard.putData("Power Hub", pdh);
-        }
+        // private void configurePDH() {
+        // SmartDashboard.putData("Power Hub", pdh);
+        // }
 
         private void setDefaultCommands() {
                 drivetrain.setDefaultCommand(
@@ -258,6 +259,8 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("USE_MT2", Commands.runOnce(() -> m_llv.useMT2 = true));
 
+                NamedCommands.registerCommand("DRIVE_TO_DEPOT_RECOVER_POSE", new PIDDriveToPose(drivetrain,new Pose2d()));
+
                 NamedCommands.registerCommand("MOVE_TO_DEPOT_INTAKE_POSE",
                                 drivetrain.pathFindToPose(new Pose2d(), drivetrain.pathConstraints));
 
@@ -269,7 +272,8 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("ALIGN_TO_HUB", new AutoAlignHub(drivetrain, m_shooter, 1));
 
-                NamedCommands.registerCommand("SHOOT_COMMAND", new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain));
+                NamedCommands.registerCommand("SHOOT_COMMAND",
+                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain));
                 NamedCommands.registerCommand("END_SHOOT_COMMAND", m_shooter.stopAllShootersCommand());
 
                 NamedCommands.registerCommand("START_SHOOTERS", m_shooter.runAllVelocityVoltageCommand());

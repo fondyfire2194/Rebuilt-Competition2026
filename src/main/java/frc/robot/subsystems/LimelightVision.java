@@ -78,7 +78,7 @@ public class LimelightVision extends SubsystemBase {
 
   private boolean showData;
 
-  double[] vals = { 0, 0, 0, 0 };
+  double[] vals = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
   /**
    * Checks if the specified limelight is connected
@@ -121,7 +121,7 @@ public class LimelightVision extends SubsystemBase {
   }
 
   public LimelightVision(boolean showData) {
-
+    this.showData = showData;
     cameras[0] = CameraConstants.frontCamera;
     cameras[1] = CameraConstants.leftCamera;
     cameras[2] = CameraConstants.rightCamera;
@@ -170,10 +170,9 @@ public class LimelightVision extends SubsystemBase {
     mt2RightPosePublisher.accept(mt2Pose[rightCam]);
 
     if (showData) {
-
       if (getLLHW(Constants.CameraConstants.frontCamera.camname).length > 0)
         vals = getLLHW(Constants.CameraConstants.frontCamera.camname);
-    }
+  }
 
   }
 
@@ -298,8 +297,8 @@ public class LimelightVision extends SubsystemBase {
     builder.addDoubleProperty(name + " IMU Roll", () -> getIMURoll(), null);
     builder.addStringProperty(name + " IMU Mode", () -> getIMUModeName(name), null);
     builder.addDoubleProperty(name + " IMU Yaw", () -> getIMUYaw(), null);
-    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT1TagsSeen", () -> mt1TagsSeen[cameraIndex], null);
-    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT2TagsSeen", () -> mt2TagsSeen[cameraIndex], null);
+    builder.addDoubleArrayProperty(name + " MT1TagsSeen", () -> mt1TagsSeen[cameraIndex], null);
+    builder.addDoubleArrayProperty(name + " MT2TagsSeen", () -> mt2TagsSeen[cameraIndex], null);
 
     builder.addDoubleProperty(name + "  Temperature", () -> vals[0], null);
     builder.addDoubleProperty(name + " CPU", () -> vals[1], null);

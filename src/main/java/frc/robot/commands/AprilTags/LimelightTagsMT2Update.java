@@ -44,7 +44,7 @@ public class LimelightTagsMT2Update extends Command {
         if (m_llv.useMT2) {
             LimelightHelpers.SetRobotOrientation(m_llv.cameras[m_cameraIndex].camname,
                     // m_swerve.getState().Pose.getRotation().getDegrees(),
-                    m_swerve.getPigeon2().getYaw().getValueAsDouble();
+                    m_swerve.getPigeon2().getYaw().getValueAsDouble(),
                     m_swerve.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
                     0);
             mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_llv.cameras[m_cameraIndex].camname);

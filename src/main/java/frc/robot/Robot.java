@@ -19,6 +19,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
+import frc.robot.commands.PIDDriveToPose;
+import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LoopEvents;
@@ -46,6 +48,7 @@ public class Robot extends TimedRobot {
         loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
         loopEvents.init();
         autoHasRun = false;
+        CommandScheduler.getInstance().schedule(new CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
     }
 
     @Override
@@ -61,6 +64,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
+        if (RobotBase.isSimulation())
+            m_robotContainer.drivetrain.resetPose(new Pose2d(14, 3.5, new Rotation2d(Math.PI)));
+
     }
 
     @Override
@@ -120,8 +126,10 @@ public class Robot extends TimedRobot {
             m_robotContainer.m_llv.useMT2 = true;
         }
 
-        if (RobotBase.isSimulation())
-            m_robotContainer.drivetrain.resetPose(new Pose2d(14, 3.5, new Rotation2d(Math.PI)));
+        if (RobotBase.isSimulation()) {
+            CommandScheduler.getInstance().schedule(
+                    new PIDDriveToPose(m_robotContainer.drivetrain, new Pose2d(13, 5, Rotation2d.fromDegrees(180))));
+        }
     }
 
     @Override

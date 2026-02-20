@@ -79,7 +79,8 @@ public class AlignTargetOdometry extends Command {
     rotationVal = m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
 
     m_drivetrain.setControl(
-        drive.withVelocityX(-m_controller.getLeftY() * MaxSpeed).withVelocityY(-m_controller.getLeftX() * MaxSpeed)
+        drive.withVelocityX(-m_controller.getLeftY() * MaxSpeed)
+            .withVelocityY(-m_controller.getLeftX() * MaxSpeed)
             // // negative X (left)
             .withRotationalRate(rotationVal * MaxAngularRate));
 

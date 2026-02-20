@@ -27,6 +27,8 @@ public class FeederSubsystem extends SubsystemBase {
   private double feederRollerPowerSim;
   private double feederBeltPowerSim;
 
+  private boolean showData;
+
   public FeederSubsystem(boolean showData) {
     feederBeltMotor = new SparkMax(Constants.CANIDConstants.feederBeltID, MotorType.kBrushless);
     feederRollerMotor = new SparkMax(Constants.CANIDConstants.feederRollerID, MotorType.kBrushless);
@@ -49,7 +51,7 @@ public class FeederSubsystem extends SubsystemBase {
         Configs.Feeder.feederBeltConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-
+    this.showData = showData;
     if (showData)
       SmartDashboard.putData(this);
   }

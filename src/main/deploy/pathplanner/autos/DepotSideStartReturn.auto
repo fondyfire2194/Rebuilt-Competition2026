@@ -29,6 +29,36 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "USE_MT1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "USE_MT2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "DRIVE_TO_DEPOT_RECOVER_POSE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "START_INTAKE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "INTAKE_ARM_DOWN"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "PickupFuelShortDepot"
@@ -38,6 +68,18 @@
           "type": "wait",
           "data": {
             "waitTime": 0.25
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP_INTAKE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "INTAKE_ARM_UP"
           }
         },
         {
