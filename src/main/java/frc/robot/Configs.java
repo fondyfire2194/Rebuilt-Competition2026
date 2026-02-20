@@ -5,10 +5,12 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degree;
+import static edu.wpi.first.units.Units.Inches;
+
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import frc.robot.subsystems.IntakeArmSubsystem;
+import frc.robot.subsystems.IntakeSlideArmSubsystem;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -44,33 +46,33 @@ public final class Configs {
 
   public static final class IntakeArm {
 
-    public static final SparkMaxConfig intakeArmConfig = new SparkMaxConfig();
+    public static final SparkMaxConfig intakeSlideConfig = new SparkMaxConfig();
 
     static {
       // Configure basic settings of the intake motor
-      intakeArmConfig
+      intakeSlideConfig
           .inverted(true)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(5)
           .smartCurrentLimit(40);
-      intakeArmConfig
+      intakeSlideConfig
           .inverted(false)
           .idleMode(IdleMode.kBrake)
           .smartCurrentLimit(60);
 
-      intakeArmConfig.encoder
-          .positionConversionFactor(IntakeArmSubsystem.positionConversionFactor)
-          .velocityConversionFactor(IntakeArmSubsystem.velocityConversionFactor);
+      intakeSlideConfig.encoder
+          .positionConversionFactor(IntakeSlideArmSubsystem.positionConversionFactor)
+          .velocityConversionFactor(IntakeSlideArmSubsystem.velocityConversionFactor);
 
-      intakeArmConfig.closedLoop
+      intakeSlideConfig.closedLoop
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
         
-      intakeArmConfig.softLimit.forwardSoftLimit(IntakeArmSubsystem.maxAngle.in(Degree))
-          .reverseSoftLimit(IntakeArmSubsystem.minAngle.in(Degree))
+      intakeSlideConfig.softLimit.forwardSoftLimit(IntakeSlideArmSubsystem.minDistance.in(Inches))
+          .reverseSoftLimit(IntakeSlideArmSubsystem.minDistance.in(Inches))
           .forwardSoftLimitEnabled(true)
           .reverseSoftLimitEnabled(true);
 
-      intakeArmConfig.signals.primaryEncoderPositionPeriodMs(10);
+      intakeSlideConfig.signals.primaryEncoderPositionPeriodMs(10);
 
     }
   }

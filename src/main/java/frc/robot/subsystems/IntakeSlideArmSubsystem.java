@@ -1,9 +1,8 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-import static edu.wpi.first.units.Units.Radian;
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.InchesPerSecond;
 
 import java.util.function.DoubleSupplier;
 
@@ -13,13 +12,14 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.AngularVelocityUnit;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -30,19 +30,21 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
 
-public class IntakeArmSubsystem extends SubsystemBase {
+public class IntakeSlideArmSubsystem extends SubsystemBase {
 
   private final SparkMax intakeArmMotor = new SparkMax(CANIDConstants.intakeArmID, MotorType.kBrushless);
 
   SparkMaxConfig armConfig;
 
-  private static double gearRatio = 36;// 1 motor rev = 10 degrees
+  SimpleMotorFeedforward slideFeedforward;
 
-  private static double maxMotorRPS = 5700 / 60;
+  private static double gearRatio = 36;// 1 motor rev = 10 inches
 
-  private static double maxArmRadsPerSec = Units.degreesToRadians(maxMotorRPS * 360. / gearRatio);
+  private static double maxMotorRPS = 5700 / 60;// 95 approx
 
-  public static double positionConversionFactor = 2 * Math.PI / gearRatio;// rads per motor rev
+  private static double maxSlideInchesPerSec = maxMotorRPS / gearRatio;
+
+  public static double positionConversionFactor = 1 / gearRatio;// inches per motor rev
   public static double velocityConversionFactor = positionConversionFactor / 60; // degrees per sec
 
   private static double kDt = 0.02;
@@ -54,51 +56,54 @@ public class IntakeArmSubsystem extends SubsystemBase {
   private static double kI = 0.0;
   private static double kD = 0.0;
 
-  private static double kS = .1;
-  private static double kG = 0.;
-  private static double kV = 12. / maxArmRadsPerSec;
-
   // Create a PID controller whose setpoint's change is subject to maximum
   // velocity and acceleration constraints.
   private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kMaxTrapVelocity,
       kMaxTrapAcceleration);
   public final ProfiledPIDController m_controller = new ProfiledPIDController(kP, kI, kD, m_constraints, kDt);
-  private final ArmFeedforward m_feedforward = new ArmFeedforward(kS, kG, kV);
 
-  public static Angle maxAngle = Degrees.of(100);
-  public static Angle minAngle = Degrees.of(-10);
+  public static Distance maxDistance = Inches.of(100);
+  public static Distance minDistance = Inches.of(0);
 
-  public Angle intakingAngle = Degrees.of(55);
+  public Distance intakingDistance = Inches.of(55);
 
-  public Angle clearAngle = Degrees.of(-20);
+  public Distance homeDistance = Inches.of(5);
+
+  private Current stallCurrent = Amps.of(15);
+
+  private Debouncer stallDebouncer = new Debouncer(.5);
+
+  private double ks = .1;
+  private double kv = 12 / maxSlideInchesPerSec;
 
   private int tst;
-  
+
   public boolean showData;
 
-  public IntakeArmSubsystem(boolean showData) {
+  public IntakeSlideArmSubsystem(boolean showData) {
 
-    m_controller.setGoal(minAngle.in(Radians));
+    m_controller.setGoal(homeDistance.in(Inches));
 
     intakeArmMotor.configure(
-        Configs.IntakeArm.intakeArmConfig,
+        Configs.IntakeArm.intakeSlideConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-        this.showData = showData;
+    this.showData = showData;
     if (showData)
       SmartDashboard.putData(this);
 
-    intakeArmMotor.getEncoder().setPosition(minAngle.in(Radians));
+    slideFeedforward = new SimpleMotorFeedforward(ks, kv);
+
+    intakeArmMotor.getEncoder().setPosition(homeDistance.in(Inches));
   }
 
   @Override
   public void initSendable(SendableBuilder builder) {
 
     builder.setSmartDashboardType("IntakeArm");
-    builder.addDoubleProperty("ActualAngle", () -> getIntakeArmAngle().in(Degrees), null);
-    builder.addDoubleProperty("GoalAngle", () -> m_controller.getGoal().position, null);
-    builder.addDoubleProperty("Velocity", () -> getIntakeArmVelocity().in(DegreesPerSecond), null);
-
+    builder.addDoubleProperty("ActualPosition", () -> getIntakeSlidePosition().in(Inches), null);
+    builder.addDoubleProperty("GoalPosition", () -> m_controller.getGoal().position, null);
+    builder.addDoubleProperty("Velocity", () -> getIntakeSlideVelocity().in(InchesPerSecond), null);
     builder.addBooleanProperty("AtSetpoint", m_controller::atSetpoint, null);
   }
 
@@ -115,32 +120,37 @@ public class IntakeArmSubsystem extends SubsystemBase {
   }
 
   public Command intakeArmToIntakePositionCommand() {
-    return Commands.runOnce(() -> m_controller.setGoal(intakingAngle.in(Radian)));
+    return Commands.runOnce(() -> m_controller.setGoal(intakingDistance.in(Inches)));
   }
 
   public Command intakeArmToClearPositionCommand() {
-    return Commands.runOnce(() -> m_controller.setGoal(clearAngle.in(Radian)));
+    return Commands.runOnce(() -> m_controller.setGoal(homeDistance.in(Inches)));
   }
 
   public Command positionIntakeArmCommand() {
-    return Commands.run(() -> positionIntakeArm(), this);
+    return Commands.run(() -> positionIntakeSlide(), this);
   }
 
-  public void positionIntakeArm() {
+  public void positionIntakeSlide() {
     tst++;
-    SmartDashboard.putNumber("IATEST", tst);
-    double feedforward = m_feedforward.calculate(m_controller.getSetpoint().position,
-        m_controller.getSetpoint().velocity);
-    double pidout = m_controller.calculate(getIntakeArmAngle().in(Radian));
-    intakeArmMotor.setVoltage(feedforward + pidout);
+
   }
 
-  public Angle getIntakeArmAngle() {
-    return Degrees.of(intakeArmMotor.getEncoder().getPosition());
+  public Distance getIntakeSlidePosition() {
+    return Inches.of(intakeArmMotor.getEncoder().getPosition());
   }
 
-  public AngularVelocity getIntakeArmVelocity() {
-    return DegreesPerSecond.of(intakeArmMotor.getEncoder().getVelocity());
+  public LinearVelocity getIntakeSlideVelocity() {
+    return InchesPerSecond.of(intakeArmMotor.getEncoder().getVelocity());
+  }
+
+  public Current getMotorCurrent() {
+    return Amps.of(intakeArmMotor.getOutputCurrent());
+  }
+
+  public boolean stalledAtEndTravel() {
+    boolean stalled = getMotorCurrent().gt(stallCurrent);
+    return stallDebouncer.calculate(stalled);
   }
 
   public Command jogIntakeArmCommand(DoubleSupplier speed) {
@@ -148,9 +158,9 @@ public class IntakeArmSubsystem extends SubsystemBase {
         () -> {
         }, // init
         () -> {
-          if (getIntakeArmAngle().lt(maxAngle) && speed.getAsDouble() > 0)
+          if (getIntakeSlidePosition().lt(maxDistance) && speed.getAsDouble() > 0)
             intakeArmMotor.setVoltage(speed.getAsDouble() * RobotController.getBatteryVoltage());
-          else if (getIntakeArmAngle().gte(minAngle) && speed.getAsDouble() < 0)
+          else if (getIntakeSlidePosition().gte(minDistance) && speed.getAsDouble() < 0)
             intakeArmMotor.setVoltage(speed.getAsDouble() * RobotController.getBatteryVoltage());
           else
             intakeArmMotor.set(0);

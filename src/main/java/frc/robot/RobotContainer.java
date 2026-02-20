@@ -38,7 +38,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
-import frc.robot.subsystems.IntakeArmSubsystem;
+import frc.robot.subsystems.IntakeSlideArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
@@ -80,7 +80,7 @@ public class RobotContainer {
 
         private final IntakeSubsystem m_intake;
 
-        private final IntakeArmSubsystem m_intakeArm;
+        private final IntakeSlideArmSubsystem m_intakeArm;
 
         public final LimelightVision m_llv;
 
@@ -94,7 +94,7 @@ public class RobotContainer {
                 m_hood = new HoodSubsystem(showAllData);
                 m_feeder = new FeederSubsystem(showAllData);
                 m_intake = new IntakeSubsystem(showAllData);
-                m_intakeArm = new IntakeArmSubsystem(showAllData);
+                m_intakeArm = new IntakeSlideArmSubsystem(showAllData);
                 m_llv = new LimelightVision(showAllData);
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
 
