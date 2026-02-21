@@ -164,12 +164,12 @@ public class RobotContainer {
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
-                                                m_intakeArm.intakeArmToIntakePositionCommand(),
+                                                m_intakeArm.intakeArmSlideToClearPositionCommand(),
                                                 m_intake.startIntakeCommand()))
                                 .onFalse(
                                                 Commands.sequence(
                                                                 Commands.waitSeconds(5),
-                                                                m_intakeArm.intakeArmToClearPositionCommand(),
+                                                                m_intakeArm.intakeArmSlideToClearPositionCommand(),
                                                                 m_intake.stopIntakeCommand()));
 
                 driver.rightBumper().onTrue(
@@ -267,8 +267,8 @@ public class RobotContainer {
                 NamedCommands.registerCommand("START_INTAKE", m_intake.startIntakeCommand());
                 NamedCommands.registerCommand("STOP_INTAKE", m_intake.stopIntakeCommand());
 
-                NamedCommands.registerCommand("INTAKE_ARM_DOWN", m_intakeArm.intakeArmToIntakePositionCommand());
-                NamedCommands.registerCommand("INTAKE_ARM_UP", m_intakeArm.intakeArmToClearPositionCommand());
+                NamedCommands.registerCommand("INTAKE_ARM_DOWN", m_intakeArm.intakeArmSlideToClearPositionCommand());
+                NamedCommands.registerCommand("INTAKE_ARM_UP", m_intakeArm.intakeArmSlideToClearPositionCommand());
 
                 NamedCommands.registerCommand("ALIGN_TO_HUB", new AutoAlignHub(drivetrain, m_shooter, 1));
 

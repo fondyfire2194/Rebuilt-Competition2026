@@ -16,7 +16,6 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -32,25 +31,25 @@ import frc.robot.Constants.CANIDConstants;
 
 public class IntakeSlideArmSubsystem extends SubsystemBase {
 
-  private final SparkMax intakeArmMotor = new SparkMax(CANIDConstants.intakeArmID, MotorType.kBrushless);
+  private final SparkMax intakeArmSlideMotor = new SparkMax(CANIDConstants.intakeArmID, MotorType.kBrushless);
 
   SparkMaxConfig armConfig;
 
   SimpleMotorFeedforward slideFeedforward;
 
-  private static double gearRatio = 36;// 1 motor rev = 10 inches
+  private static double inchesperMotorRev = 3.54;
 
   private static double maxMotorRPS = 5700 / 60;// 95 approx
 
-  private static double maxSlideInchesPerSec = maxMotorRPS / gearRatio;
+  private static double maxSlideInchesPerSec = maxMotorRPS * inchesperMotorRev;
 
-  public static double positionConversionFactor = 1 / gearRatio;// inches per motor rev
+  public static double positionConversionFactor = 1 / inchesperMotorRev;// inches per motor rev
   public static double velocityConversionFactor = positionConversionFactor / 60; // degrees per sec
 
   private static double kDt = 0.02;
 
-  private static double kMaxTrapVelocity = Units.degreesToRadians(100.);
-  private static double kMaxTrapAcceleration = Units.degreesToRadians(200.);
+  private static double kMaxTrapVelocity = 20;
+  private static double kMaxTrapAcceleration = 40;
 
   private static double kP = .05;
   private static double kI = 0.0;
@@ -62,12 +61,12 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
       kMaxTrapAcceleration);
   public final ProfiledPIDController m_controller = new ProfiledPIDController(kP, kI, kD, m_constraints, kDt);
 
-  public static Distance maxDistance = Inches.of(100);
+  public static Distance maxDistance = Inches.of(8.25);
   public static Distance minDistance = Inches.of(0);
 
-  public Distance intakingDistance = Inches.of(55);
+  public Distance intakingDistance = Inches.of(8);
 
-  public Distance homeDistance = Inches.of(5);
+  public Distance homeDistance = Inches.of(0);
 
   private Current stallCurrent = Amps.of(15);
 
@@ -84,7 +83,7 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
     m_controller.setGoal(homeDistance.in(Inches));
 
-    intakeArmMotor.configure(
+    intakeArmSlideMotor.configure(
         Configs.IntakeArm.intakeSlideConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
@@ -94,7 +93,7 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
     slideFeedforward = new SimpleMotorFeedforward(ks, kv);
 
-    intakeArmMotor.getEncoder().setPosition(homeDistance.in(Inches));
+    intakeArmSlideMotor.getEncoder().setPosition(homeDistance.in(Inches));
   }
 
   @Override
@@ -115,37 +114,38 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
   }
 
-  public boolean armInPosition() {
-    return Math.abs(m_controller.getGoal().position - intakeArmMotor.getEncoder().getPosition()) < .25;
+  public boolean armSlideInPosition() {
+    return Math.abs(m_controller.getGoal().position - intakeArmSlideMotor.getEncoder().getPosition()) < .25;
   }
 
-  public Command intakeArmToIntakePositionCommand() {
+  public Command intakeArmSlideToIntakePositionCommand() {
     return Commands.runOnce(() -> m_controller.setGoal(intakingDistance.in(Inches)));
   }
 
-  public Command intakeArmToClearPositionCommand() {
+  public Command intakeArmSlideToClearPositionCommand() {
     return Commands.runOnce(() -> m_controller.setGoal(homeDistance.in(Inches)));
   }
 
-  public Command positionIntakeArmCommand() {
+  public Command positionIntakeArmSlideCommand() {
     return Commands.run(() -> positionIntakeSlide(), this);
   }
 
   public void positionIntakeSlide() {
-    tst++;
-
+    double ff = slideFeedforward.calculate(getIntakeSlidePosition().in(Inches));
+    double pidout = m_controller.calculate(getIntakeSlidePosition().in(Inches));
+    intakeArmSlideMotor.setVoltage(ff = pidout);
   }
 
   public Distance getIntakeSlidePosition() {
-    return Inches.of(intakeArmMotor.getEncoder().getPosition());
+    return Inches.of(intakeArmSlideMotor.getEncoder().getPosition());
   }
 
   public LinearVelocity getIntakeSlideVelocity() {
-    return InchesPerSecond.of(intakeArmMotor.getEncoder().getVelocity());
+    return InchesPerSecond.of(intakeArmSlideMotor.getEncoder().getVelocity());
   }
 
   public Current getMotorCurrent() {
-    return Amps.of(intakeArmMotor.getOutputCurrent());
+    return Amps.of(intakeArmSlideMotor.getOutputCurrent());
   }
 
   public boolean stalledAtEndTravel() {
@@ -159,13 +159,13 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
         }, // init
         () -> {
           if (getIntakeSlidePosition().lt(maxDistance) && speed.getAsDouble() > 0)
-            intakeArmMotor.setVoltage(speed.getAsDouble() * RobotController.getBatteryVoltage());
+            intakeArmSlideMotor.setVoltage(speed.getAsDouble() * RobotController.getBatteryVoltage());
           else if (getIntakeSlidePosition().gte(minDistance) && speed.getAsDouble() < 0)
-            intakeArmMotor.setVoltage(speed.getAsDouble() * RobotController.getBatteryVoltage());
+            intakeArmSlideMotor.setVoltage(speed.getAsDouble() * RobotController.getBatteryVoltage());
           else
-            intakeArmMotor.set(0);
+            intakeArmSlideMotor.set(0);
         }, // execute
-        (interrupted) -> intakeArmMotor.set(0), // end
+        (interrupted) -> intakeArmSlideMotor.set(0), // end
         () -> false, // isFinished
         this);// requirements
   }
