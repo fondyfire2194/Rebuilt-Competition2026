@@ -131,7 +131,7 @@ public class RobotContainer {
                                                 // negative X (left)
                                                 .withRotationalRate(-driver.getRightX() * MaxAngularRate)));
 
-                m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
+                m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmSlideCommand());
 
                 m_hood.setDefaultCommand(m_hood.positionHoodCommand());
 

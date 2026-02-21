@@ -126,27 +126,26 @@ public class TunerConstants {
 
 
     // Front Left
-    private static final int kFrontLeftDriveMotorId = 31;
-    private static final int kFrontLeftSteerMotorId = 21;
-    private static final int kFrontLeftEncoderId = 41;
-    private static final Angle kFrontLeftEncoderOffset = Rotations.of(-0.331298828125 - 0.25);
+    private static final int kFrontLeftDriveMotorId = 30;
+    private static final int kFrontLeftSteerMotorId = 20;
+    private static final int kFrontLeftEncoderId = 40;
+    private static final Angle kFrontLeftEncoderOffset = Rotations.of(0.411376953125);
     private static final boolean kFrontLeftSteerMotorInverted = false;
     private static final boolean kFrontLeftEncoderInverted = false;
 
-    private static final Distance kFrontLeftXPos = Inches.of(13.625);
-    private static final Distance kFrontLeftYPos = Inches.of(11.25);
+    private static final Distance kFrontLeftXPos = Inches.of(10.1875);
+    private static final Distance kFrontLeftYPos = Inches.of(11.6875);
 
     // Front Right
-    private static final int kFrontRightDriveMotorId = 30;
-    private static final int kFrontRightSteerMotorId = 20;
-    private static final int kFrontRightEncoderId = 40;
-    private static final Angle kFrontRightEncoderOffset = Rotations.of(-0.15380859375 + 0.25
-    );
+    private static final int kFrontRightDriveMotorId = 34;
+    private static final int kFrontRightSteerMotorId = 21;
+    private static final int kFrontRightEncoderId = 41;
+    private static final Angle kFrontRightEncoderOffset = Rotations.of(0.0986328125);
     private static final boolean kFrontRightSteerMotorInverted = false;
     private static final boolean kFrontRightEncoderInverted = false;
 
-    private static final Distance kFrontRightXPos = Inches.of(13.625);
-    private static final Distance kFrontRightYPos = Inches.of(-11.25);
+    private static final Distance kFrontRightXPos = Inches.of(10.1875);
+    private static final Distance kFrontRightYPos = Inches.of(-11.6875);
 
     // Back Left
     private static final int kBackLeftDriveMotorId = 32;
@@ -156,19 +155,19 @@ public class TunerConstants {
     private static final boolean kBackLeftSteerMotorInverted = false;
     private static final boolean kBackLeftEncoderInverted = false;
 
-    private static final Distance kBackLeftXPos = Inches.of(-13.625);
-    private static final Distance kBackLeftYPos = Inches.of(11.25);
+    private static final Distance kBackLeftXPos = Inches.of(-10.1875);
+    private static final Distance kBackLeftYPos = Inches.of(11.6875);
 
     // Back Right
     private static final int kBackRightDriveMotorId = 33;
     private static final int kBackRightSteerMotorId = 23;
     private static final int kBackRightEncoderId = 43;
-    private static final Angle kBackRightEncoderOffset = Rotations.of(-0.321044921875);
+    private static final Angle kBackRightEncoderOffset = Rotations.of(-0.322509765625);
     private static final boolean kBackRightSteerMotorInverted = false;
     private static final boolean kBackRightEncoderInverted = false;
 
-    private static final Distance kBackRightXPos = Inches.of(-13.625);
-    private static final Distance kBackRightYPos = Inches.of(-11.25);
+    private static final Distance kBackRightXPos = Inches.of(-10.1875);
+    private static final Distance kBackRightYPos = Inches.of(-11.6875);
 
 
     public static final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> FrontLeft =
@@ -263,10 +262,10 @@ public class TunerConstants {
          *                                  unspecified or set to 0 Hz, this is 250 Hz on
          *                                  CAN FD, and 100 Hz on CAN 2.0.
          * @param odometryStandardDeviation The standard deviation for odometry calculation
-         *                                  in the form [x, y, theta]áµ€, with units in meters
+         *                                  in the form [x, y, theta]ᵀ, with units in meters
          *                                  and radians
          * @param visionStandardDeviation   The standard deviation for vision calculation
-         *                                  in the form [x, y, theta]áµ€, with units in meters
+         *                                  in the form [x, y, theta]ᵀ, with units in meters
          *                                  and radians
          * @param modules                   Constants for each specific module
          */
@@ -284,4 +283,4 @@ public class TunerConstants {
             );
         }
     }
-}
+}
