@@ -12,6 +12,7 @@ import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -20,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.commands.PIDDriveToPose;
+import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.LimelightHelpers;
@@ -91,7 +93,8 @@ public class Robot extends TimedRobot {
                 new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
                         m_robotContainer.drivetrain),
                 new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
-                        m_robotContainer.drivetrain));
+                        m_robotContainer.drivetrain),
+                new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
 
     }
 
@@ -122,7 +125,8 @@ public class Robot extends TimedRobot {
                     new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.leftCam,
                             m_robotContainer.drivetrain),
                     new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.rightCam,
-                            m_robotContainer.drivetrain));
+                            m_robotContainer.drivetrain),
+                    new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
             m_robotContainer.m_llv.useMT2 = true;
         }
 
@@ -130,6 +134,9 @@ public class Robot extends TimedRobot {
             CommandScheduler.getInstance().schedule(
                     new PIDDriveToPose(m_robotContainer.drivetrain, new Pose2d(13, 5, Rotation2d.fromDegrees(180))));
         }
+        CommandScheduler.getInstance()
+                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
+
     }
 
     @Override

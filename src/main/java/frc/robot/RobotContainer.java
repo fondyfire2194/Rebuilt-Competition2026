@@ -18,15 +18,15 @@ import com.pathplanner.lib.auto.NamedCommands;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.Constants.CANIDConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.PIDDriveToPose;
@@ -35,6 +35,7 @@ import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.PickAndSetPosetoMT1;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.AddressableLEDSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
@@ -84,9 +85,14 @@ public class RobotContainer {
 
         public final LimelightVision m_llv;
 
+        public final AddressableLEDSubsystem m_leds;
+
         // public final PowerDistribution pdh;
 
         private boolean showAllData = true;
+
+        private Trigger driverFiveSecondWarningEndShootTrigger;
+        private Trigger driverFiveSecondWarningEndPickupTrigger;
 
         public RobotContainer() {
 
@@ -96,6 +102,7 @@ public class RobotContainer {
                 m_intake = new IntakeSubsystem(showAllData);
                 m_intakeArm = new IntakeSlideArmSubsystem(showAllData);
                 m_llv = new LimelightVision(showAllData);
+                m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
 
                 registerNamedCommands();
@@ -109,17 +116,13 @@ public class RobotContainer {
                 setDefaultCommands();
                 configureDriverBindings();
                 configureCodriverBindings();
-
+                configureTriggers();
                 buildAutoChooser();
 
                 SignalLogger.setPath("media/sda1/ctre-logs");
                 DogLog.setPdh(new PowerDistribution());
                 drivetrain.registerTelemetry(logger::telemeterize);
         }
-
-        // private void configurePDH() {
-        // SmartDashboard.putData("Power Hub", pdh);
-        // }
 
         private void setDefaultCommands() {
                 drivetrain.setDefaultCommand(
@@ -238,6 +241,44 @@ public class RobotContainer {
 
                 codriver.back().onTrue(
                                 m_hood.positionToHomeCommand());
+        }
+
+        private void configureTriggers() {
+                driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
+                driverFiveSecondWarningEndPickupTrigger
+                                .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kLeftRumble, 1)));
+
+                driverFiveSecondWarningEndShootTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfShoot);
+                driverFiveSecondWarningEndShootTrigger
+                                .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kRightRumble, 1)));
+
+        }
+
+        private void configurePDH() {
+
+                /**
+                 * 0 - BRSteer
+                 * 1 -
+                 * 2-
+                 * 3-
+                 * 4 -
+                 * 5- intake slide arm
+                 * 6 - FRSteer
+                 * 7
+                 * 8
+                 * 9 - FRDrive
+                 * 10 - FLDrive
+                 * 11-
+                 * 12-
+                 * 13- FLSteer
+                 * 14-
+                 * 15-
+                 * 16
+                 * 17-BLSteer
+                 * 18-BRDrive
+                 * 19-BLDrive
+                 * 
+                 */
 
         }
 
@@ -259,7 +300,8 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("USE_MT2", Commands.runOnce(() -> m_llv.useMT2 = true));
 
-                NamedCommands.registerCommand("DRIVE_TO_DEPOT_RECOVER_POSE", new PIDDriveToPose(drivetrain,new Pose2d()));
+                NamedCommands.registerCommand("DRIVE_TO_DEPOT_RECOVER_POSE",
+                                new PIDDriveToPose(drivetrain, new Pose2d()));
 
                 NamedCommands.registerCommand("MOVE_TO_DEPOT_INTAKE_POSE",
                                 drivetrain.pathFindToPose(new Pose2d(), drivetrain.pathConstraints));
