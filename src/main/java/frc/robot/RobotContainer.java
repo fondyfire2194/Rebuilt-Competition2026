@@ -93,6 +93,7 @@ public class RobotContainer {
 
         private Trigger driverFiveSecondWarningEndShootTrigger;
         private Trigger driverFiveSecondWarningEndPickupTrigger;
+        private Trigger endGameWarningTrigger;
 
         public RobotContainer() {
 
@@ -220,7 +221,7 @@ public class RobotContainer {
 
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
-                codriver.rightBumper().onTrue(Commands.none());
+                codriver.rightBumper().onTrue(Commands.deferredProxy(()->m_leds.toggleGameData()));
 
                 codriver.y().onTrue(m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .5))
                                 .onFalse(m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .0));
@@ -245,12 +246,31 @@ public class RobotContainer {
 
         private void configureTriggers() {
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
+
                 driverFiveSecondWarningEndPickupTrigger
-                                .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kLeftRumble, 1)));
+                                .onTrue(Commands.sequence(
+                                                Commands.runOnce(() -> driver
+                                                                .setRumble(RumbleType.kLeftRumble, 1)),
+                                                Commands.waitSeconds(.5),
+                                                Commands.runOnce(() -> driver
+                                                                .setRumble(RumbleType.kLeftRumble, 0))));
 
                 driverFiveSecondWarningEndShootTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfShoot);
                 driverFiveSecondWarningEndShootTrigger
-                                .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kRightRumble, 1)));
+                                .onTrue(Commands.sequence(
+                                                Commands.runOnce(() -> driver.setRumble(RumbleType.kRightRumble, 1)),
+                                                Commands.waitSeconds(.5),
+                                                Commands.runOnce(() -> driver.setRumble(RumbleType.kRightRumble, 0))));
+
+                endGameWarningTrigger = new Trigger(() -> m_leds.endGameWarning);
+                endGameWarningTrigger
+                                .onTrue(
+                                                Commands.sequence(
+                                                                Commands.runOnce(() -> driver
+                                                                                .setRumble(RumbleType.kBothRumble, 1)),
+                                                                Commands.waitSeconds(.75),
+                                                                Commands.runOnce(() -> driver.setRumble(
+                                                                                RumbleType.kBothRumble, 0))));
 
         }
 

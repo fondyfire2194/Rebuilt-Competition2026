@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -51,6 +52,7 @@ public class Robot extends TimedRobot {
         loopEvents.init();
         autoHasRun = false;
         CommandScheduler.getInstance().schedule(new CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
+      
     }
 
     @Override
@@ -127,6 +129,7 @@ public class Robot extends TimedRobot {
                     new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.rightCam,
                             m_robotContainer.drivetrain),
                     new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
+                    
             m_robotContainer.m_llv.useMT2 = true;
         }
 

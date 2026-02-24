@@ -29,13 +29,14 @@ public class ShiftDetectionCommand extends Command {
 
   private final double driverWarningTime = 5;
   private int shiftNumber = 0;
-  private boolean currentAllianceShootActive;
+  
 
   double matchTime;
-  String gameData;
+
   private boolean hubIsActive;
   private boolean blueActiveFirst;
 
+  // https://docs.wpilib.org/en/stable/docs/yearly-overview/2026-game-data.html
   public ShiftDetectionCommand(TripleShooterSubsystem shooter, AddressableLEDSubsystem leds) {
     // Use addRequirements() here to declare subsystem dependencies.
     m_shooter = shooter;
@@ -51,22 +52,24 @@ public class ShiftDetectionCommand extends Command {
   @Override
   public void execute() {
     matchTime = DriverStation.getMatchTime();
-    gameData = DriverStation.getGameSpecificMessage();// letter is high auto score alliance
+    m_leds.gameData = DriverStation.getGameSpecificMessage();// letter is high auto score alliance
 
-    if (RobotBase.isSimulation())
-      gameData = "R";
     hubIsActive = isHubActive();
     m_shooter.hubIsActive = hubIsActive;
     m_leds.hubIsActive = hubIsActive;
 
-    m_leds.fiveSecondWarningEndOfShoot = hubIsActive && getFiveSecondWarningEnd();
-    m_leds.fiveSecondWarningEndOfPickup = !hubIsActive && getFiveSecondWarningEnd();
+    m_leds.fiveSecondWarningEndOfShoot = hubIsActive && getFiveSecondWarning();
+    m_leds.fiveSecondWarningEndOfPickup = !hubIsActive && getFiveSecondWarning();
+    m_leds.endGameWarning = getEndGameWarning();
+    m_leds.inEndGame = getInEndGame();
+    m_leds.endOfMatch = endOfMatch();
 
-    SmartDashboard.putNumber("HubMatchtime", matchTime);
-    SmartDashboard.putString("HubGamedata", gameData);
-    SmartDashboard.putNumber("HubShiftNum", shiftNumber);
-    SmartDashboard.putBoolean("HubBLUEFIRST", blueActiveFirst);
+    SmartDashboard.putNumber("MatchTime", matchTime);
+    SmartDashboard.putNumber("ShiftNum", shiftNumber);
+    SmartDashboard.putBoolean("BLUEFIRST", blueActiveFirst);
+    SmartDashboard.putNumber("ShiftTimeLeft", getTimeLeftInShift());
 
+    SmartDashboard.putBoolean("EndOfMatch", endOfMatch());
   }
 
   // Called once the command ends or is interrupted.
@@ -99,12 +102,12 @@ public class ShiftDetectionCommand extends Command {
 
     // If we have no game data, we cannot compute, assume hub is active, as its
     // likely early in teleop.
-    if (gameData.isEmpty()) {
+    if (m_leds.gameData.isEmpty()) {
       return RobotBase.isReal();
     }
     blueActiveFirst = false;
     // game data gives auto high score alliance - they shoot shifts 2 and 4
-    switch (gameData.charAt(0)) {
+    switch (m_leds.gameData.charAt(0)) {
       case 'R' -> blueActiveFirst = true;
       case 'B' -> blueActiveFirst = false;
       default -> {
@@ -114,10 +117,14 @@ public class ShiftDetectionCommand extends Command {
     }
 
     // Shift was is active for blue if red won auto, or red if blue won auto.
-    currentAllianceShootActive = switch (alliance.get()) {
+    m_leds.currentAllianceShootActive = switch (alliance.get()) {
       case Red -> !blueActiveFirst;
       case Blue -> blueActiveFirst;
     };
+
+    if (m_leds.forceFirstAlliance) {
+     m_leds. currentAllianceShootActive = m_leds.blueActiveFirst;
+    }
 
     if (matchTime >= firstShiftStartTime) {
       // transition shift
@@ -129,40 +136,74 @@ public class ShiftDetectionCommand extends Command {
 
       shiftNumber = 1;
 
-      return currentAllianceShootActive;
+      return m_leds.currentAllianceShootActive;
 
     } else if (matchTime < secondShiftStartTime && matchTime > thirdShiftStartTime) {
       // Shift 2
 
       shiftNumber = 2;
 
-      return !currentAllianceShootActive;
+      return !m_leds.currentAllianceShootActive;
 
     } else if (matchTime < thirdShiftStartTime && matchTime > fourthShiftStartTime) {
       // Shift 3
       {
         shiftNumber = 3;
       }
-      return currentAllianceShootActive;
+      return m_leds.currentAllianceShootActive;
 
     } else if (matchTime < fourthShiftStartTime && matchTime > endGameStartTime) {
       // Shift 3
       {
         shiftNumber = 4;
       }
-      return !currentAllianceShootActive;
+      return !m_leds.currentAllianceShootActive;
 
     } else {
+      shiftNumber = 5;
       // End game, hub always active.
       return true;
     }
   }
 
-  public boolean getFiveSecondWarningEnd() {
+  public boolean getFiveSecondWarning() {
     return shiftNumber == 1 && matchTime < secondShiftStartTime + driverWarningTime
         || shiftNumber == 2 && matchTime < thirdShiftStartTime + driverWarningTime
         || shiftNumber == 3 && matchTime < fourthShiftStartTime + driverWarningTime;
-       // || shiftNumber == 4 && matchTime < endGameStartTime + driverWarningTime;
+  }
+
+  public boolean getEndGameWarning() {
+    return shiftNumber == 4 && matchTime < endGameStartTime + driverWarningTime;
+  }
+
+  public boolean getInEndGame() {
+    return shiftNumber == 5;
+  }
+
+  public boolean endOfMatch() {
+    return shiftNumber == 5 && matchTime < 2;
+  }
+
+  public double getTimeLeftInShift() {
+    if (DriverStation.isTeleopEnabled()) {
+      switch (shiftNumber) {
+        case 0:
+          return matchTime - firstShiftStartTime;
+        case 1:
+          return matchTime - secondShiftStartTime;
+        case 2:
+          return matchTime - thirdShiftStartTime;
+        case 3:
+          return matchTime - fourthShiftStartTime;
+        case 4:
+          return matchTime - endGameStartTime;
+        case 5:
+          return matchTime;
+        default:
+          return 0;
+      }
+    } else
+      return 0;
   }
 
 }
