@@ -31,6 +31,18 @@ public class HoodSubsystem extends SubsystemBase {
 
     private final SparkMax hoodMotor;
 
+    private final double gearRatio = 139;
+
+    private final double pinionTeeth = 30;
+
+    private final double quadrantDegreesPerTooth = 360. / 350;// approx 1.3
+
+    private final double degreesPerPinionRev = pinionTeeth * quadrantDegreesPerTooth;//approx 40
+
+    private final double degreesPerMotorRev = degreesPerPinionRev / gearRatio;//approx .22
+
+    private final double quadrantNumberTeeth = 30;
+
     private SparkMaxConfig motorConfig;
     private SparkClosedLoopController closedLoopController;
     private RelativeEncoder encoder;

@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.75,
-        "y": 7.2
+        "x": 3.64,
+        "y": 4.05
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.75,
-        "y": 7.84784842725037
+        "x": 2.1504819277108425,
+        "y": 6.133120481927712
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.75,
-        "y": 2.25
+        "x": 0.959,
+        "y": 5.947
       },
       "prevControl": {
-        "x": 7.75,
-        "y": 2.5
+        "x": 2.478313253012048,
+        "y": 5.88178313253012
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,12 +31,12 @@
   "rotationTargets": [],
   "constraintZones": [
     {
-      "name": "PickingUpZone",
-      "minWaypointRelativePos": 0,
-      "maxWaypointRelativePos": 0.9408352668213448,
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.5866906474820145,
+      "maxWaypointRelativePos": 1.0,
       "constraints": {
         "maxVelocity": 1.5,
-        "maxAcceleration": 2.0,
+        "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -56,13 +56,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "DepotToNeutralZone",
+  "folder": "StartFromHub",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

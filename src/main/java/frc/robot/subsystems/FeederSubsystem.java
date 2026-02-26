@@ -96,7 +96,7 @@ public class FeederSubsystem extends SubsystemBase {
   public Command jogFeederRollerCommand() {
     return this.startEnd(
         () -> {
-          this.runFeederRollerMotor(Constants.FeederSetpoints.kFeedRollerSetpoint);
+          this.runFeederRollerMotor(Constants.FeederSetpoints.kFeedRollerJogSetpoint);
         }, () -> {
           this.runFeederRollerMotor(0.0);
         }).withName("Jog FeederRoller");
@@ -110,7 +110,7 @@ public class FeederSubsystem extends SubsystemBase {
   public Command jogReverseFeederRollerCommand() {
     return this.startEnd(
         () -> {
-          this.runFeederRollerMotor(Constants.FeederSetpoints.kFeedRollerJogSetpoint);
+          this.runFeederRollerMotor(-Constants.FeederSetpoints.kFeedRollerJogSetpoint);
         }, () -> {
           this.runFeederRollerMotor(0.0);
         }).withName("FeederRollerReversing");
@@ -149,6 +149,15 @@ public class FeederSubsystem extends SubsystemBase {
 
   public Command stopFeederBeltCommand() {
     return Commands.runOnce(() -> stopFeederBeltMotor());
+  }
+
+  public void runBeltAandRollers() {
+    runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
+    runFeederRollerMotor(FeederSetpoints.kFeedRollerSetpoint);
+  }
+
+  public Command runBeltsAndRollersCommand() {
+    return Commands.runOnce(() -> runBeltAandRollers());
   }
 
   /**
