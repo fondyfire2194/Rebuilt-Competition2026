@@ -91,7 +91,7 @@ public final class Configs {
     public static final SparkMaxConfig feederRollerConfig = new SparkMaxConfig();
     static { // Configure basic setting of the feeder belt motor
       feederRollerConfig
-          .inverted(true)
+          .inverted(false)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(1.0)
           .smartCurrentLimit(60);
