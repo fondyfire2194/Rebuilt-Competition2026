@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import java.util.function.DoubleSupplier;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -24,7 +22,8 @@ import frc.robot.Constants;
 
 public class HoodSubsystem extends SubsystemBase {
     private static final double kMinPosition = 0.0;
-    private static final double kMaxPosition = 20;
+    private static final double kMaxPosition = 15.;
+
     private static final double kPositionTolerance = 0.01;
 
     private static double targetPosition;
@@ -37,16 +36,13 @@ public class HoodSubsystem extends SubsystemBase {
 
     private final double quadrantDegreesPerTooth = 360. / 350;// approx 1.3
 
-    private final double degreesPerPinionRev = pinionTeeth * quadrantDegreesPerTooth;//approx 40
+    private final double degreesPerPinionRev = pinionTeeth * quadrantDegreesPerTooth;// approx 40
 
-    private final double degreesPerMotorRev = degreesPerPinionRev / gearRatio;//approx .22
-
-    private final double quadrantNumberTeeth = 30;
+    private final double degreesPerMotorRev = degreesPerPinionRev / gearRatio;// approx .22
 
     private SparkMaxConfig motorConfig;
     private SparkClosedLoopController closedLoopController;
     private RelativeEncoder encoder;
-    private double degreesPerEncoderRev = 3.6;
 
     public boolean showData;
 
@@ -60,6 +56,7 @@ public class HoodSubsystem extends SubsystemBase {
          */
         motorConfig = new SparkMaxConfig();
 
+        motorConfig.inverted(false);
         /*
          * Configure the encoder. For this specific example, we are using the
          * integrated encoder of the NEO, and we don't need to configure it. If
@@ -67,8 +64,8 @@ public class HoodSubsystem extends SubsystemBase {
          * factors.
          */
         motorConfig.encoder
-                .positionConversionFactor(degreesPerEncoderRev)
-                .velocityConversionFactor(degreesPerEncoderRev / 60);
+                .positionConversionFactor(degreesPerMotorRev)
+                .velocityConversionFactor(degreesPerMotorRev / 60);
 
         motorConfig.softLimit
                 .forwardSoftLimit(kMaxPosition)
@@ -87,7 +84,7 @@ public class HoodSubsystem extends SubsystemBase {
                 .p(0.05)
                 .i(0)
                 .d(0)
-                .outputRange(-.2, .25);
+                .outputRange(-.25, .25);
 
         /*
          * Apply the configuration to the SPARK MAX.
@@ -155,8 +152,8 @@ public class HoodSubsystem extends SubsystemBase {
     public Command jogHoodUpCommand() {
         return this.startEnd(
                 () -> {
-                    if (getHoodPosition() > kMinPosition)
-                        this.runHoodMotor(-Constants.HoodSetpoints.jogHoodMotor);
+                    if (getHoodPosition() <kMaxPosition)
+                        this.runHoodMotor(Constants.HoodSetpoints.jogHoodMotor);
                     targetPosition = getHoodPosition();
                 }, () -> {
                     this.runHoodMotor(0.0);
@@ -166,8 +163,8 @@ public class HoodSubsystem extends SubsystemBase {
     public Command jogHoodDownCommand() {
         return this.startEnd(
                 () -> {
-                    if (getHoodPosition() < kMaxPosition)
-                        this.runHoodMotor(Constants.HoodSetpoints.jogHoodMotor);
+                    if (getHoodPosition() >kMinPosition)
+                        this.runHoodMotor(-Constants.HoodSetpoints.jogHoodMotor);
                     targetPosition = getHoodPosition();
                 }, () -> {
                     this.runHoodMotor(0.0);
@@ -185,7 +182,7 @@ public class HoodSubsystem extends SubsystemBase {
         builder.addDoubleProperty("Current Position", () -> encoder.getPosition(), null);
         builder.addDoubleProperty("Target Position", () -> targetPosition, null);
         builder.addDoubleProperty("Motor Amps", () -> hoodMotor.getOutputCurrent(), null);
-
+        builder.addDoubleProperty("Motor Output Volts", () -> hoodMotor.getAppliedOutput() * 12, null);
         builder.addBooleanProperty("MaxTravelLimitReached", (() -> getHoodPosition() >= kMaxPosition), null);
         builder.addBooleanProperty("MinTravelLimitReached", (() -> getHoodPosition() <= kMinPosition), null);
 

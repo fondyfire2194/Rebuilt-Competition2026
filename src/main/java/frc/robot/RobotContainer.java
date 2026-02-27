@@ -43,6 +43,7 @@ import frc.robot.subsystems.IntakeSlideArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
+import frc.robot.utils.LaunchCalculator;
 
 public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
@@ -94,6 +95,7 @@ public class RobotContainer {
         private Trigger driverFiveSecondWarningEndShootTrigger;
         private Trigger driverFiveSecondWarningEndPickupTrigger;
         private Trigger endGameWarningTrigger;
+        private LaunchCalculator launchCalculator;
 
         public RobotContainer() {
 
@@ -105,14 +107,14 @@ public class RobotContainer {
                 m_llv = new LimelightVision(showAllData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
-
+                launchCalculator = new LaunchCalculator(drivetrain, m_shooter);
                 registerNamedCommands();
 
                 // configurePDH();
 
                 m_shooter.leftMotorActive = true;
                 m_shooter.middleMotorActive = true;
-                m_shooter.rightMotorActive = false;
+                m_shooter.rightMotorActive = true;
 
                 setDefaultCommands();
                 configureDriverBindings();
@@ -138,7 +140,7 @@ public class RobotContainer {
                 // m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmSlideCommand());
 
                 // m_hood.setDefaultCommand(m_hood.positionHoodCommand());
-
+                launchCalculator.getParameters();
         }
 
         private void configureDriverBindings() {
@@ -183,11 +185,11 @@ public class RobotContainer {
                                                 m_feeder.stopFeederBeltCommand(),
                                                 m_intake.stopIntakeCommand()));
 
-                driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand())
-                                .whileTrue(
-                                                Commands.parallel(new PrepareShotCommand(m_shooter, m_hood),
-                                                                new AlignTargetOdometry(drivetrain, m_shooter, drive,
-                                                                                driver, false)));
+                driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand());
+                                // .whileTrue(
+                                //                 Commands.parallel(new PrepareShotCommand(m_shooter, m_hood),
+                                //                                 new AlignTargetOdometry(drivetrain, m_shooter, drive,
+                                //                                                 driver, false)));
 
                 driver.y().whileTrue(m_intake.jogIntakeCommand());
 
@@ -226,10 +228,10 @@ public class RobotContainer {
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
-                codriver.rightTrigger().and(codriver.povDown()).whileTrue(m_feeder.jogFeederRollerCommand());
+               // codriver.rightTrigger().and(codriver.povDown()).whileTrue(m_feeder.jogFeederRollerCommand());
 
-                codriver.rightTrigger().and(codriver.povLeft()).onTrue(
-                               m_feeder.runBeltsAndRollersCommand());
+                codriver.rightTrigger().and(codriver.povDown()).onTrue(
+                                m_feeder.runBeltsAndRollersCommand());
 
                 codriver.rightTrigger().and(codriver.y().whileTrue(
                                 m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .5))
@@ -249,11 +251,12 @@ public class RobotContainer {
 
                 codriver.rightTrigger().and(codriver.povDown().onTrue(Commands.none()));
 
-                // codriver.b().whileTrue(m_hood.jogHoodUpCommand());
-                // codriver.x().whileTrue(m_hood.jogHoodDownCommand());
+                codriver.rightTrigger().and(codriver.povLeft().whileTrue(m_hood.jogHoodUpCommand()));
+
+                codriver.rightTrigger().and(codriver.povRight().whileTrue(m_hood.jogHoodDownCommand()));
 
                 // codriver.back().onTrue(
-                //                 m_hood.positionToHomeCommand());
+                // m_hood.positionToHomeCommand());
         }
 
         private void configureTriggers() {

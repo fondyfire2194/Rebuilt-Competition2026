@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
@@ -15,6 +16,7 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -80,7 +82,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     middleMotor = new TalonFX(CANIDConstants.centerShooterID, CanbusConstants.kCANivoreCANBus);
     rightMotor = new TalonFX(CANIDConstants.rightShooterID, CanbusConstants.kCANivoreCANBus);
 
-    configureMotor(leftMotor, InvertedValue.CounterClockwise_Positive);
+    configureMotor(leftMotor, InvertedValue.Clockwise_Positive);
     configureMotor(middleMotor, InvertedValue.Clockwise_Positive);
     configureMotor(rightMotor, InvertedValue.Clockwise_Positive);
 
@@ -89,8 +91,11 @@ public class TripleShooterSubsystem extends SubsystemBase {
   }
 
   private void configureMotor(TalonFX motor, InvertedValue invertDirection) {
-    final TalonFXConfiguration configs = new TalonFXConfiguration();
-
+    final TalonFXConfiguration configs = new TalonFXConfiguration()
+        .withMotorOutput(
+            new MotorOutputConfigs()
+                .withInverted(invertDirection)
+                .withNeutralMode(NeutralModeValue.Coast));
     /*
      * Voltage-based velocity requires a velocity feed forward to account for the
      * back-emf of the motor
@@ -109,6 +114,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
      * Torque-based velocity does not require a velocity feed forward, as torque
      * will accelerate the rotor up to the desired velocity by itself
      */
+
     configs.Slot1.kS = 2.5; // To account for friction, add 2.5 A of static feedforward
     configs.Slot1.kP = 5; // An error of 1 rotation per second results in 5 A output
     configs.Slot1.kI = 0; // No output for integrated error
@@ -272,7 +278,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     // if (middleMotorActive)
     initSendable(builder, middleMotor, "Middle");
     // if (rightMotorActive)
-    // initSendable(builder, rightMotor, "Right");
+     initSendable(builder, rightMotor, "Right");
     builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
     builder.addDoubleProperty("Voltage Target RPM", () -> velocityVoltage.getVelocityMeasure().in(RPM), null);
