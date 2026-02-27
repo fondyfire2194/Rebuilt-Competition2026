@@ -68,7 +68,7 @@
     "rotation": 37.833
   },
   "reversed": false,
-  "folder": "DepotToNeutralZone",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 90.0

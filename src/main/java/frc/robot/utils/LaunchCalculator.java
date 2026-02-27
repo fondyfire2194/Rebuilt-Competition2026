@@ -6,6 +6,7 @@ package frc.robot.utils;
 
 import static edu.wpi.first.units.Units.Meters;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -17,6 +18,9 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.LauncherConstants;
@@ -24,6 +28,7 @@ import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.geometry.AllianceFlipUtil;
+import frc.robot.utils.geometry.GeomUtil;
 
 /**
  * Add your docs here.
@@ -85,15 +90,40 @@ public class LaunchCalculator {
   private static final double passingMinDistance = 0;
   private static final double passingMaxDistance = 12;
   private static final double phaseDelay = .03;
+  private final int loops = 20;
 
   private final CommandSwerveDrivetrain drivetrain;
   private final TripleShooterSubsystem shooter;
 
-  private Rotation2d lastDriveAngle;
+  private Rotation2d lastDriveAngle = new Rotation2d();
 
   private double lastHoodAngle;
 
   private double hoodAngleOffsetDeg = 0.0;
+
+  public double getHoodAngleOffsetDeg() {
+    return hoodAngleOffsetDeg;
+  }
+
+  private int loopTST;
+
+  StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("LC/RobotPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("LC/EstimatedPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> lookAheadRobotPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("LC/LookAheadRobotPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> lookAheadPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("LC/LookAheadPose", Pose2d.struct).publish();
+
+  StructPublisher<Pose2d> launcherPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("LC/LauncherPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> stAimedPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("LC/StAimedPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> derivedPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("LC/DerivedPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> projectedHubPosePublisher = NetworkTableInstance.getDefault()
+      .getStructTopic("LC/ProjectedHubPose", Pose2d.struct).publish();
 
   public LaunchCalculator(CommandSwerveDrivetrain drivetrain, TripleShooterSubsystem shooter) {
     this.drivetrain = drivetrain;
@@ -180,53 +210,61 @@ public class LaunchCalculator {
     }
 
     // Calculate estimated pose while accounting for phase delay
-    Pose2d estimatedPose = drivetrain.getState().Pose;
+    Pose2d robotPose = drivetrain.getState().Pose;
     ChassisSpeeds robotRelativeVelocity = drivetrain.getState().Speeds;
-    estimatedPose = estimatedPose.exp(
+    Pose2d estimatedPose = robotPose.exp(
         new Twist2d(
             robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
             robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
             robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
+    robotPosePublisher.accept(robotPose);
+    estimatedPosePublisher.accept(estimatedPose);
 
     // Calculate target
     Translation2d target = passing
         ? getPassingTarget()
         : AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
 
-    Pose2d launcherPosition = estimatedPose.transformBy(LauncherConstants.robotToLaunchert2d);
-    double launcherToTargetDistance = target.getDistance(launcherPosition.getTranslation());
+    Pose2d launcherPose = estimatedPose.transformBy(LauncherConstants.toTransform2d(LauncherConstants.robotToLauncher));
+    launcherPosePublisher.accept(launcherPose);
 
-    // Calculate field relative launcher velocity
-    // This isn't actually the launcherVelocity given it won't account for angular
-    // velocity of robot
-    double launcherVelocityX = drivetrain.getState().Speeds.vxMetersPerSecond;
-    double launcherVelocityY = drivetrain.getState().Speeds.vyMetersPerSecond;
+    double launcherToTargetDistance = target.getDistance(launcherPose.getTranslation());
+
+    SmartDashboard.putNumber("LC/Lchr2TgtDist", launcherToTargetDistance);
+    ChassisSpeeds launcherVelocity = GeomUtil.transformVelocity(
+        drivetrain.getState().Speeds,
+        LauncherConstants.robotToLauncher.getTranslation().toTranslation2d(),
+        drivetrain.getState().Pose.getRotation());
 
     // Account for imparted velocity by robot (launcher) to offset
     double timeOfFlight = passing
         ? passingTimeOfFlightMap.get(launcherToTargetDistance)
         : timeOfFlightMap.get(launcherToTargetDistance);
-    Pose2d lookaheadPose = launcherPosition;
+    Pose2d lookaheadPose = launcherPose;
     double lookaheadLauncherToTargetDistance = launcherToTargetDistance;
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < loops; i++) {
+
       timeOfFlight = passing
           ? passingTimeOfFlightMap.get(lookaheadLauncherToTargetDistance)
           : timeOfFlightMap.get(lookaheadLauncherToTargetDistance);
-      double offsetX = launcherVelocityX * timeOfFlight;
-      double offsetY = launcherVelocityY * timeOfFlight;
+      double offsetX = launcherVelocity.vxMetersPerSecond * timeOfFlight;
+      double offsetY = launcherVelocity.vyMetersPerSecond * timeOfFlight;
       lookaheadPose = new Pose2d(
-          launcherPosition.getTranslation().plus(new Translation2d(offsetX, offsetY)),
-          launcherPosition.getRotation());
+          launcherPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
+          launcherPose.getRotation());
       lookaheadLauncherToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
+
+      lookAheadPosePublisher.accept(lookaheadPose);
     }
 
     // Account for launcher being off center
-    Pose2d lookaheadRobotPose = lookaheadPose.transformBy(LauncherConstants.robotToLaunchert2d.inverse());
+    Pose2d lookaheadRobotPose = lookaheadPose
+        .transformBy(LauncherConstants.toTransform2d(LauncherConstants.robotToLauncher).inverse());
     Rotation2d driveAngle = getDriveAngleWithLauncherOffset(lookaheadRobotPose, target);
     LinearFilter hoodAngleFilter = LinearFilter.movingAverage((int) (0.4 / Constants.loopPeriodSecs));
     LinearFilter driveAngleFilter = LinearFilter.movingAverage((int) (1.5 / Constants.loopPeriodSecs));
-
+    lookAheadRobotPosePublisher.accept(lookaheadRobotPose);
     // Calculate remaining parameters
     double hoodAngle = passing
         ? passingHoodAngleMap.get(lookaheadLauncherToTargetDistance).getRadians()
@@ -248,6 +286,10 @@ public class LaunchCalculator {
     boolean behindFarHub = false;// farHubBound.contains(flippedPose.getTranslation());
     boolean outsideOfBadBoxes = !(insideTowerBadBox || behindNearHub || behindFarHub);
 
+    SmartDashboard.putNumber("LC/LchrVelX", launcherVelocity.vxMetersPerSecond);
+    SmartDashboard.putNumber("LC/LchrVelY", launcherVelocity.vyMetersPerSecond);
+    SmartDashboard.putNumber("LC/LkAhdLchr2TgtDis", lookaheadLauncherToTargetDistance);
+
     // Constructor parameters
     latestParameters = new LaunchingParameters(
         outsideOfBadBoxes
@@ -264,14 +306,36 @@ public class LaunchCalculator {
         launcherToTargetDistance,
         timeOfFlight,
         passing);
+    loopTST++;
+    SmartDashboard.putNumber("LC/TST", loopTST);
+    if (latestParameters != null) {
+      SmartDashboard.putBoolean("LC/LPValid", latestParameters.isValid);
+      SmartDashboard.putNumber("LC/DriveAngle", latestParameters.driveAngle.getDegrees());
+      SmartDashboard.putNumber("LC/RobotAngle", drivetrain.getState().Pose.getRotation().getDegrees());
+      SmartDashboard.putNumber("LC/DriveVel", latestParameters.driveVelocity);
+      SmartDashboard.putNumber("LC/HoodAngle", latestParameters.hoodAngle);
+      SmartDashboard.putNumber("LC/HoodVel", latestParameters.hoodVelocity);
+      SmartDashboard.putNumber("LC/ShtrSpeed", latestParameters.flywheelSpeed);
+      SmartDashboard.putNumber("LC/DistNoLkAhd", latestParameters.distanceNoLookahead);
+      SmartDashboard.putNumber("LC/TOF", latestParameters.timeOfFlight);
+      SmartDashboard.putBoolean("LC/Passing", latestParameters.passing);
+      SmartDashboard.putNumber("LC/DAWLO", getDriveAngleWithLauncherOffset(lookaheadRobotPose, target).getDegrees());
 
+      stAimedPosePublisher.accept(getStationaryAimedPose(drivetrain.getState().Pose.getTranslation(), false));
+      Pose2d derivedPose = new Pose2d(robotPose.getTranslation(), driveAngle);
+      derivedPosePublisher.accept(derivedPose);
+
+      projectedHubPosePublisher
+          .accept(getProjectedHubPose(lookaheadRobotPose, lookaheadLauncherToTargetDistance, driveAngle));
+      SmartDashboard.putNumber("LC/projectedYDiff",
+          getProjectedHubPose(lookaheadRobotPose, lookaheadLauncherToTargetDistance, driveAngle).getY()
+              - target.getY());
+
+    }
     // Log calculated values
-    // Logger.recordOutput("LaunchCalculator/TargetPose", new Pose2d(target,
-    // Rotation2d.kZero));
-    // Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
-    // Logger.recordOutput(
-    // "LaunchCalculator/LauncherToTargetDistance",
-    // lookaheadLauncherToTargetDistance);
+    DogLog.log("LaunchCalculator/TargetPose", new Pose2d(target, Rotation2d.kZero));
+    DogLog.log("LaunchCalculator/LookaheadPose", lookaheadPose);
+    DogLog.log("LaunchCalculator/LauncherToTargetDistance", lookaheadLauncherToTargetDistance);
 
     return latestParameters;
   }
@@ -279,6 +343,11 @@ public class LaunchCalculator {
   private static Rotation2d getDriveAngleWithLauncherOffset(
       Pose2d robotPose, Translation2d target) {
     Rotation2d fieldToHubAngle = target.minus(robotPose.getTranslation()).getAngle();
+    SmartDashboard.putNumber("LC/tgtx", target.getX());
+    SmartDashboard.putNumber("LC/tgty", target.getY());
+    SmartDashboard.putNumber("LC/robx", robotPose.getX());
+    SmartDashboard.putNumber("LC/roby", robotPose.getY());
+    SmartDashboard.putNumber("LC/fieldToHubAngle", fieldToHubAngle.getDegrees());
     Rotation2d hubAngle = new Rotation2d(
         Math.asin(
             MathUtil.clamp(
@@ -286,6 +355,8 @@ public class LaunchCalculator {
                     / target.getDistance(robotPose.getTranslation()),
                 -1.0,
                 1.0)));
+    SmartDashboard.putNumber("LC/HubAngle", hubAngle.getDegrees());
+
     Rotation2d driveAngle = fieldToHubAngle.plus(hubAngle)
         .plus(LauncherConstants.robotToLauncher.getRotation().toRotation2d());
     return driveAngle;
@@ -337,7 +408,6 @@ public class LaunchCalculator {
     if (!forceBlue) {
       target = AllianceFlipUtil.apply(target);
     }
-
     return new Pose2d(
         robotTranslation, getDriveAngleWithLauncherOffset(new Pose2d(robotTranslation, new Rotation2d()), target));
   }
@@ -345,6 +415,24 @@ public class LaunchCalculator {
   /** Adjusts the hood angle offset up or down the specified amount. */
   public void incrementHoodAngleOffset(double incrementDegrees) {
     hoodAngleOffsetDeg += incrementDegrees;
+  }
+
+  public Pose2d getProjectedHubPose(Pose2d robotPose, double distanceToHub, Rotation2d driveAngle) {
+
+    /**
+     * calculate the pose where the computed drive angle hits the x center line of
+     * the hub
+     * Use the distance to the hub as the hypotenuse and break it into x and y
+     * components
+     * 
+     */
+
+    double xDistToHub = distanceToHub * driveAngle.getCos();
+    double yDistToHub = distanceToHub * driveAngle.getSin();
+    Pose2d temp = new Pose2d(robotPose.getX() + xDistToHub, robotPose.getY() + yDistToHub, driveAngle);
+
+    return temp;
+
   }
 
 }

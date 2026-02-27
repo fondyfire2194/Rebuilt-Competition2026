@@ -26,6 +26,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "StartAtHubAutos",
+  "folder": null,
   "choreoAuto": false
 }

@@ -26,6 +26,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "StartAtTrenchAutos",
+  "folder": null,
   "choreoAuto": false
 }

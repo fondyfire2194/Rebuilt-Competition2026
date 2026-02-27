@@ -26,6 +26,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "StartAtBumpAutos",
+  "folder": null,
   "choreoAuto": false
 }

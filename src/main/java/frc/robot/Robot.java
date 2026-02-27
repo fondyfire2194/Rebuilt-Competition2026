@@ -12,8 +12,9 @@ import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -21,24 +22,27 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
-import frc.robot.commands.PIDDriveToPose;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
+import frc.robot.utils.LaunchCalculator;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LoopEvents;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
     private final EventLoop m_eventLoop = new EventLoop();
-    // StructPublisher<Pose2d> rHposePublisher = NetworkTableInstance.getDefault()
-    // .getStructTopic("BlueHubPose", Pose2d.struct).publish();
-    // StructPublisher<Pose2d> bHposePublisher = NetworkTableInstance.getDefault()
-    // .getStructTopic("RedHubPose", Pose2d.struct).publish();
+    StructPublisher<Pose2d> rHposePublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("RedHubPose", Pose2d.struct).publish();
+    StructPublisher<Pose2d> bHposePublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("BlueHubPose", Pose2d.struct).publish();
 
     private final RobotContainer m_robotContainer;
     private LoopEvents loopEvents;
     private boolean autoHasRun;
+    private LaunchCalculator launchCalculator;
+    private int resetLCResults;
 
     /* log and replay timestamp and joystick data */
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -48,11 +52,14 @@ public class Robot extends TimedRobot {
     public Robot() {
         m_robotContainer = new RobotContainer();
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
+        if (!DriverStation.isFMSAttached())
+            DogLog.setOptions(new DogLogOptions().withNtPublish(true));
         loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
         loopEvents.init();
         autoHasRun = false;
         CommandScheduler.getInstance().schedule(new CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
-      
+
+        launchCalculator = new LaunchCalculator(m_robotContainer.drivetrain, m_robotContainer.m_shooter);
     }
 
     @Override
@@ -63,6 +70,9 @@ public class Robot extends TimedRobot {
         m_timeAndJoystickReplay.update();
 
         CommandScheduler.getInstance().run();
+
+        rHposePublisher.accept(FieldConstants.redHubPose);
+        bHposePublisher.accept(FieldConstants.blueHubPose);
 
     }
 
@@ -111,16 +121,17 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname, CameraConstants.apriltagPipeline);
-        LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname, CameraConstants.apriltagPipeline);
-        LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname, CameraConstants.apriltagPipeline);
-
+        if (RobotBase.isReal()) {
+            LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname, CameraConstants.apriltagPipeline);
+            LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname, CameraConstants.apriltagPipeline);
+            LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname, CameraConstants.apriltagPipeline);
+        }
         SignalLogger.setPath("media/sda1/logs");
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
 
-        if (!autoHasRun) {
+        if (RobotBase.isReal() && !autoHasRun) {
             CommandScheduler.getInstance().schedule(
                     new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
                             m_robotContainer.drivetrain),
@@ -129,14 +140,15 @@ public class Robot extends TimedRobot {
                     new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.rightCam,
                             m_robotContainer.drivetrain),
                     new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
-                    
+
             m_robotContainer.m_llv.useMT2 = true;
         }
 
-        if (RobotBase.isSimulation()) {
-            CommandScheduler.getInstance().schedule(
-                    new PIDDriveToPose(m_robotContainer.drivetrain, new Pose2d(13, 5, Rotation2d.fromDegrees(180))));
-        }
+        // if (RobotBase.isSimulation()) {
+        // CommandScheduler.getInstance().schedule(
+        // new PIDDriveToPose(m_robotContainer.drivetrain, new Pose2d(13, 5,
+        // Rotation2d.fromDegrees(180))));
+        // }
         CommandScheduler.getInstance()
                 .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
 
@@ -144,7 +156,18 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
+        if (resetLCResults == 0)
+            launchCalculator.getParameters();
 
+        DogLog.log("LaunchCalculator/Parameters", launchCalculator.getParameters());
+        DogLog.log("LaunchCalculator/HoodAngleOffsetDeg", launchCalculator.getHoodAngleOffsetDeg());
+
+        resetLCResults++;
+
+        if (resetLCResults > 1) {
+            launchCalculator.clearLaunchingParameters();
+            resetLCResults = 0;
+        }
     }
 
     @Override

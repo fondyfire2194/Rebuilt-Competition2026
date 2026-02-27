@@ -59,7 +59,7 @@
     "rotation": -37.833
   },
   "reversed": false,
-  "folder": "StartFromTrenches",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 90.0

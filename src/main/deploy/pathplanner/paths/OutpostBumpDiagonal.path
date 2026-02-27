@@ -21,7 +21,7 @@
       },
       "prevControl": {
         "x": 6.75,
-        "y": 0.9000000000000004
+        "y": 0.9000000000000001
       },
       "nextControl": null,
       "isLocked": false,
@@ -45,7 +45,7 @@
     "rotation": -90.0
   },
   "reversed": false,
-  "folder": "DepotToNeutralZone",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": -90.0

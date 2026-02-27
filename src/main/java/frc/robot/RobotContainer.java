@@ -17,8 +17,8 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -27,10 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.PIDDriveToPose;
-import frc.robot.commands.PrepareShotCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.PickAndSetPosetoMT1;
@@ -95,7 +93,6 @@ public class RobotContainer {
         private Trigger driverFiveSecondWarningEndShootTrigger;
         private Trigger driverFiveSecondWarningEndPickupTrigger;
         private Trigger endGameWarningTrigger;
-        private LaunchCalculator launchCalculator;
 
         public RobotContainer() {
 
@@ -107,7 +104,6 @@ public class RobotContainer {
                 m_llv = new LimelightVision(showAllData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
-                launchCalculator = new LaunchCalculator(drivetrain, m_shooter);
                 registerNamedCommands();
 
                 // configurePDH();
@@ -137,10 +133,9 @@ public class RobotContainer {
                                                 // negative X (left)
                                                 .withRotationalRate(-driver.getRightX() * MaxAngularRate)));
 
-                // m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmSlideCommand());
+                 m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmSlideCommand());
 
-                // m_hood.setDefaultCommand(m_hood.positionHoodCommand());
-                launchCalculator.getParameters();
+                m_hood.setDefaultCommand(m_hood.positionHoodCommand());
         }
 
         private void configureDriverBindings() {
@@ -186,16 +181,16 @@ public class RobotContainer {
                                                 m_intake.stopIntakeCommand()));
 
                 driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand());
-                                // .whileTrue(
-                                //                 Commands.parallel(new PrepareShotCommand(m_shooter, m_hood),
-                                //                                 new AlignTargetOdometry(drivetrain, m_shooter, drive,
-                                //                                                 driver, false)));
+                // .whileTrue(
+                // Commands.parallel(new PrepareShotCommand(m_shooter, m_hood),
+                // new AlignTargetOdometry(drivetrain, m_shooter, drive,
+                // driver, false)));
 
                 driver.y().whileTrue(m_intake.jogIntakeCommand());
 
                 driver.a().whileTrue(m_intakeArm.jogIntakeArmCommand(() -> driver.getLeftX()));
 
-                driver.b().onTrue(Commands.none());
+                driver.b().whileTrue(Commands.none());
 
                 driver.povUp().onTrue(m_shooter.changeTargetVelocityCommand(100));
 
@@ -228,7 +223,7 @@ public class RobotContainer {
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
-               // codriver.rightTrigger().and(codriver.povDown()).whileTrue(m_feeder.jogFeederRollerCommand());
+                // codriver.rightTrigger().and(codriver.povDown()).whileTrue(m_feeder.jogFeederRollerCommand());
 
                 codriver.rightTrigger().and(codriver.povDown()).onTrue(
                                 m_feeder.runBeltsAndRollersCommand());
@@ -345,7 +340,7 @@ public class RobotContainer {
                 NamedCommands.registerCommand("MOVE_TO_DEPOT_INTAKE_POSE",
                                 drivetrain.pathFindToPose(new Pose2d(), drivetrain.pathConstraints));
 
-                NamedCommands.registerCommand("START_INTAKE", m_intake.startIntakeCommand());
+                NamedCommands.registerCommand("START_INTAKE", m_intake.startIntakeCommand().asProxy());
                 NamedCommands.registerCommand("STOP_INTAKE", m_intake.stopIntakeCommand());
 
                 NamedCommands.registerCommand("INTAKE_ARM_DOWN", m_intakeArm.intakeArmSlideToClearPositionCommand());

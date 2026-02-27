@@ -64,10 +64,10 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "DepotShoot",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 2.7045538027929896
   },
   "useDefaultConstraints": true
 }

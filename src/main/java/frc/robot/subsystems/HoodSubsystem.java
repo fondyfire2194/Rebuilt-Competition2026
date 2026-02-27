@@ -6,9 +6,11 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.Faults;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkSoftLimit;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
@@ -124,12 +126,11 @@ public class HoodSubsystem extends SubsystemBase {
                     closedLoopController.setSetpoint(targetPosition, ControlType.kPosition, ClosedLoopSlot.kSlot0);
                 }, // execute
                 (interrupted) -> hoodMotor.set(0), // end
-                () -> false, // isFinished
+                () -> getForwardSoftLimit(hoodMotor) || getReverseSoftLimit(hoodMotor), // isFinished
                 this);// requirements
     }
 
     public void setTargetPosition(double position) {
-
         MathUtil.clamp(targetPosition, kMinPosition, kMaxPosition);
     }
 
@@ -152,7 +153,7 @@ public class HoodSubsystem extends SubsystemBase {
     public Command jogHoodUpCommand() {
         return this.startEnd(
                 () -> {
-                    if (getHoodPosition() <kMaxPosition)
+                    if (getHoodPosition() < kMaxPosition)
                         this.runHoodMotor(Constants.HoodSetpoints.jogHoodMotor);
                     targetPosition = getHoodPosition();
                 }, () -> {
@@ -163,12 +164,20 @@ public class HoodSubsystem extends SubsystemBase {
     public Command jogHoodDownCommand() {
         return this.startEnd(
                 () -> {
-                    if (getHoodPosition() >kMinPosition)
+                    if (getHoodPosition() > kMinPosition)
                         this.runHoodMotor(-Constants.HoodSetpoints.jogHoodMotor);
                     targetPosition = getHoodPosition();
                 }, () -> {
                     this.runHoodMotor(0.0);
                 }).withName("JogHoodDown");
+    }
+
+    public boolean getForwardSoftLimit(SparkMax motor) {
+        return motor.getForwardSoftLimit().isReached();
+    }
+
+    public boolean getReverseSoftLimit(SparkMax motor) {
+        return motor.getReverseSoftLimit().isReached();
     }
 
     @Override
@@ -183,8 +192,8 @@ public class HoodSubsystem extends SubsystemBase {
         builder.addDoubleProperty("Target Position", () -> targetPosition, null);
         builder.addDoubleProperty("Motor Amps", () -> hoodMotor.getOutputCurrent(), null);
         builder.addDoubleProperty("Motor Output Volts", () -> hoodMotor.getAppliedOutput() * 12, null);
-        builder.addBooleanProperty("MaxTravelLimitReached", (() -> getHoodPosition() >= kMaxPosition), null);
-        builder.addBooleanProperty("MinTravelLimitReached", (() -> getHoodPosition() <= kMinPosition), null);
+        builder.addBooleanProperty("MaxTravelLimitReached", (() -> getForwardSoftLimit(hoodMotor)), null);
+        builder.addBooleanProperty("MinTravelLimitReached", (() -> getReverseSoftLimit(hoodMotor)), null);
 
     }
 }
