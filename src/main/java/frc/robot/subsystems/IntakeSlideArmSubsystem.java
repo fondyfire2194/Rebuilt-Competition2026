@@ -3,11 +3,15 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.InchesPerSecond;
+import static edu.wpi.first.units.Units.Millimeters;
 
 import java.util.function.DoubleSupplier;
 
+import javax.imageio.plugins.tiff.BaselineTIFFTagSet;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -33,11 +37,17 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
   private final SparkMax intakeArmSlideMotor = new SparkMax(CANIDConstants.intakeArmID, MotorType.kBrushless);
 
-  SparkMaxConfig armConfig;
+  SparkMaxConfig motorConfig;
 
   SimpleMotorFeedforward slideFeedforward;
 
-  private static double inchesperMotorRev = 3.54;
+  static double motorPulleyTeeth = 18;
+  static double beltPulleyTeeth = 18;
+  static Distance motorToFirstPulleyBeltPitch = Millimeters.of(215);
+  static Distance firstPulleyToShaftBeltPitch = Millimeters.of(650);
+
+  private static double inchesperMotorRev = (motorPulleyTeeth / beltPulleyTeeth)
+      * ((motorToFirstPulleyBeltPitch.in(Inches) / firstPulleyToShaftBeltPitch.in(Inches)));// approx .33 inches
 
   private static double maxMotorRPS = 5700 / 60;// 95 approx
 
@@ -61,8 +71,8 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
       kMaxTrapAcceleration);
   public final ProfiledPIDController m_controller = new ProfiledPIDController(kP, kI, kD, m_constraints, kDt);
 
-  public static Distance maxDistance = Inches.of(8.25);
-  public static Distance minDistance = Inches.of(0);
+  public static Distance maxDistance = Inches.of(10);
+  public static Distance minDistance = Inches.of(-1);
 
   public Distance intakingDistance = Inches.of(8);
 
@@ -79,9 +89,56 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
   public boolean showData;
 
+  private double jogInSpeed = -.15;
+
+  private double jogOutSpeed = .15;
+
   public IntakeSlideArmSubsystem(boolean showData) {
 
     m_controller.setGoal(homeDistance.in(Inches));
+
+    motorConfig = new SparkMaxConfig();
+
+    motorConfig.inverted(false);
+    /*
+     * Configure the encoder. For this specific example, we are using the
+     * integrated encoder of the NEO, and we don't need to configure it. If
+     * needed, we can adjust values like the position or velocity conversion
+     * factors.
+     */
+    motorConfig.encoder
+        .positionConversionFactor(inchesperMotorRev)
+        .velocityConversionFactor(inchesperMotorRev / 60);
+
+    motorConfig.softLimit
+        .forwardSoftLimit(maxDistance.in(Inches))
+        .forwardSoftLimitEnabled(true)
+        .reverseSoftLimit(minDistance.in(Inches))
+        .reverseSoftLimitEnabled(true);
+
+    /*
+     * Configure the closed loop controller. We want to make sure we set the
+     * feedback sensor as the primary encoder.
+     */
+    motorConfig.closedLoop
+        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        // Set PID values for position control. We don't need to pass a closed loop
+        // slot, as it will default to slot 0.
+        .p(0.05)
+        .i(0)
+        .d(0)
+        .outputRange(-.25, .25);
+
+    /*
+     * Apply the configuration to the SPARK MAX.
+     *
+     * kResetSafeParameters is used to get the SPARK MAX to a known state. This
+     * is useful in case the SPARK MAX is replaced.
+     *
+     * kPersistParameters is used to ensure the configuration is not lost when
+     * the SPARK MAX loses power. This is useful for power cycles that may occur
+     * mid-operation.
+     */
 
     intakeArmSlideMotor.configure(
         Configs.IntakeArm.intakeSlideConfig,
@@ -100,6 +157,7 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
 
     builder.setSmartDashboardType("IntakeArm");
+    builder.addDoubleProperty("Motor Volts", () -> intakeArmSlideMotor.getAppliedOutput() * 12, null);
     builder.addDoubleProperty("ActualPosition", () -> getIntakeSlidePosition().in(Inches), null);
     builder.addDoubleProperty("GoalPosition", () -> m_controller.getGoal().position, null);
     builder.addDoubleProperty("Velocity", () -> getIntakeSlideVelocity().in(InchesPerSecond), null);
@@ -153,15 +211,15 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
     return stallDebouncer.calculate(stalled);
   }
 
-  public Command jogIntakeArmCommand(DoubleSupplier speed) {
+  public Command jogIntakeArmCommand() {
     return new FunctionalCommand(
         () -> {
         }, // init
         () -> {
-          if (getIntakeSlidePosition().lt(maxDistance) && speed.getAsDouble() > 0)
-            intakeArmSlideMotor.setVoltage(speed.getAsDouble() * RobotController.getBatteryVoltage());
-          else if (getIntakeSlidePosition().gte(minDistance) && speed.getAsDouble() < 0)
-            intakeArmSlideMotor.setVoltage(speed.getAsDouble() * RobotController.getBatteryVoltage());
+          if (getIntakeSlidePosition().lt(maxDistance) && jogOutSpeed > 0)
+            intakeArmSlideMotor.setVoltage(jogOutSpeed * RobotController.getBatteryVoltage());
+          else if (getIntakeSlidePosition().gte(minDistance) && jogInSpeed < 0)
+            intakeArmSlideMotor.setVoltage(jogInSpeed * RobotController.getBatteryVoltage());
           else
             intakeArmSlideMotor.set(0);
         }, // execute

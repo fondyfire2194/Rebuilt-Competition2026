@@ -6,11 +6,9 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkBase.Faults;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkSoftLimit;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
@@ -47,6 +45,8 @@ public class HoodSubsystem extends SubsystemBase {
     private RelativeEncoder encoder;
 
     public boolean showData;
+
+    private int tst;
 
     public HoodSubsystem(boolean showData) {
         hoodMotor = new SparkMax(Constants.CANIDConstants.hoodMotorID, MotorType.kBrushless);
@@ -114,7 +114,7 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public Command positionTestCommand() {
-        return Commands.runOnce(() -> targetPosition = kMinPosition + 10);
+        return Commands.runOnce(() -> targetPosition = kMinPosition + 5);
     }
 
     public Command positionHoodCommand() {
@@ -123,10 +123,12 @@ public class HoodSubsystem extends SubsystemBase {
                     targetPosition = getHoodPosition();
                 }, // init
                 () -> {
+                    tst++;
+                    SmartDashboard.putNumber("HOODTST", tst);
                     closedLoopController.setSetpoint(targetPosition, ControlType.kPosition, ClosedLoopSlot.kSlot0);
                 }, // execute
                 (interrupted) -> hoodMotor.set(0), // end
-                () -> getForwardSoftLimit(hoodMotor) || getReverseSoftLimit(hoodMotor), // isFinished
+                () -> false, // isFinished
                 this);// requirements
     }
 
@@ -135,7 +137,7 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public Command setTargetCommand(double position) {
-        return Commands.runOnce(() -> setTargetPosition(position));
+        return Commands.runOnce(() -> targetPosition=position);
     }
 
     public double getHoodPosition() {

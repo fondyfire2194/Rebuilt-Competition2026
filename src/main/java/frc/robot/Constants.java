@@ -53,7 +53,7 @@ public final class Constants {
   }
 
   public class LauncherConstants {
-    public static Transform3d robotToLauncher = new Transform3d(0.35, 0.01, 0.599, new Rotation3d(0.0, 0.0,0));
+    public static Transform3d robotToShooter = new Transform3d(0.35, 0.01, 0.599, new Rotation3d(0.0, 0.0,0));
 
     // public static Transform2d robotToLauncher2d = new Transform2d(0.276, 0.0, new
     // Rotation2d(0));

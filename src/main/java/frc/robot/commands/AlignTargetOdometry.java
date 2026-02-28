@@ -63,6 +63,7 @@ public class AlignTargetOdometry extends Command {
     m_alignTargetPID.enableContinuousInput(-180, 180);
     // if (!lob) {
     targetPose = AllianceUtil.getHubPose();
+   // targetPose = m_drivetrain.projectedOnTheMoveShootPose;
     m_alignTargetPID.setTolerance(0.2);
     aligning = true;
   }

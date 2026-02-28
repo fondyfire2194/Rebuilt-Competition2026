@@ -41,7 +41,7 @@ public class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
     private LoopEvents loopEvents;
     private boolean autoHasRun;
-    private LaunchCalculator launchCalculator;
+   
     private int resetLCResults;
 
     /* log and replay timestamp and joystick data */
@@ -58,9 +58,7 @@ public class Robot extends TimedRobot {
         loopEvents.init();
         autoHasRun = false;
         CommandScheduler.getInstance().schedule(new CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
-
-        launchCalculator = new LaunchCalculator(m_robotContainer.drivetrain, m_robotContainer.m_shooter);
-    }
+  }
 
     @Override
     public void robotPeriodic() {
@@ -156,18 +154,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        if (resetLCResults == 0)
-            launchCalculator.getParameters();
-
-        DogLog.log("LaunchCalculator/Parameters", launchCalculator.getParameters());
-        DogLog.log("LaunchCalculator/HoodAngleOffsetDeg", launchCalculator.getHoodAngleOffsetDeg());
-
-        resetLCResults++;
-
-        if (resetLCResults > 1) {
-            launchCalculator.clearLaunchingParameters();
-            resetLCResults = 0;
-        }
+      
     }
 
     @Override

@@ -123,7 +123,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
     public double distanceLimelightToEstimator;
     public boolean alignedToTarget;
-    public double shootTolerance =.5;
+    public double shootTolerance = .5;
+
+    public Pose2d projectedOnTheMoveShootPose = new Pose2d();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -148,7 +150,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     }
 
-     /**
+    /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
      * This constructs the underlying hardware devices, so users should not
