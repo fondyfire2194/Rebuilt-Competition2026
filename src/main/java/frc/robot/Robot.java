@@ -11,6 +11,7 @@ import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
@@ -26,9 +27,10 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
-import frc.robot.utils.LaunchCalculator;
+import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LoopEvents;
+import frc.robot.utils.ShootOnTheFlyCalculator4322;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
@@ -41,8 +43,8 @@ public class Robot extends TimedRobot {
     private final RobotContainer m_robotContainer;
     private LoopEvents loopEvents;
     private boolean autoHasRun;
-   
-    private int resetLCResults;
+
+    ShootOnTheFlyCalculator4322 sotfcCalc4332 = new ShootOnTheFlyCalculator4322(true);
 
     /* log and replay timestamp and joystick data */
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -58,7 +60,16 @@ public class Robot extends TimedRobot {
         loopEvents.init();
         autoHasRun = false;
         CommandScheduler.getInstance().schedule(new CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
-  }
+
+        sotfcCalc4332.addTableEntry(.5, 500, 5, 1.5);
+        sotfcCalc4332.addTableEntry(1., 1000, 10, 1.);
+        sotfcCalc4332.addTableEntry(1.5, 1500, 15, 1.5);
+        sotfcCalc4332.addTableEntry(2., 2000, 20, 1.6);
+        sotfcCalc4332.addTableEntry(3., 2500, 22, 1.7);
+        sotfcCalc4332.addTableEntry(4., 3000, 24, 1.8);
+        sotfcCalc4332.addTableEntry(5., 4000, 26, 1.);
+
+    }
 
     @Override
     public void robotPeriodic() {
@@ -123,6 +134,8 @@ public class Robot extends TimedRobot {
             LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname, CameraConstants.apriltagPipeline);
             LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname, CameraConstants.apriltagPipeline);
             LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname, CameraConstants.apriltagPipeline);
+            LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname, CameraConstants.fuelDetectorPipeline);
+
         }
         SignalLogger.setPath("media/sda1/logs");
         if (m_autonomousCommand != null) {
@@ -154,7 +167,18 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-      
+
+        sotfcCalc4332.calculateStationary(
+                m_robotContainer.drivetrain.getState().Pose.getTranslation(),
+                AllianceUtil.getHubPose().getTranslation());
+
+        sotfcCalc4332.calculate(
+                m_robotContainer.drivetrain.getState().Pose.getTranslation(),
+                new Translation2d(m_robotContainer.drivetrain.getState().Speeds.vxMetersPerSecond,
+                        m_robotContainer.drivetrain.getState().Speeds.vyMetersPerSecond),
+                AllianceUtil.getHubPose().getTranslation(),
+                10);
+
     }
 
     @Override

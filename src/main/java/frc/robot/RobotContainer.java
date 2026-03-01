@@ -27,10 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.PIDDriveToPose;
-import frc.robot.commands.PrepareShotCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.PickAndSetPosetoMT1;
@@ -44,6 +42,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.LaunchCalculator;
+import frc.robot.utils.ShootOnTheFlyCalculator4322;
 
 public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
@@ -193,15 +192,14 @@ public class RobotContainer {
                 // new AlignTargetOdometry(drivetrain, m_shooter, drive,
                 // driver, false)));
                 // driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand())
-                //                 .whileTrue(
-                //                                 Commands.parallel(Commands.run(()-)
-                //                                                 new AlignTargetOdometry(drivetrain, m_shooter, drive,
-                //                                                                 driver, false)));
+                // .whileTrue(
+                // Commands.parallel(Commands.run(()-)
+                // new AlignTargetOdometry(drivetrain, m_shooter, drive,
+                // driver, false)));
 
-                 driver.y().onTrue(m_hood.setTargetCommand(0));
+                driver.y().onTrue(m_hood.setTargetCommand(0));
 
-                 driver.a().onTrue(m_hood.positionTestCommand());
-
+                driver.a().onTrue(m_hood.positionTestCommand());
 
                 driver.b().onTrue(m_hood.setTargetCommand(5));
 
@@ -231,8 +229,7 @@ public class RobotContainer {
 
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
-                // codriver.rightBumper().onTrue(Commands.deferredProxy(() ->
-                // m_leds.toggleGameData()));
+                codriver.rightBumper().onTrue(Commands.none());
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
@@ -259,7 +256,6 @@ public class RobotContainer {
                                 .whileTrue(m_intakeArm.jogIntakeArmCommand()));
 
                 codriver.leftTrigger().and(codriver.povRight().whileTrue(m_intake.jogExtakeCommand()));
-
 
                 codriver.leftTrigger().and(codriver.povLeft().whileTrue(m_intake.jogIntakeCommand()));
 
