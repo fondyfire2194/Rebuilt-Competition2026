@@ -5,10 +5,6 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.InchesPerSecond;
 import static edu.wpi.first.units.Units.Millimeters;
 
-import java.util.function.DoubleSupplier;
-
-import javax.imageio.plugins.tiff.BaselineTIFFTagSet;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.FeedbackSensor;
@@ -36,8 +32,6 @@ import frc.robot.Constants.CANIDConstants;
 public class IntakeSlideArmSubsystem extends SubsystemBase {
 
   private final SparkMax intakeArmSlideMotor = new SparkMax(CANIDConstants.intakeArmID, MotorType.kBrushless);
-
-  SparkMaxConfig motorConfig;
 
   SimpleMotorFeedforward slideFeedforward;
 
@@ -97,38 +91,10 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
     m_controller.setGoal(homeDistance.in(Inches));
 
-    motorConfig = new SparkMaxConfig();
-
-    motorConfig.inverted(false);
-    /*
-     * Configure the encoder. For this specific example, we are using the
-     * integrated encoder of the NEO, and we don't need to configure it. If
-     * needed, we can adjust values like the position or velocity conversion
-     * factors.
-     */
-    motorConfig.encoder
-        .positionConversionFactor(inchesperMotorRev)
-        .velocityConversionFactor(inchesperMotorRev / 60);
-
-    motorConfig.softLimit
-        .forwardSoftLimit(maxDistance.in(Inches))
-        .forwardSoftLimitEnabled(true)
-        .reverseSoftLimit(minDistance.in(Inches))
-        .reverseSoftLimitEnabled(true);
-
-    /*
-     * Configure the closed loop controller. We want to make sure we set the
-     * feedback sensor as the primary encoder.
-     */
-    motorConfig.closedLoop
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        // Set PID values for position control. We don't need to pass a closed loop
-        // slot, as it will default to slot 0.
-        .p(0.05)
-        .i(0)
-        .d(0)
-        .outputRange(-.25, .25);
-
+    intakeArmSlideMotor.configure(
+        Configs.IntakeSlideArm.intakeSlideArmConfig,
+        ResetMode.kResetSafeParameters,
+        PersistMode.kPersistParameters);
     /*
      * Apply the configuration to the SPARK MAX.
      *
@@ -141,10 +107,12 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
      */
 
     intakeArmSlideMotor.configure(
-        Configs.IntakeArm.intakeSlideConfig,
+        Configs.IntakeSlideArm.intakeSlideArmConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
+        
     this.showData = showData;
+
     if (showData)
       SmartDashboard.putData(this);
 

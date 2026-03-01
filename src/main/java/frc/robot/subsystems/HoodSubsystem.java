@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -12,17 +14,19 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Configs;
 import frc.robot.Constants;
 
 public class HoodSubsystem extends SubsystemBase {
-    private static final double kMinPosition = 0.0;
-    private static final double kMaxPosition = 15.;
+    public static final Angle kMinPosition = Degrees.of(0.0);
+    public static final Angle kMaxPosition = Degrees.of(15.);
 
     private static final double kPositionTolerance = 0.01;
 
@@ -30,15 +34,15 @@ public class HoodSubsystem extends SubsystemBase {
 
     private final SparkMax hoodMotor;
 
-    private final double gearRatio = 139;
+    private final static double gearRatio = 139;
 
-    private final double pinionTeeth = 30;
+    private final static double pinionTeeth = 30;
 
-    private final double quadrantDegreesPerTooth = 360. / 350;// approx 1.3
+    private final static double quadrantDegreesPerTooth = 360. / 350;// approx 1.3
 
-    private final double degreesPerPinionRev = pinionTeeth * quadrantDegreesPerTooth;// approx 40
+    private final static double degreesPerPinionRev = pinionTeeth * quadrantDegreesPerTooth;// approx 40
 
-    private final double degreesPerMotorRev = degreesPerPinionRev / gearRatio;// approx .22
+    public final static double degreesPerMotorRev = degreesPerPinionRev / gearRatio;// approx .22
 
     private SparkMaxConfig motorConfig;
     private SparkClosedLoopController closedLoopController;
@@ -56,37 +60,6 @@ public class HoodSubsystem extends SubsystemBase {
          * Create a new SPARK MAX configuration object. This will store the
          * configuration parameters for the SPARK MAX that we will set below.
          */
-        motorConfig = new SparkMaxConfig();
-
-        motorConfig.inverted(false);
-        /*
-         * Configure the encoder. For this specific example, we are using the
-         * integrated encoder of the NEO, and we don't need to configure it. If
-         * needed, we can adjust values like the position or velocity conversion
-         * factors.
-         */
-        motorConfig.encoder
-                .positionConversionFactor(degreesPerMotorRev)
-                .velocityConversionFactor(degreesPerMotorRev / 60);
-
-        motorConfig.softLimit
-                .forwardSoftLimit(kMaxPosition)
-                .forwardSoftLimitEnabled(true)
-                .reverseSoftLimit(kMinPosition)
-                .reverseSoftLimitEnabled(true);
-
-        /*
-         * Configure the closed loop controller. We want to make sure we set the
-         * feedback sensor as the primary encoder.
-         */
-        motorConfig.closedLoop
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                // Set PID values for position control. We don't need to pass a closed loop
-                // slot, as it will default to slot 0.
-                .p(0.05)
-                .i(0)
-                .d(0)
-                .outputRange(-.25, .25);
 
         /*
          * Apply the configuration to the SPARK MAX.
@@ -98,8 +71,13 @@ public class HoodSubsystem extends SubsystemBase {
          * the SPARK MAX loses power. This is useful for power cycles that may occur
          * mid-operation.
          */
-        hoodMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-        encoder.setPosition(kMinPosition);
+        hoodMotor.configure(
+                Configs.Hood.hoodConfig,
+                ResetMode.kResetSafeParameters,
+                PersistMode.kNoPersistParameters);
+
+        encoder.setPosition(kMinPosition.in(Degrees));
+
         this.showData = showData;
         if (showData)
             SmartDashboard.putData(this);
@@ -110,11 +88,11 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public Command positionToHomeCommand() {
-        return Commands.runOnce(() -> targetPosition = kMinPosition);
+        return Commands.runOnce(() -> targetPosition = kMinPosition.in((Degrees)));
     }
 
     public Command positionTestCommand() {
-        return Commands.runOnce(() -> targetPosition = kMinPosition + 5);
+        return Commands.runOnce(() -> targetPosition = kMinPosition.in(Degrees) + 5);
     }
 
     public Command positionHoodCommand() {
@@ -123,8 +101,6 @@ public class HoodSubsystem extends SubsystemBase {
                     targetPosition = getHoodPosition();
                 }, // init
                 () -> {
-                    tst++;
-                    SmartDashboard.putNumber("HOODTST", tst);
                     closedLoopController.setSetpoint(targetPosition, ControlType.kPosition, ClosedLoopSlot.kSlot0);
                 }, // execute
                 (interrupted) -> hoodMotor.set(0), // end
@@ -132,12 +108,12 @@ public class HoodSubsystem extends SubsystemBase {
                 this);// requirements
     }
 
-    public void setTargetPosition(double position) {
-        MathUtil.clamp(targetPosition, kMinPosition, kMaxPosition);
-    }
+    // public void setTargetPosition(double position) {
+    //     MathUtil.clamp(targetPosition, kMinPosition.in((Degrees)), kMaxPosition.in(Degrees));
+    // }
 
     public Command setTargetCommand(double position) {
-        return Commands.runOnce(() -> targetPosition=position);
+        return Commands.runOnce(() -> targetPosition = position);
     }
 
     public double getHoodPosition() {
@@ -155,7 +131,7 @@ public class HoodSubsystem extends SubsystemBase {
     public Command jogHoodUpCommand() {
         return this.startEnd(
                 () -> {
-                    if (getHoodPosition() < kMaxPosition)
+                    if (getHoodPosition() < kMaxPosition.in(Degrees))
                         this.runHoodMotor(Constants.HoodSetpoints.jogHoodMotor);
                     targetPosition = getHoodPosition();
                 }, () -> {
@@ -166,7 +142,7 @@ public class HoodSubsystem extends SubsystemBase {
     public Command jogHoodDownCommand() {
         return this.startEnd(
                 () -> {
-                    if (getHoodPosition() > kMinPosition)
+                    if (getHoodPosition() > kMinPosition.in(Degrees))
                         this.runHoodMotor(-Constants.HoodSetpoints.jogHoodMotor);
                     targetPosition = getHoodPosition();
                 }, () -> {

@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -95,7 +96,15 @@ public class TripleShooterSubsystem extends SubsystemBase {
         .withMotorOutput(
             new MotorOutputConfigs()
                 .withInverted(invertDirection)
-                .withNeutralMode(NeutralModeValue.Coast));
+                .withNeutralMode(NeutralModeValue.Coast))
+        .withCurrentLimits(
+            new CurrentLimitsConfigs()
+                // stator current limit to help avoid brownouts without impacting performance.
+                .withSupplyCurrentLimit(Amps.of(40))
+                .withSupplyCurrentLimitEnable(true)
+                .withStatorCurrentLimit(Amps.of(80))
+                .withStatorCurrentLimitEnable(true));
+
     /*
      * Voltage-based velocity requires a velocity feed forward to account for the
      * back-emf of the motor
@@ -278,7 +287,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     // if (middleMotorActive)
     initSendable(builder, middleMotor, "Middle");
     // if (rightMotorActive)
-     initSendable(builder, rightMotor, "Right");
+    initSendable(builder, rightMotor, "Right");
     builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
     builder.addDoubleProperty("Voltage Target RPM", () -> velocityVoltage.getVelocityMeasure().in(RPM), null);

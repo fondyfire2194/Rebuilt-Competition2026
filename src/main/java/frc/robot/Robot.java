@@ -11,13 +11,13 @@ import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -27,186 +27,183 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
-import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LoopEvents;
-import frc.robot.utils.ShootOnTheFlyCalculator4322;
 
 public class Robot extends TimedRobot {
-    private Command m_autonomousCommand;
-    private final EventLoop m_eventLoop = new EventLoop();
-    StructPublisher<Pose2d> rHposePublisher = NetworkTableInstance.getDefault()
-            .getStructTopic("RedHubPose", Pose2d.struct).publish();
-    StructPublisher<Pose2d> bHposePublisher = NetworkTableInstance.getDefault()
-            .getStructTopic("BlueHubPose", Pose2d.struct).publish();
+        private Command m_autonomousCommand;
+        private final EventLoop m_eventLoop = new EventLoop();
+        StructPublisher<Pose2d> rHposePublisher = NetworkTableInstance.getDefault()
+                        .getStructTopic("RedHubPose", Pose2d.struct).publish();
+        StructPublisher<Pose2d> bHposePublisher = NetworkTableInstance.getDefault()
+                        .getStructTopic("BlueHubPose", Pose2d.struct).publish();
 
-    private final RobotContainer m_robotContainer;
-    private LoopEvents loopEvents;
-    private boolean autoHasRun;
+        private final RobotContainer m_robotContainer;
+        private LoopEvents loopEvents;
+        private boolean autoHasRun;
 
-    ShootOnTheFlyCalculator4322 sotfcCalc4332 = new ShootOnTheFlyCalculator4322(true);
+        Timer loopTimer = new Timer();
 
-    /* log and replay timestamp and joystick data */
-    private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
-            .withTimestampReplay()
-            .withJoystickReplay();
+        /* log and replay timestamp and joystick data */
+        private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
+                        .withTimestampReplay()
+                        .withJoystickReplay();
 
-    public Robot() {
-        m_robotContainer = new RobotContainer();
-        DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
-        if (!DriverStation.isFMSAttached())
-            DogLog.setOptions(new DogLogOptions().withNtPublish(true));
-        loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
-        loopEvents.init();
-        autoHasRun = false;
-        CommandScheduler.getInstance().schedule(new CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
-
-        sotfcCalc4332.addTableEntry(.5, 500, 5, 1.5);
-        sotfcCalc4332.addTableEntry(1., 1000, 10, 1.);
-        sotfcCalc4332.addTableEntry(1.5, 1500, 15, 1.5);
-        sotfcCalc4332.addTableEntry(2., 2000, 20, 1.6);
-        sotfcCalc4332.addTableEntry(3., 2500, 22, 1.7);
-        sotfcCalc4332.addTableEntry(4., 3000, 24, 1.8);
-        sotfcCalc4332.addTableEntry(5., 4000, 26, 1.);
-
-    }
-
-    @Override
-    public void robotPeriodic() {
-
-        m_eventLoop.poll();
-
-        m_timeAndJoystickReplay.update();
-
-        CommandScheduler.getInstance().run();
-
-        rHposePublisher.accept(FieldConstants.redHubPose);
-        bHposePublisher.accept(FieldConstants.blueHubPose);
-
-    }
-
-    @Override
-    public void disabledInit() {
-        if (RobotBase.isSimulation())
-            m_robotContainer.drivetrain.resetPose(new Pose2d(14, 3.5, new Rotation2d(Math.PI)));
-
-    }
-
-    @Override
-    public void disabledPeriodic() {
-
-    }
-
-    @Override
-    public void disabledExit() {
-    }
-
-    @Override
-    public void autonomousInit() {
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-        SmartDashboard.putString("AutoName", m_autonomousCommand.getName());
-        if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().schedule(m_autonomousCommand);
-        }
-        CommandScheduler.getInstance().schedule(
-                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
-                        m_robotContainer.drivetrain),
-                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
-                        m_robotContainer.drivetrain),
-                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
-                        m_robotContainer.drivetrain),
-                new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
-
-    }
-
-    @Override
-    public void autonomousPeriodic() {
-    }
-
-    @Override
-    public void autonomousExit() {
-        autoHasRun = true;
-    }
-
-    @Override
-    public void teleopInit() {
-        if (RobotBase.isReal()) {
-            LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname, CameraConstants.apriltagPipeline);
-            LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname, CameraConstants.apriltagPipeline);
-            LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname, CameraConstants.apriltagPipeline);
-            LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname, CameraConstants.fuelDetectorPipeline);
+        public Robot() {
+                m_robotContainer = new RobotContainer();
+                DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
+                if (!DriverStation.isFMSAttached())
+                        DogLog.setOptions(new DogLogOptions().withNtPublish(true));
+                loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
+                loopEvents.init();
+                autoHasRun = false;
+                CommandScheduler.getInstance()
+                                .schedule(new CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
 
         }
-        SignalLogger.setPath("media/sda1/logs");
-        if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().cancel(m_autonomousCommand);
+
+        @Override
+        public void robotPeriodic() {
+
+                m_eventLoop.poll();
+
+                m_timeAndJoystickReplay.update();
+
+                CommandScheduler.getInstance().run();
+
+                rHposePublisher.accept(FieldConstants.redHubPose);
+                bHposePublisher.accept(FieldConstants.blueHubPose);
+
         }
 
-        if (RobotBase.isReal() && !autoHasRun) {
-            CommandScheduler.getInstance().schedule(
-                    new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
-                            m_robotContainer.drivetrain),
-                    new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.leftCam,
-                            m_robotContainer.drivetrain),
-                    new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.rightCam,
-                            m_robotContainer.drivetrain),
-                    new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
+        @Override
+        public void disabledInit() {
+                if (RobotBase.isSimulation())
+                        m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
 
-            m_robotContainer.m_llv.useMT2 = true;
         }
 
-        // if (RobotBase.isSimulation()) {
-        // CommandScheduler.getInstance().schedule(
-        // new PIDDriveToPose(m_robotContainer.drivetrain, new Pose2d(13, 5,
-        // Rotation2d.fromDegrees(180))));
-        // }
-        CommandScheduler.getInstance()
-                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
+        @Override
+        public void disabledPeriodic() {
 
-    }
+        }
 
-    @Override
-    public void teleopPeriodic() {
+        @Override
+        public void disabledExit() {
+        }
 
-        sotfcCalc4332.calculateStationary(
-                m_robotContainer.drivetrain.getState().Pose.getTranslation(),
-                AllianceUtil.getHubPose().getTranslation());
+        @Override
+        public void autonomousInit() {
+                m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+                SmartDashboard.putString("AutoName", m_autonomousCommand.getName());
+                if (m_autonomousCommand != null) {
+                        CommandScheduler.getInstance().schedule(m_autonomousCommand);
+                }
+                CommandScheduler.getInstance().schedule(
+                                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
+                                                m_robotContainer.drivetrain),
+                                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
+                                                m_robotContainer.drivetrain),
+                                new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
+                                                m_robotContainer.drivetrain),
+                                new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
 
-        sotfcCalc4332.calculate(
-                m_robotContainer.drivetrain.getState().Pose.getTranslation(),
-                new Translation2d(m_robotContainer.drivetrain.getState().Speeds.vxMetersPerSecond,
-                        m_robotContainer.drivetrain.getState().Speeds.vyMetersPerSecond),
-                AllianceUtil.getHubPose().getTranslation(),
-                10);
+        }
 
-    }
+        @Override
+        public void autonomousPeriodic() {
+        }
 
-    @Override
-    public void teleopExit() {
-    }
+        @Override
+        public void autonomousExit() {
+                autoHasRun = true;
+        }
 
-    @Override
-    public void testInit() {
-        CommandScheduler.getInstance().cancelAll();
-    }
+        @Override
+        public void teleopInit() {
 
-    @Override
-    public void testPeriodic() {
+                loopTimer.start();
+                if (RobotBase.isReal()) {
+                        LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
+                                        CameraConstants.apriltagPipeline);
+                        LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
+                                        CameraConstants.apriltagPipeline);
+                        LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname,
+                                        CameraConstants.apriltagPipeline);
+                        LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname,
+                                        CameraConstants.fuelDetectorPipeline);
 
-    }
+                }
+                SignalLogger.setPath("media/sda1/logs");
+                if (m_autonomousCommand != null) {
+                        CommandScheduler.getInstance().cancel(m_autonomousCommand);
+                }
 
-    @Override
-    public void testExit() {
-    }
+                if (RobotBase.isReal() && !autoHasRun) {
+                        CommandScheduler.getInstance().schedule(
+                                        new LimelightTagsMT2Update(m_robotContainer.m_llv,
+                                                        m_robotContainer.m_llv.frontCam,
+                                                        m_robotContainer.drivetrain),
+                                        new LimelightTagsMT2Update(m_robotContainer.m_llv,
+                                                        m_robotContainer.m_llv.leftCam,
+                                                        m_robotContainer.drivetrain),
+                                        new LimelightTagsMT2Update(m_robotContainer.m_llv,
+                                                        m_robotContainer.m_llv.rightCam,
+                                                        m_robotContainer.drivetrain),
+                                        new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
 
-    @Override
-    public void simulationPeriodic() {
-    }
+                        m_robotContainer.m_llv.useMT2 = true;
+                }
+                CommandScheduler.getInstance()
+                                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
+                                                m_robotContainer.m_leds));
 
-    public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
-        double XDiff = targetPose.getX() - robotPose.getX();
-        double YDiff = targetPose.getY() - robotPose.getY();
-        return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
-    }
+        }
+
+        @Override
+        public void teleopPeriodic() {
+
+                // LaunchCalculator.getInstance().clearLaunchingParameters();
+
+                // double tstart = loopTimer.get();
+
+                // LaunchCalculator.getInstance().getParameters(m_robotContainer.drivetrain);
+
+                // double tend = loopTimer.get();
+
+                // SmartDashboard.putNumber("SOTF/scantime", 1000. * (tend - tstart));
+                // SmartDashboard.putNumber("SOTF/starttime", tstart);
+                // SmartDashboard.putNumber("SOTF/endtime", tend);
+                SmartDashboard.putNumber("LC/Robot Angle",
+                                m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
+        }
+
+        @Override
+        public void teleopExit() {
+        }
+
+        @Override
+        public void testInit() {
+                CommandScheduler.getInstance().cancelAll();
+        }
+
+        @Override
+        public void testPeriodic() {
+
+        }
+
+        @Override
+        public void testExit() {
+        }
+
+        @Override
+        public void simulationPeriodic() {
+        }
+
+        public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
+                double XDiff = targetPose.getX() - robotPose.getX();
+                double YDiff = targetPose.getY() - robotPose.getY();
+                return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
+        }
 
 }

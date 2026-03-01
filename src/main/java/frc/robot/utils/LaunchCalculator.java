@@ -6,8 +6,6 @@ package frc.robot.utils;
 
 import static edu.wpi.first.units.Units.Meters;
 
-import java.nio.channels.ShutdownChannelGroupException;
-
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -28,7 +26,6 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.LauncherConstants;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.geometry.AllianceFlipUtil;
 import frc.robot.utils.geometry.GeomUtil;
 
@@ -70,6 +67,15 @@ import frc.robot.utils.geometry.GeomUtil;
  */
 public class LaunchCalculator {
 
+  private static LaunchCalculator instance;
+
+  public static LaunchCalculator getInstance() {
+    if (instance == null)
+      instance = new LaunchCalculator();
+
+    return instance;
+  }
+
   public record LaunchingParameters(
       boolean isValid,
       Rotation2d driveAngle,
@@ -93,9 +99,6 @@ public class LaunchCalculator {
   private static final double phaseDelay = .03;
   private final int loops = 20;
 
-  private final CommandSwerveDrivetrain drivetrain;
-  private final TripleShooterSubsystem shooter;
-
   private Rotation2d lastDriveAngle = new Rotation2d();
 
   private double lastHoodAngle;
@@ -107,6 +110,8 @@ public class LaunchCalculator {
   }
 
   private int loopTST;
+
+  boolean showData = true;
 
   StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
       .getStructTopic("LC/RobotPose", Pose2d.struct).publish();
@@ -125,14 +130,6 @@ public class LaunchCalculator {
       .getStructTopic("LC/DerivedPose", Pose2d.struct).publish();
   StructPublisher<Pose2d> projectedHubPosePublisher = NetworkTableInstance.getDefault()
       .getStructTopic("LC/ProjectedHubPose", Pose2d.struct).publish();
-
-  boolean showData;
-
-  public LaunchCalculator(CommandSwerveDrivetrain drivetrain, TripleShooterSubsystem shooter, boolean showData) {
-    this.drivetrain = drivetrain;
-    this.shooter = shooter;
-    this.showData = showData;
-  }
 
   // Launching Maps
   private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap = new InterpolatingTreeMap<>(
@@ -206,7 +203,7 @@ public class LaunchCalculator {
     return timeOfFlightMap.get(maxDistance);
   }
 
-  public LaunchingParameters getParameters() {
+  public LaunchingParameters getParameters(CommandSwerveDrivetrain drivetrain) {
     boolean passing = AllianceFlipUtil
         .applyX(drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
     if (latestParameters != null) {
@@ -245,7 +242,7 @@ public class LaunchCalculator {
      */
 
     Translation2d target = passing
-        ? getPassingTarget()
+        ? getPassingTarget(drivetrain)
         : AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
 
     Pose2d shooterPose = estimatedPose.transformBy(LauncherConstants.toTransform2d(LauncherConstants.robotToShooter));
@@ -297,9 +294,9 @@ public class LaunchCalculator {
       lookaheadPose = new Pose2d(
           shooterPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
           shooterPose.getRotation());
+      lookaheadShooterToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
 
       if (showData) {
-        lookaheadShooterToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
         lookAheadPosePublisher.accept(lookaheadPose);
       }
     }
@@ -369,6 +366,11 @@ public class LaunchCalculator {
     if (latestParameters != null) {
       Pose2d derivedPose = new Pose2d(robotPose.getTranslation(), driveAngle);
 
+      Pose2d projectedOnTheMoveShootPose = getProjectedHubPose((drivetrain.getState().Pose),
+          lookaheadShooterToTargetDistance, driveAngle);
+
+      Rotation2d projectedOnTheMoveShootAngle = latestParameters.driveAngle;
+
       if (showData) {
         SmartDashboard.putBoolean("LC/LPValid", latestParameters.isValid);
         SmartDashboard.putNumber("LC/DriveAngle", latestParameters.driveAngle.getDegrees());
@@ -384,14 +386,14 @@ public class LaunchCalculator {
 
         stAimedPosePublisher.accept(getStationaryAimedPose(drivetrain.getState().Pose.getTranslation(), false));
         derivedPosePublisher.accept(derivedPose);
-        drivetrain.projectedOnTheMoveShootPose = getProjectedHubPose(lookaheadRobotPose,
-            lookaheadShooterToTargetDistance, driveAngle);
 
         projectedHubPosePublisher
             .accept(drivetrain.projectedOnTheMoveShootPose);
 
+        SmartDashboard.putNumber("LC/DriveAngle", driveAngle.getDegrees());
         SmartDashboard.putNumber("LC/projectedYDiff",
             drivetrain.projectedOnTheMoveShootPose.getY() - target.getY());
+
       }
     }
     // Log calculated values
@@ -434,7 +436,7 @@ public class LaunchCalculator {
     latestParameters = null;
   }
 
-  public Translation2d getPassingTarget() {
+  public Translation2d getPassingTarget(CommandSwerveDrivetrain drivetrain) {
     double flippedY = AllianceFlipUtil.applyX(drivetrain.getState().Pose.getTranslation().getMeasureX().in(Meters));
     boolean mirror = flippedY > FieldConstants.LinesHorizontal.center;
 

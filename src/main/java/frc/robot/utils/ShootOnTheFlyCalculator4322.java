@@ -22,35 +22,37 @@ import frc.robot.Constants.FieldConstants;
  */
 public class ShootOnTheFlyCalculator4322 {
 
-  StructPublisher<Translation2d> robotPublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("SOTF/RobotPose", Translation2d.struct).publish();
-  StructPublisher<Translation2d> futurePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("SOTF/FuturePose", Translation2d.struct).publish();
+  // StructPublisher<Translation2d> robotPublisher = NetworkTableInstance.getDefault()
+  //     .getStructTopic("SOTF/RobotPose", Translation2d.struct).publish();
+  // StructPublisher<Translation2d> futurePublisher = NetworkTableInstance.getDefault()
+  //     .getStructTopic("SOTF/FuturePose", Translation2d.struct).publish();
 
-  StructPublisher<Translation2d> toGoalPublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("SOTF/ToGoal", Translation2d.struct).publish();
+  // StructPublisher<Translation2d> toGoalPublisher = NetworkTableInstance.getDefault()
+  //     .getStructTopic("SOTF/ToGoal", Translation2d.struct).publish();
 
-  StructPublisher<Translation2d> targetDirectionPublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("SOTF/TargetDirectipn", Translation2d.struct).publish();
+  // StructPublisher<Translation2d> targetDirectionPublisher = NetworkTableInstance.getDefault()
+  //     .getStructTopic("SOTF/TargetDirectipn", Translation2d.struct).publish();
 
-  StructPublisher<Translation2d> targetVelocityPublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("SOTF/TargetVelocity", Translation2d.struct).publish();
+  // StructPublisher<Translation2d> targetVelocityPublisher = NetworkTableInstance.getDefault()
+  //     .getStructTopic("SOTF/TargetVelocity", Translation2d.struct).publish();
 
-  StructPublisher<Translation2d> shotVelocityPublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("SOTF/ShotVelocity", Translation2d.struct).publish();
+  // StructPublisher<Translation2d> shotVelocityPublisher = NetworkTableInstance.getDefault()
+  //     .getStructTopic("SOTF/ShotVelocity", Translation2d.struct).publish();
 
-  StructPublisher<Rotation2d> robotAnglePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("SOTF/RobotAngle", Rotation2d.struct).publish();
+  // StructPublisher<Rotation2d> robotAnglePublisher = NetworkTableInstance.getDefault()
+  //     .getStructTopic("SOTF/RobotAngle", Rotation2d.struct).publish();
 
-  StructPublisher<Pose2d> projectedHubPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("SOTF/ProjectedHubPose", Pose2d.struct).publish();
+  // StructPublisher<Pose2d> projectedHubPosePublisher = NetworkTableInstance.getDefault()
+  //     .getStructTopic("SOTF/ProjectedHubPose", Pose2d.struct).publish();
+
+ 
 
   /** Parameters stored in the shooter lookup table. */
   public record ShooterParams(double rpm, double hoodAngle, double timeOfFlight) {
   }
 
-  /** Output command from the calculator. */
-  public record ShooterCommand(
+  /** Output values from the calculator. */
+  public record ShooterValues(
       Rotation2d robotAngle, double rpm, double hoodAngle, double effectiveDistance) {
   }
 
@@ -99,9 +101,9 @@ public class ShootOnTheFlyCalculator4322 {
    *
    * @param robotPosition Current robot position on field
    * @param goalPosiiton  Goal/target position on field
-   * @return Shooter command with robot angle, RPM, and hood angle
+   * @return Shooter values with robot angle, RPM, and hood angle
    */
-  public ShooterCommand calculateStationary(
+  public ShooterValues calculateStationary(
       Translation2d robotPosition, Translation2d goalPosition) {
     return calculate(robotPosition, new Translation2d(), goalPosition, 0.0);
   }
@@ -114,9 +116,9 @@ public class ShootOnTheFlyCalculator4322 {
    * @param goalPosition        Goal/target position on field
    * @param latencyCompensation Additional time to project position forward
    *                            (seconds)
-   * @return Shooter command with robot angle, RPM, and hood angle
+   * @return Shooter values with robot angle, RPM, and hood angle
    */
-  public ShooterCommand calculate(
+  public ShooterValues calculate(
       Translation2d robotPosition,
       Translation2d robotVelocity,
       Translation2d goalPosition,
@@ -125,20 +127,19 @@ public class ShootOnTheFlyCalculator4322 {
     // 1. Project future position (account for latency)
     Translation2d futurePosition = robotPosition.plus(robotVelocity.times(latencyCompensation));
 
-    
-      robotPublisher.accept(robotPosition);
-      futurePublisher.accept(futurePosition);
-  
+    // robotPublisher.accept(robotPosition);
+    // futurePublisher.accept(futurePosition);
+
     // 2. Get target vector
     Translation2d toGoal = goalPosition.minus(futurePosition);
-    toGoalPublisher.accept(toGoal);
+   // toGoalPublisher.accept(toGoal);
     double distance = toGoal.getNorm();
 
     SmartDashboard.putNumber("SOTF/DistToGoal", distance);
 
     Translation2d targetDirection = toGoal.div(distance);
 
-    targetDirectionPublisher.accept(targetDirection);
+   // targetDirectionPublisher.accept(targetDirection);
 
     // 3. Look up baseline parameters from table
     ShooterParams baseline = shooterTable.get(distance);
@@ -149,25 +150,26 @@ public class ShootOnTheFlyCalculator4322 {
 
     // 4. Build target velocity vector (velocity needed to reach goal)
     Translation2d targetVelocity = targetDirection.times(baselineVelocity);
-    targetVelocityPublisher.accept(targetVelocity);
+  //  targetVelocityPublisher.accept(targetVelocity);
     // 5. THE MAGIC: subtract robot velocity to get required shot velocity
     Translation2d shotVelocity = targetVelocity.minus(robotVelocity);
-    shotVelocityPublisher.accept(shotVelocity);
+    //shotVelocityPublisher.accept(shotVelocity);
     // 6. Extract robot angle and required velocity magnitude
     Rotation2d robotAngle = shotVelocity.getAngle();
-    robotAnglePublisher.accept(robotAngle);
+   // robotAnglePublisher.accept(robotAngle);
     double requiredVelocity = shotVelocity.getNorm();
     SmartDashboard.putNumber("SOTF/RequireVel", requiredVelocity);
 
     // 7. Use Option 3: adjust both RPM and hood angle
-    ShooterCommand adjusted = calculateBothAdjustments(distance, baseline, requiredVelocity);
+    ShooterValues adjusted = calculateBothAdjustments(distance, baseline, requiredVelocity);
     Pose2d projectedOnTheMoveShootPose = getProjectedHubPose(futurePosition,
-            distance, robotAngle);
-projectedHubPosePublisher.accept(projectedOnTheMoveShootPose);
-       SmartDashboard.putNumber("SOTF/projectedYDiff",
-            projectedOnTheMoveShootPose.getY() - FieldConstants.redHubPose.getY());
-    return new ShooterCommand(
+        distance, robotAngle);
+    //projectedHubPosePublisher.accept(projectedOnTheMoveShootPose);
+    SmartDashboard.putNumber("SOTF/projectedYDiff",
+        projectedOnTheMoveShootPose.getY() - FieldConstants.redHubPose.getY());
+    return new ShooterValues(
         robotAngle, adjusted.rpm(), adjusted.hoodAngle(), adjusted.effectiveDistance());
+
   }
 
   /**
@@ -178,9 +180,9 @@ projectedHubPosePublisher.accept(projectedOnTheMoveShootPose);
    * @param distance         Actual distance to target
    * @param baseline         Baseline parameters from lookup table
    * @param requiredVelocity Required horizontal velocity magnitude
-   * @return Adjusted shooter command
+   * @return Adjusted shooter values
    */
-  private ShooterCommand calculateBothAdjustments(
+  private ShooterValues calculateBothAdjustments(
       double distance, ShooterParams baseline, double requiredVelocity) {
 
     /*
@@ -223,11 +225,10 @@ projectedHubPosePublisher.accept(projectedOnTheMoveShootPose);
       currentTime = currentParams.timeOfFlight();
       currentVelocity = currentDistance / currentTime;
     }
-    return new ShooterCommand(
+    return new ShooterValues(
         null, currentParams.rpm(), currentParams.hoodAngle(), currentDistance);
   }
 
-  
   public Pose2d getProjectedHubPose(Translation2d robotPose, double distanceToHub, Rotation2d driveAngle) {
 
     /**

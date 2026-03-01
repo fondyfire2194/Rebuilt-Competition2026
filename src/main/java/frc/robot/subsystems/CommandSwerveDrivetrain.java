@@ -126,6 +126,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public double shootTolerance = .5;
 
     public Pose2d projectedOnTheMoveShootPose = new Pose2d();
+    public Rotation2d projectedOnTheMoveShootAngle = new Rotation2d();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.

@@ -8,6 +8,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -21,7 +22,9 @@ import frc.robot.Constants.FeederSetpoints;
 
 public class FeederSubsystem extends SubsystemBase {
   /** Creates a new FeederSubsystem. */
+
   private SparkMax feederBeltMotor;
+
   private SparkMax feederRollerMotor;
 
   private double feederRollerPowerSim;
@@ -51,6 +54,7 @@ public class FeederSubsystem extends SubsystemBase {
         Configs.Feeder.feederBeltConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
+
     this.showData = showData;
     if (showData)
       SmartDashboard.putData(this);

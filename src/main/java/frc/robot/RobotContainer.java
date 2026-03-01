@@ -17,6 +17,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -27,7 +28,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
+import frc.robot.commands.DriveWithShootOnTheMove;
 import frc.robot.commands.PIDDriveToPose;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
@@ -42,7 +45,6 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.LaunchCalculator;
-import frc.robot.utils.ShootOnTheFlyCalculator4322;
 
 public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
@@ -89,7 +91,6 @@ public class RobotContainer {
 
         // public final PowerDistribution pdh;
 
-        private LaunchCalculator launchCalculator;
 
         private boolean showAllData = true;
 
@@ -105,8 +106,7 @@ public class RobotContainer {
                 m_intake = new IntakeSubsystem(showAllData);
                 m_intakeArm = new IntakeSlideArmSubsystem(showAllData);
 
-                launchCalculator = new LaunchCalculator(drivetrain, m_shooter, true);
-
+        
                 m_llv = new LimelightVision(showAllData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
@@ -186,16 +186,10 @@ public class RobotContainer {
                                                 m_feeder.stopFeederBeltCommand(),
                                                 m_intake.stopIntakeCommand()));
 
-                // driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand())
-                // .whileTrue(
-                // Commands.parallel(new PrepareShotCommand(m_shooter, m_hood),
-                // new AlignTargetOdometry(drivetrain, m_shooter, drive,
-                // driver, false)));
-                // driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand())
-                // .whileTrue(
-                // Commands.parallel(Commands.run(()-)
-                // new AlignTargetOdometry(drivetrain, m_shooter, drive,
-                // driver, false)));
+                driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand())
+                                .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_shooter, drive, driver));
+                // .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, drive,
+                // driver, false));
 
                 driver.y().onTrue(m_hood.setTargetCommand(0));
 
