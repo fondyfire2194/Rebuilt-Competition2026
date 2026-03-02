@@ -108,9 +108,15 @@ public class HoodSubsystem extends SubsystemBase {
                 this);// requirements
     }
 
-    // public void setTargetPosition(double position) {
-    //     MathUtil.clamp(targetPosition, kMinPosition.in((Degrees)), kMaxPosition.in(Degrees));
-    // }
+    public void incrementHoodPosition(double val) {
+        double pos = getHoodPosition();
+        pos = MathUtil.clamp(val, kMinPosition.in(Degrees), kMaxPosition.in(Degrees));
+        targetPosition = pos;
+    }
+
+    public Command incrementHoodCommand(double val) {
+        return Commands.runOnce(() -> incrementHoodPosition(val));
+    }
 
     public Command setTargetCommand(double position) {
         return Commands.runOnce(() -> targetPosition = position);

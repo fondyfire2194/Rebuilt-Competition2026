@@ -4,9 +4,7 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Degrees;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -27,6 +25,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Constants.RobotConstants;
+import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.DriveWithShootOnTheMove;
 import frc.robot.commands.PIDDriveToPose;
@@ -44,15 +44,11 @@ import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
 
 public class RobotContainer {
-        private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
-                                                                                            // top // speed
-        private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
-                                                                                          // second // max angular
-                                                                                          // velocity
 
         /* Setting up bindings for necessary control of the swerve drive platform */
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-                        .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+                        .withDeadband(RobotConstants.MaxSpeed * 0.1)
+                        .withRotationalDeadband(RobotConstants.MaxAngularRate * 0.1) // Add a 10% deadband
                         .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive
                                                                                  // motors
         private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -62,7 +58,7 @@ public class RobotContainer {
         private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
                         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        private final Telemetry logger = new Telemetry(MaxSpeed);
+        private final Telemetry logger = new Telemetry(RobotConstants.MaxSpeed);
 
         private final CommandXboxController driver = new CommandXboxController(0);
         public final CommandXboxController codriver = new CommandXboxController(1);
@@ -88,12 +84,13 @@ public class RobotContainer {
 
         // public final PowerDistribution pdh;
 
-
         private boolean showAllData = true;
 
         private Trigger driverFiveSecondWarningEndShootTrigger;
         private Trigger driverFiveSecondWarningEndPickupTrigger;
         private Trigger endGameWarningTrigger;
+
+        private Trigger autoShootTrigger;
 
         public RobotContainer() {
 
@@ -103,7 +100,6 @@ public class RobotContainer {
                 m_intake = new IntakeSubsystem(showAllData);
                 m_intakeArm = new IntakeSlideArmSubsystem(showAllData);
 
-        
                 m_llv = new LimelightVision(showAllData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
@@ -131,10 +127,11 @@ public class RobotContainer {
                                 // Drivetrain will execute this command periodically
                                 drivetrain.applyRequest(() -> drive
                                                 .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
-                                                .withVelocityX(-driver.getLeftY() * MaxSpeed)
-                                                .withVelocityY(-driver.getLeftX() * MaxSpeed)
+                                                .withVelocityX(-driver.getLeftY() * RobotConstants.MaxSpeed)
+                                                .withVelocityY(-driver.getLeftX() * RobotConstants.MaxSpeed)
                                                 // negative X (left)
-                                                .withRotationalRate(-driver.getRightX() * MaxAngularRate)));
+                                                .withRotationalRate(
+                                                                -driver.getRightX() * RobotConstants.MaxAngularRate)));
 
                 m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmSlideCommand());
 
@@ -149,7 +146,7 @@ public class RobotContainer {
                 // neutral mode is applied to the drive motors while disabled.
                 final var idle = new SwerveRequest.Idle();
                 RobotModeTriggers.disabled().whileTrue(
-                                drivetrain.applyRequest(() -> idle).ignoringDisable(true));
+                                drivetrain.applyRequest(isShootUsingDistance).ignoringDisable(true));
 
                 // driver.a().whileTrue(drivetrain.applyRequest(() -> brake));
                 // driver.b().whileTrue(drivetrain
@@ -176,31 +173,38 @@ public class RobotContainer {
                                                                 m_intakeArm.intakeArmSlideToClearPositionCommand(),
                                                                 m_intake.stopIntakeCommand()));
 
+                driver.leftBumper().onTrue(
+                                Commands.sequence(
+                                                m_shooter.setShootUsingDistanceCommand(true),
+                                                m_shooter.runAllVelocityVoltageCommand()))
+                                // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_shooter, drive,
+                                // driver));
+                                .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, drive,
+                                                driver, false));
+
                 driver.rightBumper().onTrue(
                                 Commands.parallel(
+                                        m_shooter.setShootUsingDistanceCommand(false),
                                                 m_shooter.stopAllShootersCommand(),
                                                 m_feeder.stopFeederRollerCommand(),
                                                 m_feeder.stopFeederBeltCommand(),
                                                 m_intake.stopIntakeCommand()));
 
-                driver.leftBumper().onTrue(m_shooter.runAllVelocityVoltageCommand())
-                                .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_shooter, drive, driver));
-                // .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, drive,
-                // driver, false));
+                driver.b().onTrue(m_hood.setTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
-                driver.y().onTrue(m_hood.setTargetCommand(0));
+                driver.y().onTrue(m_hood.incrementHoodCommand(.5));
 
-                driver.a().onTrue(m_hood.positionTestCommand());
+                driver.a().onTrue(m_hood.incrementHoodCommand(-.5));
 
-                driver.b().onTrue(m_hood.setTargetCommand(5));
+                driver.x().onTrue(m_hood.setTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)))
 
                 driver.povUp().onTrue(m_shooter.changeTargetVelocityCommand(100));
 
                 driver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
 
-                driver.povLeft().onTrue(Commands.runOnce(() -> m_shooter.bypassShootInterlocks = true));
+                driver.povLeft().onTrue(Commands.none());
 
-                codriver.povRight().onTrue(Commands.runOnce(() -> m_shooter.bypassShootInterlocks = false));
+                codriver.povRight().onTrue(Commands.none());
 
                 // Reset the field-centric heading
                 driver.start().onTrue(
@@ -255,6 +259,16 @@ public class RobotContainer {
         }
 
         private void configureTriggers() {
+
+                autoShootTrigger = new Trigger(
+                                () -> m_shooter.hubIsActive
+                                                && m_shooter.isShootUsingDistance()
+                                                && drivetrain.alignedToTarget
+                                                && m_hood.isPositionWithinTolerance()
+                                                && m_shooter.allVelocityInTolerance());
+
+                autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain));
+
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 
                 driverFiveSecondWarningEndPickupTrigger

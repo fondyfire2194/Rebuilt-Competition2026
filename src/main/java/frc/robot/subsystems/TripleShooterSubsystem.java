@@ -73,9 +73,21 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public boolean endShooterCommand;
 
-  public boolean bypassShootInterlocks;
-
   public boolean hubIsActive;
+
+  private boolean shootUsingDistance;
+
+  public boolean isShootUsingDistance() {
+    return shootUsingDistance;
+  }
+
+  public void setShootUsingDistance(boolean autoShoot) {
+    this.shootUsingDistance = autoShoot;
+  }
+
+  public Command setShootUsingDistanceCommand(boolean on) {
+    return Commands.runOnce(() -> setShootUsingDistance(on));
+  }
 
   public TripleShooterSubsystem(boolean showData) {
     this.showData = showData;

@@ -18,13 +18,13 @@ public class ShootingData {
     // Launching Maps
     public static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(), Rotation2d::interpolate);
-    public static final InterpolatingDoubleTreeMap flywheelSpeedMap = new InterpolatingDoubleTreeMap();
+    public static final InterpolatingDoubleTreeMap shooterSpeedMap = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap timeOfFlightMap = new InterpolatingDoubleTreeMap();
 
     // Passing Maps
     public static final InterpolatingTreeMap<Double, Rotation2d> passingHoodAngleMap = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(), Rotation2d::interpolate);
-    public static final InterpolatingDoubleTreeMap passingFlywheelSpeedMap = new InterpolatingDoubleTreeMap();
+    public static final InterpolatingDoubleTreeMap passingShooterSpeedMap = new InterpolatingDoubleTreeMap();
     public final static InterpolatingDoubleTreeMap passingTimeOfFlightMap = new InterpolatingDoubleTreeMap();
     // Passing targets
     public static final double hubPassLine = FieldConstants.LinesHorizontal.rightBumpStart
@@ -53,18 +53,18 @@ public class ShootingData {
         hoodAngleMap.put(4.35, Rotation2d.fromDegrees(34.0));
         hoodAngleMap.put(4.84, Rotation2d.fromDegrees(38.0));
 
-        flywheelSpeedMap.put(0.96, 150.0);
-        flywheelSpeedMap.put(1.16, 155.0);
-        flywheelSpeedMap.put(1.58, 160.0);
-        flywheelSpeedMap.put(2.07, 165.0);
-        flywheelSpeedMap.put(2.37, 170.0);
-        flywheelSpeedMap.put(2.47, 170.0);
-        flywheelSpeedMap.put(2.70, 170.0);
-        flywheelSpeedMap.put(2.94, 175.0);
-        flywheelSpeedMap.put(3.48, 175.0);
-        flywheelSpeedMap.put(3.92, 180.0);
-        flywheelSpeedMap.put(4.35, 185.0);
-        flywheelSpeedMap.put(4.84, 190.0);
+        shooterSpeedMap.put(0.96, 1500.0);
+        shooterSpeedMap.put(1.16, 1550.0);
+        shooterSpeedMap.put(1.58, 1600.0);
+        shooterSpeedMap.put(2.07, 1650.0);
+        shooterSpeedMap.put(2.37, 1700.0);
+        shooterSpeedMap.put(2.47, 1700.0);
+        shooterSpeedMap.put(2.70, 1700.0);
+        shooterSpeedMap.put(2.94, 1750.0);
+        shooterSpeedMap.put(3.48, 1750.0);
+        shooterSpeedMap.put(3.92, 1800.0);
+        shooterSpeedMap.put(4.35, 1850.0);
+        shooterSpeedMap.put(4.84, 1900.0);
 
         timeOfFlightMap.put(5.68, 1.16);
         timeOfFlightMap.put(4.55, 1.12);
@@ -72,13 +72,13 @@ public class ShootingData {
         timeOfFlightMap.put(1.88, 1.09);
         timeOfFlightMap.put(1.38, 0.90);
 
-        passingHoodAngleMap.put(5.46, Rotation2d.fromDegrees(38.0));
-        passingHoodAngleMap.put(6.62, Rotation2d.fromDegrees(38.0));
-        passingHoodAngleMap.put(7.80, Rotation2d.fromDegrees(38.0));
+        passingHoodAngleMap.put(5.46, Rotation2d.fromDegrees(0.0));
+        passingHoodAngleMap.put(6.62, Rotation2d.fromDegrees(3.0));
+        passingHoodAngleMap.put(7.80, Rotation2d.fromDegrees(8.0));
 
-        passingFlywheelSpeedMap.put(5.46, 160.0);
-        passingFlywheelSpeedMap.put(6.62, 180.0);
-        passingFlywheelSpeedMap.put(7.80, 200.0);
+        passingShooterSpeedMap.put(5.46, 160.0);
+        passingShooterSpeedMap.put(6.62, 180.0);
+        passingShooterSpeedMap.put(7.80, 200.0);
 
         passingTimeOfFlightMap.put(passingMinDistance, 0.0);
         passingTimeOfFlightMap.put(passingMaxDistance, 0.0);

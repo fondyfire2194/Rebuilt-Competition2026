@@ -4,22 +4,22 @@
 
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.generated.TunerConstants;
+import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
+import frc.robot.utils.ShootingData;
+import frc.robot.utils.geometry.AllianceFlipUtil;
 
 public class AlignTargetOdometry extends Command {
   /** Creates a new AlignToTagSet */
@@ -36,11 +36,12 @@ public class AlignTargetOdometry extends Command {
   private double rotationVal;
   private boolean aligning;
   private double angleToTarget;
-  private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
   private SwerveRequest.FieldCentric drive;
   private final TripleShooterSubsystem shooter;
+  private double distanceToHub;
+  private Double shooterRPM;
+  private Rotation2d hoodAngle;
 
   public AlignTargetOdometry(
       CommandSwerveDrivetrain drivetrain,
@@ -73,16 +74,25 @@ public class AlignTargetOdometry extends Command {
 
     angleToTarget = getAngleDegreesToTarget(targetPose, m_drivetrain.getState().Pose);
 
-    shooter.setDistanceToHub(targetPose.getTranslation()
-        .getDistance(m_drivetrain.getState().Pose.getTranslation()));
+    boolean passing = AllianceFlipUtil
+        .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
+
+    distanceToHub = targetPose.getTranslation()
+        .getDistance(m_drivetrain.getState().Pose.getTranslation());
+
+    shooterRPM = passing ? ShootingData.passingShooterSpeedMap.get(distanceToHub)
+        : ShootingData.shooterSpeedMap.get(distanceToHub);
+
+    hoodAngle = passing ? ShootingData.passingHoodAngleMap.get(distanceToHub)
+        : ShootingData.hoodAngleMap.get(distanceToHub);
 
     rotationVal = m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
 
     m_drivetrain.setControl(
-        drive.withVelocityX(-m_controller.getLeftY() * MaxSpeed)
-            .withVelocityY(-m_controller.getLeftX() * MaxSpeed)
+        drive.withVelocityX(-m_controller.getLeftY() * RobotConstants.MaxSpeed)
+            .withVelocityY(-m_controller.getLeftX() * RobotConstants.MaxSpeed)
             // // negative X (left)
-            .withRotationalRate(rotationVal * MaxAngularRate));
+            .withRotationalRate(rotationVal * RobotConstants.MaxAngularRate));
 
     m_drivetrain.alignedToTarget = Math.abs(angleToTarget) < m_drivetrain.shootTolerance;
 

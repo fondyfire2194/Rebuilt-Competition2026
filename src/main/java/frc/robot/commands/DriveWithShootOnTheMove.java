@@ -18,11 +18,14 @@ import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.LaunchCalculator;
+import frc.robot.utils.ShootingData;
+import frc.robot.utils.geometry.AllianceFlipUtil;
 
 /**
  * This routine is enabled by holding a gamepad trigger/ bumper while using the
@@ -59,6 +62,9 @@ public class DriveWithShootOnTheMove extends Command {
   private final TripleShooterSubsystem shooter;
   private Pose2d targetPose;
   private double deadband = .02;
+  private double distanceToHub;
+  private double shooterRPM;
+  private double hoodAngle;
 
   public DriveWithShootOnTheMove(
       CommandSwerveDrivetrain drivetrain,
@@ -86,13 +92,21 @@ public class DriveWithShootOnTheMove extends Command {
   @Override
   public void execute() {
 
-    LaunchCalculator.LaunchingParameters lp = LaunchCalculator.getInstance().getParameters(m_drivetrain);
+  
+  
+  LaunchCalculator.LaunchingParameters lp = LaunchCalculator.getInstance().getParameters(m_drivetrain);
     SmartDashboard.putBoolean("LC/lp", false);
     if (lp != null) {
       SmartDashboard.putBoolean("LC/lp", true);
 
-      shooter.setDistanceToHub(targetPose.getTranslation()
-          .getDistance(m_drivetrain.getState().Pose.getTranslation()));
+     
+    boolean passing = lp.passing();
+
+    distanceToHub = lp.distance()
+
+    shooterRPM = lp.flywheelSpeed();
+
+    hoodAngle = lp.hoodAngle();
 
       SmartDashboard.putNumber("LC/pomtsa", m_drivetrain.projectedOnTheMoveShootAngle.getDegrees());
       angleError = m_drivetrain.getState().Pose.getRotation().minus(lp.driveAngle()).getDegrees();

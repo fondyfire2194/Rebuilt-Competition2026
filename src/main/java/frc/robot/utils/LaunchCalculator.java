@@ -13,9 +13,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
-import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -24,7 +21,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.LauncherConstants;
-import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.utils.geometry.AllianceFlipUtil;
 import frc.robot.utils.geometry.GeomUtil;
@@ -277,8 +273,8 @@ public class LaunchCalculator {
         hoodAngle + Units.degreesToRadians(hoodAngleOffsetDeg),
         hoodVelocity,
         passing
-            ? ShootingData.passingFlywheelSpeedMap.get(lookaheadShooterToTargetDistance)
-            : ShootingData.flywheelSpeedMap.get(lookaheadShooterToTargetDistance),
+            ? ShootingData.passingShooterSpeedMap.get(lookaheadShooterToTargetDistance)
+            : ShootingData.shooterSpeedMap.get(lookaheadShooterToTargetDistance),
         lookaheadShooterToTargetDistance,
         shooterToTargetDistance,
         timeOfFlight,
@@ -374,7 +370,8 @@ public class LaunchCalculator {
           ? FieldConstants.fieldWidth
               - MathUtil.interpolate(ShootingData.yPassTarget, ShootingData.passingMinDistance, interpolateZoneAmount)
           : MathUtil.interpolate(ShootingData.yPassTarget, ShootingData.passingMinDistance, interpolateZoneAmount);
-      Translation2d flippedGoalTranslation = AllianceFlipUtil.apply(new Translation2d(ShootingData.xPassTarget, unflippedPoseY));
+      Translation2d flippedGoalTranslation = AllianceFlipUtil
+          .apply(new Translation2d(ShootingData.xPassTarget, unflippedPoseY));
       return flippedGoalTranslation;
     }
 
