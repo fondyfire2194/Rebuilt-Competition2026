@@ -6,6 +6,9 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 
+import java.util.Map;
+import java.util.Set;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -21,6 +24,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -142,14 +149,12 @@ public class RobotContainer {
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
 
-                
-        // Idle while the robot is disabled. This ensures the configured
-        // neutral mode is applied to the drive motors while disabled.
+                // Idle while the robot is disabled. This ensures the configured
+                // neutral mode is applied to the drive motors while disabled.
 
-        final var idle = new SwerveRequest.Idle();
-        RobotModeTriggers.disabled().whileTrue(
-            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
-        );
+                final var idle = new SwerveRequest.Idle();
+                RobotModeTriggers.disabled().whileTrue(
+                                drivetrain.applyRequest(() -> idle).ignoringDisable(true));
                 // driver.a().whileTrue(drivetrain.applyRequest(() -> brake));
                 // driver.b().whileTrue(drivetrain
                 // .applyRequest(() -> point.withModuleDirection(
@@ -187,7 +192,7 @@ public class RobotContainer {
 
                 driver.rightBumper().onTrue(
                                 Commands.parallel(
-                                        m_shooter.setShootUsingDistanceCommand(false),
+                                                m_shooter.setShootUsingDistanceCommand(false),
                                                 m_shooter.stopAllShootersCommand(),
                                                 m_feeder.stopFeederRollerCommand(),
                                                 m_feeder.stopFeederBeltCommand(),
@@ -195,9 +200,14 @@ public class RobotContainer {
 
                 driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
-                driver.y().onTrue(m_hood.incrementHoodCommand(.5));
+                driver.y().onTrue(
+                        new DeferredCommand(()->
+                        m_hood.incrementHoodCommand(.5), Set.of()));
 
-                driver.a().onTrue(m_hood.incrementHoodCommand(-.5));
+                driver.a().onTrue(
+                        new DeferredCommand(()->
+                        m_hood.incrementHoodCommand(-.5), Set.of()));
+
 
                 driver.x().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
 
@@ -205,7 +215,13 @@ public class RobotContainer {
 
                 driver.povDown().onTrue(m_shooter.changeFinalTargetVelocityCommand(-100));
 
-                driver.povLeft().onTrue(Commands.none());
+                driver.povLeft().onTrue(
+                                new DeferredCommand(() -> Commands.either(
+                                                Commands.parallel(m_shooter.setShootUsingDistanceCommand(false),
+                                                                m_hood.setHoodUsingDistanceCommand(false)),
+                                                Commands.parallel(m_shooter.setShootUsingDistanceCommand(true),
+                                                                m_hood.setHoodUsingDistanceCommand(true)),
+                                                () -> m_shooter.isShootUsingDistance()), Set.of()));
 
                 codriver.povRight().onTrue(Commands.none());
 
@@ -382,4 +398,5 @@ public class RobotContainer {
                 return autoChooser.getSelected();
                 // return new PathPlannerAuto("SimpleAuto");
         }
+
 }

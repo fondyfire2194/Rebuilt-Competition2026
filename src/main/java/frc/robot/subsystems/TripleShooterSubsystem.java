@@ -65,10 +65,9 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   private Distance distanceToHub;
 
-  // private AngularVelocity targetVelocity = RPM.of(500);
-  private double manualSetTargetRPM = 2500;
+  private double manualSetTargetRPM = 2000;
   public double autoSetTargetRPM = 2500;
-  private double finalTargetRPM;
+  private double finalSetTargetRPM;
 
   private AngularAcceleration targetAcceleration = RotationsPerSecondPerSecond.of(500);
 
@@ -88,10 +87,14 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public void setShootUsingDistance(boolean autoShoot) {
     this.shootUsingDistance = autoShoot;
+
   }
 
   public Command setShootUsingDistanceCommand(boolean on) {
-    return Commands.runOnce(() -> setShootUsingDistance(on));
+    return Commands.sequence(
+        Commands.runOnce(() -> shootUsingDistance = on),
+        Commands.runOnce(() -> finalSetTargetRPM = isShootUsingDistance() ? autoSetTargetRPM : manualSetTargetRPM));
+
   }
 
   public TripleShooterSubsystem(boolean showData) {
@@ -179,10 +182,9 @@ public class TripleShooterSubsystem extends SubsystemBase {
   }
 
   public void runVelocityVoltage(TalonFX motor) {
-    finalTargetRPM = isShootUsingDistance() ? autoSetTargetRPM : manualSetTargetRPM;
     motor.setControl(
         velocityVoltage
-            .withVelocity(RPM.of(finalTargetRPM))
+            .withVelocity(RPM.of(finalSetTargetRPM))
             .withAcceleration(targetAcceleration)
             .withEnableFOC(true));
   }
@@ -257,7 +259,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
   }
 
   public void changeFinalTargetVelocity(double rpm) {
-    manualSetTargetRPM += rpm;
+    finalSetTargetRPM += rpm;
     SmartDashboard.putNumber("TGTrpm", manualSetTargetRPM);
   }
 
@@ -308,8 +310,12 @@ public class TripleShooterSubsystem extends SubsystemBase {
     initSendable(builder, rightMotor, "Right");
     builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
+    builder.addBooleanProperty("Use Distance For RPM", () -> isShootUsingDistance(), null);
+
     builder.addDoubleProperty("Voltage Target RPM", () -> velocityVoltage.getVelocityMeasure().in(RPM), null);
-    builder.addDoubleProperty("Target Velocity RPM", () -> manualSetTargetRPM, null);
+    builder.addDoubleProperty("Manual Target RPM", () -> manualSetTargetRPM, null);
+    builder.addDoubleProperty("Auto Target RPM", () -> autoSetTargetRPM, null);
+    builder.addDoubleProperty("Final Target RPM", () -> finalSetTargetRPM, null);
   }
 
   @Override
