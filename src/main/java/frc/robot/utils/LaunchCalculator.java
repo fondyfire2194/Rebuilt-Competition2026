@@ -92,10 +92,6 @@ public class LaunchCalculator {
   // Cache parameters
   private LaunchingParameters latestParameters = null;
 
-  private static final double minDistance = .9;
-  private static final double maxDistance = 4.9;
-  private static final double passingMinDistance = 0;
-  private static final double passingMaxDistance = 12;
   private static final double phaseDelay = .03;
   private final int loops = 20;
 
@@ -130,78 +126,6 @@ public class LaunchCalculator {
       .getStructTopic("LC/DerivedPose", Pose2d.struct).publish();
   StructPublisher<Pose2d> projectedHubPosePublisher = NetworkTableInstance.getDefault()
       .getStructTopic("LC/ProjectedHubPose", Pose2d.struct).publish();
-
-  // Launching Maps
-  private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap = new InterpolatingTreeMap<>(
-      InverseInterpolator.forDouble(), Rotation2d::interpolate);
-  private static final InterpolatingDoubleTreeMap flywheelSpeedMap = new InterpolatingDoubleTreeMap();
-  private static final InterpolatingDoubleTreeMap timeOfFlightMap = new InterpolatingDoubleTreeMap();
-
-  // Passing Maps
-  private static final InterpolatingTreeMap<Double, Rotation2d> passingHoodAngleMap = new InterpolatingTreeMap<>(
-      InverseInterpolator.forDouble(), Rotation2d::interpolate);
-  private static final InterpolatingDoubleTreeMap passingFlywheelSpeedMap = new InterpolatingDoubleTreeMap();
-  private static final InterpolatingDoubleTreeMap passingTimeOfFlightMap = new InterpolatingDoubleTreeMap();
-  // Passing targets
-  private static final double hubPassLine = FieldConstants.LinesHorizontal.rightBumpStart
-      - RobotConstants.trackWidthY / 2.0;
-  private static final double xPassTarget = Units.inchesToMeters(25);
-  private static final double yPassTarget = Units.inchesToMeters(50);
-
-  static {
-
-    hoodAngleMap.put(0.96, Rotation2d.fromDegrees(10.0));
-    hoodAngleMap.put(1.16, Rotation2d.fromDegrees(12.0));
-    hoodAngleMap.put(1.58, Rotation2d.fromDegrees(14.0));
-    hoodAngleMap.put(2.07, Rotation2d.fromDegrees(18.5));
-    hoodAngleMap.put(2.37, Rotation2d.fromDegrees(22.0));
-    hoodAngleMap.put(2.47, Rotation2d.fromDegrees(23.0));
-    hoodAngleMap.put(2.70, Rotation2d.fromDegrees(24.0));
-    hoodAngleMap.put(2.94, Rotation2d.fromDegrees(25.0));
-    hoodAngleMap.put(3.48, Rotation2d.fromDegrees(27.0));
-    hoodAngleMap.put(3.92, Rotation2d.fromDegrees(32.0));
-    hoodAngleMap.put(4.35, Rotation2d.fromDegrees(34.0));
-    hoodAngleMap.put(4.84, Rotation2d.fromDegrees(38.0));
-
-    flywheelSpeedMap.put(0.96, 150.0);
-    flywheelSpeedMap.put(1.16, 155.0);
-    flywheelSpeedMap.put(1.58, 160.0);
-    flywheelSpeedMap.put(2.07, 165.0);
-    flywheelSpeedMap.put(2.37, 170.0);
-    flywheelSpeedMap.put(2.47, 170.0);
-    flywheelSpeedMap.put(2.70, 170.0);
-    flywheelSpeedMap.put(2.94, 175.0);
-    flywheelSpeedMap.put(3.48, 175.0);
-    flywheelSpeedMap.put(3.92, 180.0);
-    flywheelSpeedMap.put(4.35, 185.0);
-    flywheelSpeedMap.put(4.84, 190.0);
-
-    timeOfFlightMap.put(5.68, 1.16);
-    timeOfFlightMap.put(4.55, 1.12);
-    timeOfFlightMap.put(3.15, 1.11);
-    timeOfFlightMap.put(1.88, 1.09);
-    timeOfFlightMap.put(1.38, 0.90);
-
-    passingHoodAngleMap.put(5.46, Rotation2d.fromDegrees(38.0));
-    passingHoodAngleMap.put(6.62, Rotation2d.fromDegrees(38.0));
-    passingHoodAngleMap.put(7.80, Rotation2d.fromDegrees(38.0));
-
-    passingFlywheelSpeedMap.put(5.46, 160.0);
-    passingFlywheelSpeedMap.put(6.62, 180.0);
-    passingFlywheelSpeedMap.put(7.80, 200.0);
-
-    passingTimeOfFlightMap.put(passingMinDistance, 0.0);
-    passingTimeOfFlightMap.put(passingMaxDistance, 0.0);
-
-  }
-
-  public static double getMinTimeOfFlight() {
-    return timeOfFlightMap.get(minDistance);
-  }
-
-  public static double getMaxTimeOfFlight() {
-    return timeOfFlightMap.get(maxDistance);
-  }
 
   public LaunchingParameters getParameters(CommandSwerveDrivetrain drivetrain) {
     boolean passing = AllianceFlipUtil
@@ -279,16 +203,16 @@ public class LaunchCalculator {
 
     // Account for imparted velocity by robot (shooter) to offset
     double timeOfFlight = passing
-        ? passingTimeOfFlightMap.get(shooterToTargetDistance)
-        : timeOfFlightMap.get(shooterToTargetDistance);
+        ? ShootingData.passingTimeOfFlightMap.get(shooterToTargetDistance)
+        : ShootingData.timeOfFlightMap.get(shooterToTargetDistance);
     Pose2d lookaheadPose = shooterPose;
     double lookaheadShooterToTargetDistance = shooterToTargetDistance;
 
     // loop to get better time of filght
     for (int i = 0; i < loops; i++) {
       timeOfFlight = passing
-          ? passingTimeOfFlightMap.get(lookaheadShooterToTargetDistance)
-          : timeOfFlightMap.get(lookaheadShooterToTargetDistance);
+          ? ShootingData.passingTimeOfFlightMap.get(lookaheadShooterToTargetDistance)
+          : ShootingData.timeOfFlightMap.get(lookaheadShooterToTargetDistance);
       double offsetX = shootererVelocity.vxMetersPerSecond * timeOfFlight;
       double offsetY = shootererVelocity.vyMetersPerSecond * timeOfFlight;
       lookaheadPose = new Pose2d(
@@ -320,8 +244,8 @@ public class LaunchCalculator {
      * 
      */
     double hoodAngle = passing
-        ? passingHoodAngleMap.get(lookaheadShooterToTargetDistance).getRadians()
-        : hoodAngleMap.get(lookaheadShooterToTargetDistance).getRadians();
+        ? ShootingData.passingHoodAngleMap.get(lookaheadShooterToTargetDistance).getRadians()
+        : ShootingData.hoodAngleMap.get(lookaheadShooterToTargetDistance).getRadians();
 
     if (lastDriveAngle == null)
       lastDriveAngle = driveAngle;
@@ -345,15 +269,16 @@ public class LaunchCalculator {
 
     // Construct parameters
     latestParameters = new LaunchingParameters(
-        lookaheadShooterToTargetDistance >= (passing ? passingMinDistance : minDistance)
-            && lookaheadShooterToTargetDistance <= (passing ? passingMaxDistance : maxDistance),
+        lookaheadShooterToTargetDistance >= (passing ? ShootingData.passingMinDistance : ShootingData.minDistance)
+            && lookaheadShooterToTargetDistance <= (passing ? ShootingData.passingMaxDistance
+                : ShootingData.maxDistance),
         driveAngle,
         driveVelocity,
         hoodAngle + Units.degreesToRadians(hoodAngleOffsetDeg),
         hoodVelocity,
         passing
-            ? passingFlywheelSpeedMap.get(lookaheadShooterToTargetDistance)
-            : flywheelSpeedMap.get(lookaheadShooterToTargetDistance),
+            ? ShootingData.passingFlywheelSpeedMap.get(lookaheadShooterToTargetDistance)
+            : ShootingData.flywheelSpeedMap.get(lookaheadShooterToTargetDistance),
         lookaheadShooterToTargetDistance,
         shooterToTargetDistance,
         timeOfFlight,
@@ -429,7 +354,7 @@ public class LaunchCalculator {
   }
 
   public double getNaiveTOF(double distance) {
-    return timeOfFlightMap.get(distance);
+    return ShootingData.timeOfFlightMap.get(distance);
   }
 
   public void clearLaunchingParameters() {
@@ -441,21 +366,23 @@ public class LaunchCalculator {
     boolean mirror = flippedY > FieldConstants.LinesHorizontal.center;
 
     // Check if we need to interpolate
-    if (FieldConstants.fieldWidth - hubPassLine > flippedY && flippedY > hubPassLine) {
-      double interpolateZoneAmount = ((mirror ? FieldConstants.fieldWidth - flippedY : flippedY) - hubPassLine)
-          / (FieldConstants.LinesHorizontal.center - hubPassLine);
+    if (FieldConstants.fieldWidth - ShootingData.hubPassLine > flippedY && flippedY > ShootingData.hubPassLine) {
+      double interpolateZoneAmount = ((mirror ? FieldConstants.fieldWidth - flippedY : flippedY)
+          - ShootingData.hubPassLine)
+          / (FieldConstants.LinesHorizontal.center - ShootingData.hubPassLine);
       var unflippedPoseY = mirror
           ? FieldConstants.fieldWidth
-              - MathUtil.interpolate(yPassTarget, passingMinDistance, interpolateZoneAmount)
-          : MathUtil.interpolate(yPassTarget, passingMinDistance, interpolateZoneAmount);
-      Translation2d flippedGoalTranslation = AllianceFlipUtil.apply(new Translation2d(xPassTarget, unflippedPoseY));
+              - MathUtil.interpolate(ShootingData.yPassTarget, ShootingData.passingMinDistance, interpolateZoneAmount)
+          : MathUtil.interpolate(ShootingData.yPassTarget, ShootingData.passingMinDistance, interpolateZoneAmount);
+      Translation2d flippedGoalTranslation = AllianceFlipUtil.apply(new Translation2d(ShootingData.xPassTarget, unflippedPoseY));
       return flippedGoalTranslation;
     }
 
     // Fixed passing target
     Translation2d flippedGoalTranslation = AllianceFlipUtil.apply(
         new Translation2d(
-            xPassTarget, mirror ? FieldConstants.fieldWidth - yPassTarget : yPassTarget));
+            ShootingData.xPassTarget,
+            mirror ? FieldConstants.fieldWidth - ShootingData.yPassTarget : ShootingData.yPassTarget));
 
     return flippedGoalTranslation;
   }

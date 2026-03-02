@@ -14,6 +14,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -44,7 +45,11 @@ public class DriveWithShootOnTheMove extends Command {
   private SlewRateLimiter rotationLimiter = new SlewRateLimiter(3.0);
 
   private final CommandSwerveDrivetrain m_drivetrain;
-  public PIDController m_alignTargetPID = new PIDController(0.05, 0, 0);
+  private double kp = .05;
+  private double ki = .0;
+  private double kd = .0;
+
+  public PIDController m_alignTargetPID = new PIDController(kp, ki, kd);
   private double rotationVal;
   private double angleError;
   private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
@@ -90,9 +95,17 @@ public class DriveWithShootOnTheMove extends Command {
           .getDistance(m_drivetrain.getState().Pose.getTranslation()));
 
       SmartDashboard.putNumber("LC/pomtsa", m_drivetrain.projectedOnTheMoveShootAngle.getDegrees());
-      angleError = -(lp.driveAngle().minus(m_drivetrain.getState().Pose.getRotation())).getDegrees();
+      angleError = m_drivetrain.getState().Pose.getRotation().minus(lp.driveAngle()).getDegrees();
 
-      rotationVal = m_alignTargetPID.calculate(angleError, 0);
+      rotationVal = lp.driveVelocity()
+          + lp.driveAngle()
+              .minus(m_drivetrain.getState().Pose.getRotation())
+              .getRadians() * kp
+
+          + (lp.driveVelocity()
+              - m_drivetrain.getState().Speeds.omegaRadiansPerSecond) * kd;
+
+      rotationVal = m_alignTargetPID.calculate(lp.driveVelocity() + angleError, 0);
 
       double gamePadRotate = m_controller.getRightX();
 
