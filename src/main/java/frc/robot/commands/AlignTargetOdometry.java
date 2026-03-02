@@ -6,11 +6,12 @@ package frc.robot.commands;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.FieldConstants;
@@ -33,7 +34,12 @@ public class AlignTargetOdometry extends Command {
 
   private final CommandSwerveDrivetrain m_drivetrain;
   private final HoodSubsystem hood;
-  public PIDController m_alignTargetPID = new PIDController(0.03, 0, 0);
+
+  private DoubleSubscriber kp;
+  private DoubleSubscriber ki;
+  private DoubleSubscriber kd;
+
+  public PIDController m_alignTargetPID;
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
   private boolean aligning;
@@ -42,8 +48,6 @@ public class AlignTargetOdometry extends Command {
   private SwerveRequest.FieldCentric drive;
   private final TripleShooterSubsystem shooter;
   private double distanceToHub;
-  private Double shooterRPM;
-  private Rotation2d hoodAngle;
 
   public AlignTargetOdometry(
       CommandSwerveDrivetrain drivetrain,
@@ -55,7 +59,7 @@ public class AlignTargetOdometry extends Command {
 
     m_drivetrain = drivetrain;
     m_controller = controller;
-    this.hood=hood;
+    this.hood = hood;
     this.feed = feed;
     this.drive = drive;
     this.shooter = shooter;
@@ -65,6 +69,11 @@ public class AlignTargetOdometry extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    kp = DogLog.tunable("Align/PGain", .03, newKp -> m_alignTargetPID.setP(newKp));
+    ki = DogLog.tunable("Align/IGain", .0, newKi -> m_alignTargetPID.setI(newKi));
+    kd = DogLog.tunable("Align/DGain", .0, newKd -> m_alignTargetPID.setI(newKd));
+    m_alignTargetPID = new PIDController(kp.get(), ki.get(), kd.get());
+
     m_alignTargetPID.enableContinuousInput(-180, 180);
     // if (!lob) {
     targetPose = AllianceUtil.getHubPose();
@@ -76,6 +85,7 @@ public class AlignTargetOdometry extends Command {
   @Override
   public void execute() {
 
+    
     angleToTarget = getAngleDegreesToTarget(targetPose, m_drivetrain.getState().Pose);
 
     boolean passing = AllianceFlipUtil
@@ -106,6 +116,7 @@ public class AlignTargetOdometry extends Command {
   @Override
   public void end(boolean interrupted) {
     aligning = false;
+
   }
 
   // Returns true when the command should end.
@@ -119,4 +130,5 @@ public class AlignTargetOdometry extends Command {
     double YDiff = targetPose.getY() - robotPose.getY();
     return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
   }
+
 }

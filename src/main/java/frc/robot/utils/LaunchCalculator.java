@@ -4,7 +4,10 @@
 
 package frc.robot.utils;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
+
+import java.util.function.DoubleSupplier;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
@@ -18,10 +21,12 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Configs.Hood;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.LauncherConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.utils.geometry.AllianceFlipUtil;
 import frc.robot.utils.geometry.GeomUtil;
 
@@ -105,27 +110,45 @@ public class LaunchCalculator {
 
   boolean showData = true;
 
-  StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LC/RobotPose", Pose2d.struct).publish();
-  StructPublisher<Pose2d> estimatedPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LC/EstimatedPose", Pose2d.struct).publish();
-  StructPublisher<Pose2d> lookAheadRobotPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LC/LookAheadRobotPose", Pose2d.struct).publish();
-  StructPublisher<Pose2d> lookAheadPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LC/LookAheadPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> robotPosePublisher;
+  StructPublisher<Pose2d> estimatedPosePublisher;
+  StructPublisher<Pose2d> lookAheadRobotPosePublisher;
+  StructPublisher<Pose2d> lookAheadPosePublisher;
 
-  StructPublisher<Pose2d> shooterPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LC/LauncherPose", Pose2d.struct).publish();
-  StructPublisher<Pose2d> stAimedPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LC/StAimedPose", Pose2d.struct).publish();
-  StructPublisher<Pose2d> derivedPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LC/DerivedPose", Pose2d.struct).publish();
-  StructPublisher<Pose2d> projectedHubPosePublisher = NetworkTableInstance.getDefault()
-      .getStructTopic("LC/ProjectedHubPose", Pose2d.struct).publish();
+  StructPublisher<Pose2d> shooterPosePublisher;
+  StructPublisher<Pose2d> stAimedPosePublisher;
+  StructPublisher<Pose2d> derivedPosePublisher;
+  StructPublisher<Pose2d> projectedHubPosePublisher;
+
+  
+  
+ // private static final LoggedTunableNumber maxIdleSpeed = new LoggedTunableNumber("LaunchCalculator/MaxIdleSpeed", 200);
+
+  
 
   public LaunchingParameters getParameters(CommandSwerveDrivetrain drivetrain) {
     boolean passing = AllianceFlipUtil
         .applyX(drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
+    if (showData) {
+      robotPosePublisher = NetworkTableInstance.getDefault()
+          .getStructTopic("LC/RobotPose", Pose2d.struct).publish();
+
+      estimatedPosePublisher = NetworkTableInstance.getDefault()
+          .getStructTopic("LC/EstimatedPose", Pose2d.struct).publish();
+      lookAheadRobotPosePublisher = NetworkTableInstance.getDefault()
+          .getStructTopic("LC/LookAheadRobotPose", Pose2d.struct).publish();
+      lookAheadPosePublisher = NetworkTableInstance.getDefault()
+          .getStructTopic("LC/LookAheadPose", Pose2d.struct).publish();
+
+      shooterPosePublisher = NetworkTableInstance.getDefault()
+          .getStructTopic("LC/LauncherPose", Pose2d.struct).publish();
+      stAimedPosePublisher = NetworkTableInstance.getDefault()
+          .getStructTopic("LC/StAimedPose", Pose2d.struct).publish();
+      derivedPosePublisher = NetworkTableInstance.getDefault()
+          .getStructTopic("LC/DerivedPose", Pose2d.struct).publish();
+      projectedHubPosePublisher = NetworkTableInstance.getDefault()
+          .getStructTopic("LC/ProjectedHubPose", Pose2d.struct).publish();
+    }
     if (latestParameters != null) {
       return latestParameters;
     }

@@ -5,9 +5,11 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import java.util.Map;
 import java.util.Set;
+import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -19,6 +21,7 @@ import com.pathplanner.lib.events.EventTrigger;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -26,9 +29,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -36,7 +36,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
-import frc.robot.commands.DriveWithShootOnTheMove;
 import frc.robot.commands.PIDDriveToPose;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
@@ -50,6 +49,7 @@ import frc.robot.subsystems.IntakeSlideArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
+import frc.robot.utils.ShootingData;
 
 public class RobotContainer {
 
@@ -70,6 +70,7 @@ public class RobotContainer {
 
         private final CommandXboxController driver = new CommandXboxController(0);
         public final CommandXboxController codriver = new CommandXboxController(1);
+        public final CommandXboxController presetdriver = new CommandXboxController(2);
 
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -100,6 +101,38 @@ public class RobotContainer {
 
         private Trigger autoShootTrigger;
 
+        // Presets
+        public static final double hubPresetDistance = 0.96;
+        public static final double towerPresetDistance = 2.5;
+        public static final double trenchPresetDistance = 3.03;
+        public static final double outpostPresetDistance = 4.84;
+
+        static DoubleSupplier hdminhminA;
+        static DoubleSupplier hdminshspd;
+        static DoubleSupplier hdmaxmaxA;
+        static DoubleSupplier hdmaxshspd;
+
+        static DoubleSupplier hubhminA;
+        static DoubleSupplier hubshspd;
+        static DoubleSupplier twrminA;
+        static DoubleSupplier twrshspd;
+        static DoubleSupplier trenchminA;
+        static DoubleSupplier trenchshspd;
+        static DoubleSupplier outpostminA;
+        static DoubleSupplier outpostshspd;
+
+        public static record LaunchPreset(
+                        DoubleSupplier hoodAngleDeg, DoubleSupplier flywheelSpeed) {
+        }
+
+        public static LaunchPreset hoodMinPreset;
+        public static LaunchPreset hoodMaxPreset;
+
+        public static LaunchPreset outpostPreset;
+        public static LaunchPreset hubPreset;
+        public static LaunchPreset towerPreset;
+        public static LaunchPreset trenchPreset;
+
         public RobotContainer() {
 
                 m_shooter = new TripleShooterSubsystem(showAllData);
@@ -112,7 +145,7 @@ public class RobotContainer {
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
                 registerNamedCommands();
-             //   registerEventTriggers();
+                // registerEventTriggers();
                 // configurePDH();
 
                 m_shooter.leftMotorActive = true;
@@ -120,9 +153,12 @@ public class RobotContainer {
                 m_shooter.rightMotorActive = true;
 
                 setDefaultCommands();
+                configurePresets();
                 configureDriverBindings();
                 configureCodriverBindings();
+                configurePresetControllerBindings();
                 configureTriggers();
+
                 buildAutoChooser();
 
                 SignalLogger.setPath("media/sda1/ctre-logs");
@@ -275,6 +311,74 @@ public class RobotContainer {
                 // m_hood.positionToHomeCommand());
         }
 
+        public void configurePresetControllerBindings() {
+
+                presetdriver.leftBumper().onTrue(
+                                Commands.parallel(
+                                                m_shooter.setShootUsingDistanceCommand(false),
+                                                m_hood.setHoodUsingDistanceCommand(false),
+                                                m_shooter.setManualTargetVelocityCommand(
+                                                                RPM.of(hdminshspd.getAsDouble())),
+                                                m_hood.setManualTargetCommand(hdminhminA.getAsDouble())));
+
+                presetdriver.leftTrigger().onTrue(
+                                Commands.parallel(
+                                                m_shooter.setShootUsingDistanceCommand(false),
+                                                m_hood.setHoodUsingDistanceCommand(false),
+                                                m_shooter.setManualTargetVelocityCommand(
+                                                                RPM.of(hdmaxshspd.getAsDouble())),
+                                                m_hood.setManualTargetCommand(hdmaxmaxA.getAsDouble())));
+
+                presetdriver.a().onTrue(
+                                Commands.parallel(
+                                                m_shooter.setShootUsingDistanceCommand(false),
+                                                m_hood.setHoodUsingDistanceCommand(false),
+                                                m_shooter.setManualTargetVelocityCommand(
+                                                                RPM.of(twrshspd.getAsDouble())),
+                                                m_hood.setManualTargetCommand(twrminA.getAsDouble())));
+
+                presetdriver.b().onTrue(
+                                Commands.parallel(
+                                                m_shooter.setShootUsingDistanceCommand(false),
+                                                m_hood.setHoodUsingDistanceCommand(false),
+                                                m_shooter.setManualTargetVelocityCommand(
+                                                                RPM.of(trenchshspd.getAsDouble())),
+                                                m_hood.setManualTargetCommand(trenchminA.getAsDouble())));
+
+                presetdriver.x().onTrue(
+                                Commands.parallel(
+                                                m_shooter.setShootUsingDistanceCommand(false),
+                                                m_hood.setHoodUsingDistanceCommand(false),
+                                                m_shooter.setManualTargetVelocityCommand(
+                                                                RPM.of(outpostshspd.getAsDouble())),
+                                                m_hood.setManualTargetCommand(outpostminA.getAsDouble())));
+
+                presetdriver.a().onTrue(
+                                Commands.parallel(
+                                                m_shooter.setShootUsingDistanceCommand(false),
+                                                m_hood.setHoodUsingDistanceCommand(false),
+                                                m_shooter.setManualTargetVelocityCommand(
+                                                                RPM.of(twrshspd.getAsDouble())),
+                                                m_hood.setManualTargetCommand(twrminA.getAsDouble())));
+
+                presetdriver.y().onTrue(
+                                Commands.parallel(
+                                                m_shooter.setShootUsingDistanceCommand(false),
+                                                m_hood.setHoodUsingDistanceCommand(false),
+                                                m_shooter.setManualTargetVelocityCommand(
+                                                                RPM.of(hubshspd.getAsDouble())),
+                                                m_hood.setManualTargetCommand(hubhminA.getAsDouble())));
+
+                presetdriver.povLeft().onTrue(
+                                new DeferredCommand(() -> Commands.either(
+                                                Commands.parallel(m_shooter.setShootUsingDistanceCommand(false),
+                                                                m_hood.setHoodUsingDistanceCommand(false)),
+                                                Commands.parallel(m_shooter.setShootUsingDistanceCommand(true),
+                                                                m_hood.setHoodUsingDistanceCommand(true)),
+                                                () -> m_shooter.isShootUsingDistance()), Set.of()));
+
+        }
+
         private void configureTriggers() {
 
                 autoShootTrigger = new Trigger(
@@ -312,6 +416,55 @@ public class RobotContainer {
                                                                 Commands.waitSeconds(.75),
                                                                 Commands.runOnce(() -> driver.setRumble(
                                                                                 RumbleType.kBothRumble, 0))));
+
+        }
+
+        private void configurePresets() {
+                hoodMinPreset = new LaunchPreset(
+                                hdminhminA = DogLog.tunable(
+                                                "LaunchCalculator/Presets/HoodMin/HoodAngle",
+                                                HoodSubsystem.kMinPosition.in(Degrees)),
+                                hdminshspd = DogLog.tunable(
+                                                "LaunchCalculator/Presets/HoodMin/FlywheelSpeed", 50.));
+
+                hoodMaxPreset = new LaunchPreset(
+                                hdmaxmaxA = DogLog.tunable(
+                                                "LaunchCalculator/Presets/HoodMax/HoodAngle",
+                                                HoodSubsystem.kMaxPosition.in(Degrees)),
+                                hdmaxshspd = DogLog.tunable(
+                                                "LaunchCalculator/Presets/HoodMax/FlywheelSpeed", 50.));
+
+                hubPreset = new LaunchPreset(
+                                hubhminA = DogLog.tunable(
+                                                "LaunchCalculator/Presets/Hub/HoodAngle",
+                                                ShootingData.hoodAngleMap.get(hubPresetDistance).getDegrees()),
+                                hubshspd = DogLog.tunable(
+                                                "LaunchCalculator/Presets/Hub/FlywheelSpeed",
+                                                ShootingData.shooterSpeedMap.get(hubPresetDistance)));
+
+                towerPreset = new LaunchPreset(
+                                twrminA = DogLog.tunable(
+                                                "LaunchCalculator/Presets/Tower/HoodAngle",
+                                                ShootingData.hoodAngleMap.get(towerPresetDistance).getDegrees()),
+                                twrshspd = DogLog.tunable(
+                                                "LaunchCalculator/Presets/Tower/FlywheelSpeed",
+                                                ShootingData.shooterSpeedMap.get(towerPresetDistance)));
+
+                trenchPreset = new LaunchPreset(
+                                trenchminA = DogLog.tunable(
+                                                "LaunchCalculator/Presets/Trench/HoodAngle",
+                                                ShootingData.hoodAngleMap.get(trenchPresetDistance).getDegrees()),
+                                trenchshspd = DogLog.tunable(
+                                                "LaunchCalculator/Presets/Trench/FlywheelSpeed",
+                                                ShootingData.shooterSpeedMap.get(trenchPresetDistance)));
+
+                outpostPreset = new LaunchPreset(
+                                outpostminA = DogLog.tunable(
+                                                "LaunchCalculator/Presets/Outpost/HoodAngle",
+                                                ShootingData.hoodAngleMap.get(outpostPresetDistance).getDegrees()),
+                                outpostshspd = DogLog.tunable(
+                                                "LaunchCalculator/Presets/Outpost/FlywheelSpeed",
+                                                ShootingData.shooterSpeedMap.get(outpostPresetDistance)));
 
         }
 

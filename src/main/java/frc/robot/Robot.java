@@ -33,11 +33,8 @@ import frc.robot.utils.LoopEvents;
 public class Robot extends TimedRobot {
         private Command m_autonomousCommand;
         private final EventLoop m_eventLoop = new EventLoop();
-        StructPublisher<Pose2d> rHposePublisher = NetworkTableInstance.getDefault()
-                        .getStructTopic("RedHubPose", Pose2d.struct).publish();
-        StructPublisher<Pose2d> bHposePublisher = NetworkTableInstance.getDefault()
-                        .getStructTopic("BlueHubPose", Pose2d.struct).publish();
-
+        StructPublisher<Pose2d> rHposePublisher;
+        StructPublisher<Pose2d> bHposePublisher;
         private final RobotContainer m_robotContainer;
         private LoopEvents loopEvents;
         private boolean autoHasRun;
@@ -50,10 +47,19 @@ public class Robot extends TimedRobot {
                         .withJoystickReplay();
 
         public Robot() {
+                // NetworkTableInstance inst = NetworkTableInstance.getDefault();
+                // inst.flush();
                 m_robotContainer = new RobotContainer();
                 DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
-                if (!DriverStation.isFMSAttached())
+                if (!DriverStation.isFMSAttached()) {
                         DogLog.setOptions(new DogLogOptions().withNtPublish(true));
+
+                        rHposePublisher = NetworkTableInstance.getDefault()
+                                        .getStructTopic("RedHubPose", Pose2d.struct).publish();
+                        bHposePublisher = NetworkTableInstance.getDefault()
+                                        .getStructTopic("BlueHubPose", Pose2d.struct).publish();
+
+                }
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
                 autoHasRun = false;
