@@ -30,7 +30,9 @@ public class HoodSubsystem extends SubsystemBase {
 
     private static final double kPositionTolerance = 0.01;
 
-    private static double targetPosition;
+    private static double manualTargetPosition;
+    public static double autoTargetAngle;
+    private static double finalTargetPosition;
 
     private final SparkMax hoodMotor;
 
@@ -51,6 +53,19 @@ public class HoodSubsystem extends SubsystemBase {
     public boolean showData;
 
     private int tst;
+    private boolean hoodUsingDistance;
+
+    public boolean isHoodUsingDistance() {
+        return hoodUsingDistance;
+    }
+
+    public void setHoodUsingDistance(boolean autoHood) {
+        this.hoodUsingDistance = autoHood;
+    }
+
+    public Command setHoodUsingDistanceCommand(boolean on) {
+        return Commands.runOnce(() -> setHoodUsingDistance(on));
+    }
 
     public HoodSubsystem(boolean showData) {
         hoodMotor = new SparkMax(Constants.CANIDConstants.hoodMotorID, MotorType.kBrushless);
@@ -84,24 +99,24 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public boolean isPositionWithinTolerance() {
-        return MathUtil.isNear(targetPosition, getHoodPosition(), kPositionTolerance);
+        return MathUtil.isNear(finalTargetPosition, getHoodPosition(), kPositionTolerance);
     }
 
     public Command positionToHomeCommand() {
-        return Commands.runOnce(() -> targetPosition = kMinPosition.in((Degrees)));
+        return Commands.runOnce(() -> finalTargetPosition = kMinPosition.in((Degrees)));
     }
 
     public Command positionTestCommand() {
-        return Commands.runOnce(() -> targetPosition = kMinPosition.in(Degrees) + 5);
+        return Commands.runOnce(() -> finalTargetPosition = kMinPosition.in(Degrees) + 5);
     }
 
     public Command positionHoodCommand() {
         return new FunctionalCommand(
                 () -> {
-                    targetPosition = getHoodPosition();
+                    finalTargetPosition = getHoodPosition();
                 }, // init
                 () -> {
-                    closedLoopController.setSetpoint(targetPosition, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+                    closedLoopController.setSetpoint(finalTargetPosition, ControlType.kPosition, ClosedLoopSlot.kSlot0);
                 }, // execute
                 (interrupted) -> hoodMotor.set(0), // end
                 () -> false, // isFinished
@@ -109,17 +124,18 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public void incrementHoodPosition(double val) {
+        finalTargetPosition = isHoodUsingDistance() ? autoTargetAngle : manualTargetPosition;
         double pos = getHoodPosition();
         pos = MathUtil.clamp(val, kMinPosition.in(Degrees), kMaxPosition.in(Degrees));
-        targetPosition = pos;
+        manualTargetPosition = pos;
     }
 
     public Command incrementHoodCommand(double val) {
         return Commands.runOnce(() -> incrementHoodPosition(val));
     }
 
-    public Command setTargetCommand(double position) {
-        return Commands.runOnce(() -> targetPosition = position);
+    public Command setManualTargetCommand(double position) {
+        return Commands.runOnce(() -> manualTargetPosition = position);
     }
 
     public double getHoodPosition() {
@@ -139,7 +155,7 @@ public class HoodSubsystem extends SubsystemBase {
                 () -> {
                     if (getHoodPosition() < kMaxPosition.in(Degrees))
                         this.runHoodMotor(Constants.HoodSetpoints.jogHoodMotor);
-                    targetPosition = getHoodPosition();
+                    manualTargetPosition = getHoodPosition();
                 }, () -> {
                     this.runHoodMotor(0.0);
                 }).withName("JogHoodUp");
@@ -150,7 +166,7 @@ public class HoodSubsystem extends SubsystemBase {
                 () -> {
                     if (getHoodPosition() > kMinPosition.in(Degrees))
                         this.runHoodMotor(-Constants.HoodSetpoints.jogHoodMotor);
-                    targetPosition = getHoodPosition();
+                    manualTargetPosition = getHoodPosition();
                 }, () -> {
                     this.runHoodMotor(0.0);
                 }).withName("JogHoodDown");
@@ -173,7 +189,7 @@ public class HoodSubsystem extends SubsystemBase {
         builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
                 null);
         builder.addDoubleProperty("Current Position", () -> encoder.getPosition(), null);
-        builder.addDoubleProperty("Target Position", () -> targetPosition, null);
+        builder.addDoubleProperty("Target Position", () -> manualTargetPosition, null);
         builder.addDoubleProperty("Motor Amps", () -> hoodMotor.getOutputCurrent(), null);
         builder.addDoubleProperty("Motor Output Volts", () -> hoodMotor.getAppliedOutput() * 12, null);
         builder.addBooleanProperty("MaxTravelLimitReached", (() -> getForwardSoftLimit(hoodMotor)), null);

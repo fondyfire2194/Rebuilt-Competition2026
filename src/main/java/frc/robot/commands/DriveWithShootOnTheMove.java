@@ -14,18 +14,15 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants.FieldConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.LaunchCalculator;
-import frc.robot.utils.ShootingData;
-import frc.robot.utils.geometry.AllianceFlipUtil;
 
 /**
  * This routine is enabled by holding a gamepad trigger/ bumper while using the
@@ -48,6 +45,7 @@ public class DriveWithShootOnTheMove extends Command {
   private SlewRateLimiter rotationLimiter = new SlewRateLimiter(3.0);
 
   private final CommandSwerveDrivetrain m_drivetrain;
+  private final HoodSubsystem m_hood;
   private double kp = .05;
   private double ki = .0;
   private double kd = .0;
@@ -60,19 +58,18 @@ public class DriveWithShootOnTheMove extends Command {
 
   private SwerveRequest.FieldCentric drive;
   private final TripleShooterSubsystem shooter;
-  private Pose2d targetPose;
   private double deadband = .02;
-  private double distanceToHub;
-  private double shooterRPM;
-  private double hoodAngle;
+  private Pose2d targetPose;
 
   public DriveWithShootOnTheMove(
       CommandSwerveDrivetrain drivetrain,
+      HoodSubsystem hood,
       TripleShooterSubsystem shooter,
       SwerveRequest.FieldCentric drive,
       CommandXboxController controller) {
 
     m_drivetrain = drivetrain;
+    m_hood = hood;
     m_controller = controller;
     this.drive = drive;
     this.shooter = shooter;
@@ -92,21 +89,16 @@ public class DriveWithShootOnTheMove extends Command {
   @Override
   public void execute() {
 
-  
-  
-  LaunchCalculator.LaunchingParameters lp = LaunchCalculator.getInstance().getParameters(m_drivetrain);
+    LaunchCalculator.LaunchingParameters lp = LaunchCalculator.getInstance().getParameters(m_drivetrain);
     SmartDashboard.putBoolean("LC/lp", false);
     if (lp != null) {
       SmartDashboard.putBoolean("LC/lp", true);
 
-     
-    boolean passing = lp.passing();
+      boolean passing = lp.passing();
 
-    distanceToHub = lp.distance()
+      shooter.autoSetTargetRPM = lp.flywheelSpeed();
 
-    shooterRPM = lp.flywheelSpeed();
-
-    hoodAngle = lp.hoodAngle();
+      HoodSubsystem.autoTargetAngle = lp.hoodAngle();
 
       SmartDashboard.putNumber("LC/pomtsa", m_drivetrain.projectedOnTheMoveShootAngle.getDegrees());
       angleError = m_drivetrain.getState().Pose.getRotation().minus(lp.driveAngle()).getDegrees();

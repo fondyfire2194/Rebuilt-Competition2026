@@ -142,12 +142,14 @@ public class RobotContainer {
                 // Note that X is defined as forward according to WPILib convention,
                 // and Y is defined as to the left according to WPILib convention.
 
-                // Idle while the robot is disabled. This ensures the configured
-                // neutral mode is applied to the drive motors while disabled.
-                final var idle = new SwerveRequest.Idle();
-                RobotModeTriggers.disabled().whileTrue(
-                                drivetrain.applyRequest(isShootUsingDistance).ignoringDisable(true));
+                
+        // Idle while the robot is disabled. This ensures the configured
+        // neutral mode is applied to the drive motors while disabled.
 
+        final var idle = new SwerveRequest.Idle();
+        RobotModeTriggers.disabled().whileTrue(
+            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
+        );
                 // driver.a().whileTrue(drivetrain.applyRequest(() -> brake));
                 // driver.b().whileTrue(drivetrain
                 // .applyRequest(() -> point.withModuleDirection(
@@ -176,10 +178,11 @@ public class RobotContainer {
                 driver.leftBumper().onTrue(
                                 Commands.sequence(
                                                 m_shooter.setShootUsingDistanceCommand(true),
+                                                m_hood.setHoodUsingDistanceCommand(true),
                                                 m_shooter.runAllVelocityVoltageCommand()))
                                 // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_shooter, drive,
                                 // driver));
-                                .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, drive,
+                                .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
                                                 driver, false));
 
                 driver.rightBumper().onTrue(
@@ -190,17 +193,17 @@ public class RobotContainer {
                                                 m_feeder.stopFeederBeltCommand(),
                                                 m_intake.stopIntakeCommand()));
 
-                driver.b().onTrue(m_hood.setTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
+                driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
                 driver.y().onTrue(m_hood.incrementHoodCommand(.5));
 
                 driver.a().onTrue(m_hood.incrementHoodCommand(-.5));
 
-                driver.x().onTrue(m_hood.setTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)))
+                driver.x().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
 
-                driver.povUp().onTrue(m_shooter.changeTargetVelocityCommand(100));
+                driver.povUp().onTrue(m_shooter.changeFinalTargetVelocityCommand(100));
 
-                driver.povDown().onTrue(m_shooter.changeTargetVelocityCommand(-100));
+                driver.povDown().onTrue(m_shooter.changeFinalTargetVelocityCommand(-100));
 
                 driver.povLeft().onTrue(Commands.none());
 

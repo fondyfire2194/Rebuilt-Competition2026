@@ -66,7 +66,10 @@ public class TripleShooterSubsystem extends SubsystemBase {
   private Distance distanceToHub;
 
   // private AngularVelocity targetVelocity = RPM.of(500);
-  private double targetRPM = 500;
+  private double manualSetTargetRPM = 2500;
+  public double autoSetTargetRPM = 2500;
+  private double finalTargetRPM;
+
   private AngularAcceleration targetAcceleration = RotationsPerSecondPerSecond.of(500);
 
   private int tst = 0;
@@ -76,6 +79,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public boolean hubIsActive;
 
   private boolean shootUsingDistance;
+
+  public boolean bypassShootInterlocks;
 
   public boolean isShootUsingDistance() {
     return shootUsingDistance;
@@ -174,9 +179,10 @@ public class TripleShooterSubsystem extends SubsystemBase {
   }
 
   public void runVelocityVoltage(TalonFX motor) {
+    finalTargetRPM = isShootUsingDistance() ? autoSetTargetRPM : manualSetTargetRPM;
     motor.setControl(
         velocityVoltage
-            .withVelocity(RPM.of(targetRPM))
+            .withVelocity(RPM.of(finalTargetRPM))
             .withAcceleration(targetAcceleration)
             .withEnableFOC(true));
   }
@@ -203,7 +209,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public void runVelocityTorque(TalonFX motor) {
     motor.setControl(
         velocityTorque
-            .withVelocity(targetRPM));
+            .withVelocity(manualSetTargetRPM));
   }
 
   public void setPercentOutput(TalonFX motor, double percentOutput) {
@@ -238,21 +244,21 @@ public class TripleShooterSubsystem extends SubsystemBase {
     return runOnce(this::disableAllShooters);
   }
 
-  public void setTargetVelocity(double RPM) {
-    targetRPM = RPM;
+  public void setManualTargetVelocity(double RPM) {
+    manualSetTargetRPM = RPM;
   }
 
-  public Command setTargetVelocityCommand(AngularVelocity vel) {
-    return Commands.runOnce(() -> setTargetVelocity(vel.in(RPM)));
+  public Command setManualTargetVelocityCommand(AngularVelocity vel) {
+    return Commands.runOnce(() -> setManualTargetVelocity(vel.in(RPM)));
   }
 
-  public Command changeTargetVelocityCommand(double rpm) {
-    return Commands.runOnce(() -> changeTargetVelocity(rpm));
+  public Command changeFinalTargetVelocityCommand(double rpm) {
+    return Commands.runOnce(() -> changeFinalTargetVelocity(rpm));
   }
 
-  public void changeTargetVelocity(double rpm) {
-    targetRPM += rpm;
-    SmartDashboard.putNumber("TGTrpm", targetRPM);
+  public void changeFinalTargetVelocity(double rpm) {
+    manualSetTargetRPM += rpm;
+    SmartDashboard.putNumber("TGTrpm", manualSetTargetRPM);
   }
 
   public void setDutyCycleOut(TalonFX motor, double dutyCycle) {
@@ -303,7 +309,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
     builder.addDoubleProperty("Voltage Target RPM", () -> velocityVoltage.getVelocityMeasure().in(RPM), null);
-    builder.addDoubleProperty("Target Velocity RPM", () -> targetRPM, null);
+    builder.addDoubleProperty("Target Velocity RPM", () -> manualSetTargetRPM, null);
   }
 
   @Override

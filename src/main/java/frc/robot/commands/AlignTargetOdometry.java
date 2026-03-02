@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.ShootingData;
@@ -31,6 +32,7 @@ public class AlignTargetOdometry extends Command {
   private SlewRateLimiter rotationLimiter = new SlewRateLimiter(3.0);
 
   private final CommandSwerveDrivetrain m_drivetrain;
+  private final HoodSubsystem hood;
   public PIDController m_alignTargetPID = new PIDController(0.03, 0, 0);
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
@@ -46,12 +48,14 @@ public class AlignTargetOdometry extends Command {
   public AlignTargetOdometry(
       CommandSwerveDrivetrain drivetrain,
       TripleShooterSubsystem shooter,
+      HoodSubsystem hood,
       SwerveRequest.FieldCentric drive,
       CommandXboxController controller,
       boolean feed) {
 
     m_drivetrain = drivetrain;
     m_controller = controller;
+    this.hood=hood;
     this.feed = feed;
     this.drive = drive;
     this.shooter = shooter;
@@ -80,11 +84,11 @@ public class AlignTargetOdometry extends Command {
     distanceToHub = targetPose.getTranslation()
         .getDistance(m_drivetrain.getState().Pose.getTranslation());
 
-    shooterRPM = passing ? ShootingData.passingShooterSpeedMap.get(distanceToHub)
+    shooter.autoSetTargetRPM = passing ? ShootingData.passingShooterSpeedMap.get(distanceToHub)
         : ShootingData.shooterSpeedMap.get(distanceToHub);
 
-    hoodAngle = passing ? ShootingData.passingHoodAngleMap.get(distanceToHub)
-        : ShootingData.hoodAngleMap.get(distanceToHub);
+    HoodSubsystem.autoTargetAngle = passing ? ShootingData.passingHoodAngleMap.get(distanceToHub).getDegrees()
+        : ShootingData.hoodAngleMap.get(distanceToHub).getDegrees();
 
     rotationVal = m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
 
