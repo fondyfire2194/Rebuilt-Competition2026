@@ -15,6 +15,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.events.EventTrigger;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -111,7 +112,7 @@ public class RobotContainer {
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
                 registerNamedCommands();
-
+             //   registerEventTriggers();
                 // configurePDH();
 
                 m_shooter.leftMotorActive = true;
@@ -201,13 +202,10 @@ public class RobotContainer {
                 driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
                 driver.y().onTrue(
-                        new DeferredCommand(()->
-                        m_hood.incrementHoodCommand(.5), Set.of()));
+                                new DeferredCommand(() -> m_hood.incrementHoodCommand(.5), Set.of()));
 
                 driver.a().onTrue(
-                        new DeferredCommand(()->
-                        m_hood.incrementHoodCommand(-.5), Set.of()));
-
+                                new DeferredCommand(() -> m_hood.incrementHoodCommand(-.5), Set.of()));
 
                 driver.x().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
 
@@ -390,6 +388,13 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("START CLIMBER", Commands.none());
                 NamedCommands.registerCommand("STOP_CLIMBER", Commands.none());
+
+        }
+
+        private void registerEventTriggers() {
+
+                EventTrigger example = new EventTrigger("Example");
+                example.onTrue(Commands.none());
 
         }
 
