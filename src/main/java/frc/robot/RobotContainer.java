@@ -65,13 +65,13 @@ public class RobotContainer {
         private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
                         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        private final Telemetry logger = new Telemetry(RobotConstants.MaxSpeed);
-
         private final CommandXboxController driver = new CommandXboxController(0);
         public final CommandXboxController codriver = new CommandXboxController(1);
         public final CommandXboxController presetdriver = new CommandXboxController(2);
 
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+        
+        private final Telemetry logger = new Telemetry(RobotConstants.MaxSpeed, drivetrain);
 
         /* Path follower */
         private SendableChooser<Command> autoChooser;
@@ -255,7 +255,8 @@ public class RobotContainer {
                                                                 m_hood.setHoodUsingDistanceCommand(true)),
                                                 () -> m_shooter.isShootUsingDistance()), Set.of()));
 
-                driver.povRight().onTrue(Commands.runOnce(() -> drivetrain.resetRotation(new Rotation2d())).ignoringDisable(true));
+                driver.povRight().onTrue(Commands.runOnce(() -> drivetrain.resetRotation(new Rotation2d()))
+                                .ignoringDisable(true));
 
                 // Reset the field-centric heading
                 driver.start().onTrue(

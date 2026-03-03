@@ -76,8 +76,9 @@ public class AlignTargetOdometry extends Command {
     m_alignTargetPID = new PIDController(kp.get(), ki.get(), kd.get());
 
     m_alignTargetPID.enableContinuousInput(-180, 180);
-     if (!passing) {
-    targetPose = AllianceUtil.getHubPose();
+    if (!passing) {
+      targetPose = AllianceUtil.getHubPose();
+    }
     m_alignTargetPID.setTolerance(0.2);
     aligning = true;
   }
@@ -86,11 +87,10 @@ public class AlignTargetOdometry extends Command {
   @Override
   public void execute() {
 
-    
     angleToTarget = getAngleDegreesToTarget(targetPose, m_drivetrain.getState().Pose);
 
-     passing = AllianceFlipUtil
-         .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
+    passing = AllianceFlipUtil
+        .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
 
     distanceToHub = targetPose.getTranslation()
         .getDistance(m_drivetrain.getState().Pose.getTranslation());

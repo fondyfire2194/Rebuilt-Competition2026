@@ -306,7 +306,8 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-    initSendableLL4(builder, frontName, 0);
+    // initSendableLL4(builder, frontName, 0);
+    initSendable(builder, 0);
     initSendable(builder, 1);
     initSendable(builder, 2);
 

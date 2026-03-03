@@ -79,13 +79,6 @@ public class Robot extends TimedRobot {
 
                 CommandScheduler.getInstance().run();
 
-                double yaw = m_robotContainer.drivetrain.getPigeon2().getYaw().getValueAsDouble();
-                double pitch = m_robotContainer.drivetrain.getPigeon2().getPitch().getValueAsDouble();
-                double roll = m_robotContainer.drivetrain.getPigeon2().getRoll().getValueAsDouble();
-
-                SmartDashboard.putNumber("Pigeon Yaw", yaw);
-                SmartDashboard.putNumber("Pigeon Roll", roll);
-                SmartDashboard.putNumber("Pigeon Pitch", pitch);
 
         }
 
