@@ -42,7 +42,7 @@ public class CaptureMT1Values extends Command {
                 m_llv.mt1Ambiguity[m_llv.leftCam] = mt1Left.rawFiducials[0].ambiguity;
                 m_llv.mt1DistToCamera[m_llv.leftCam] = mt1Left.rawFiducials[0].distToCamera;
                 m_llv.mt1TimeStampSeconds[m_llv.leftCam] = mt1Left.timestampSeconds;
-                m_llv.getMT1TagsSeen(1, mt1Left.rawFiducials);
+                m_llv.getMT1TagIDsSeen(numberScans, null);
             }
         }
         if (LimelightHelpers.getTV(m_llv.rightName)) {
@@ -53,7 +53,7 @@ public class CaptureMT1Values extends Command {
             if (mt1Right.rawFiducials.length > 0) {
                 m_llv.mt1Ambiguity[m_llv.rightCam] = mt1Right.rawFiducials[0].ambiguity;
                 m_llv.mt1DistToCamera[m_llv.rightCam] = mt1Right.rawFiducials[0].distToCamera;
-                m_llv.getMT1TagsSeen(2, mt1Left.rawFiducials);
+                m_llv.getMT1TagIDsSeen(2, mt1Left.rawFiducials);
             }
         }
 
@@ -65,7 +65,7 @@ public class CaptureMT1Values extends Command {
             if (mt1Front.rawFiducials.length > 0) {
                 m_llv.mt1Ambiguity[m_llv.frontCam] = mt1Front.rawFiducials[0].ambiguity;
                 m_llv.mt1DistToCamera[m_llv.frontCam] = mt1Front.rawFiducials[0].distToCamera;
-                m_llv.getMT1TagsSeen(0, mt1Left.rawFiducials);
+                m_llv.getMT1TagIDsSeen(0, mt1Left.rawFiducials);
             }
         }
 

@@ -60,12 +60,13 @@ public class Robot extends TimedRobot {
                 // inst.flush();
                 m_robotContainer = new RobotContainer();
                 DataLogManager.start();
+                
                 DogLog.setOptions(new DogLogOptions().withCaptureDs(false));
                 DriverStation.startDataLog(DataLogManager.getLog());
-                if (!DriverStation.isFMSAttached()) {
+              //  if (!DriverStation.isFMSAttached()) {
                         DogLog.setOptions(new DogLogOptions().withNtPublish(true));
 
-                }
+              //  }
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
                 autoHasRun = false;

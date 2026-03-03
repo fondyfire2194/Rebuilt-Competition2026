@@ -49,13 +49,16 @@ public class LimelightTagsMT2Update extends Command {
                     0);
             mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_llv.cameras[m_cameraIndex].camname);
             m_llv.mt2Pose[m_cameraIndex] = mt2.pose;
-
+            m_llv.numberMT2TagsSeen[m_cameraIndex] = 0;
+            for (int i = 0; i < m_llv.mt2TagIDsSeen.length - 1; i++) {
+                m_llv.mt2TagIDsSeen[m_cameraIndex][i] = 0;
+            }
             if (mt2.rawFiducials.length > 0) {
-                 m_llv.mt2ambiguity[m_cameraIndex] = mt2.rawFiducials[0].ambiguity;
-                 m_llv.mt2distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
-                 m_llv.numberMT2Pose[m_cameraIndex] = mt2.tagCount;
-                 m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
-                 m_llv.getMT2TagsSeen(m_cameraIndex, mt2.rawFiducials);
+                m_llv.mt2ambiguity[m_cameraIndex] = mt2.rawFiducials[0].ambiguity;
+                m_llv.mt2distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
+                m_llv.numberMT2TagsSeen[m_cameraIndex] = mt2.tagCount;
+                m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
+                m_llv.getMT2TagIDsSeen(m_cameraIndex, null);
             }
 
             rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
