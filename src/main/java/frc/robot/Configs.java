@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
@@ -129,7 +128,7 @@ public final class Configs {
           .inverted(true)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(1.0)
-          .smartCurrentLimit(60);
+          .smartCurrentLimit(80);
     }
 
     public static final SparkMaxConfig feederRollerConfig = new SparkMaxConfig();
@@ -138,7 +137,7 @@ public final class Configs {
           .inverted(false)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(1.0)
-          .smartCurrentLimit(60);
+          .smartCurrentLimit(80);
     }
   }
 }

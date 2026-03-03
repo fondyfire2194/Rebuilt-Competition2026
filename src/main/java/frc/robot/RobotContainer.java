@@ -6,8 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import java.util.Set;
 import java.util.function.DoubleSupplier;
 
@@ -21,6 +19,7 @@ import com.pathplanner.lib.events.EventTrigger;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -140,7 +139,6 @@ public class RobotContainer {
                 m_feeder = new FeederSubsystem(showAllData);
                 m_intake = new IntakeSubsystem(showAllData);
                 m_intakeArm = new IntakeSlideArmSubsystem(showAllData);
-
                 m_llv = new LimelightVision(showAllData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
@@ -257,7 +255,7 @@ public class RobotContainer {
                                                                 m_hood.setHoodUsingDistanceCommand(true)),
                                                 () -> m_shooter.isShootUsingDistance()), Set.of()));
 
-                codriver.povRight().onTrue(Commands.none());
+                driver.povRight().onTrue(Commands.runOnce(() -> drivetrain.resetRotation(new Rotation2d())).ignoringDisable(true));
 
                 // Reset the field-centric heading
                 driver.start().onTrue(

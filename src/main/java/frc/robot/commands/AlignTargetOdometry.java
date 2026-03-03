@@ -88,8 +88,8 @@ public class AlignTargetOdometry extends Command {
     
     angleToTarget = getAngleDegreesToTarget(targetPose, m_drivetrain.getState().Pose);
 
-    boolean passing = AllianceFlipUtil
-        .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
+     boolean passing =false;// AllianceFlipUtil
+    //     .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
 
     distanceToHub = targetPose.getTranslation()
         .getDistance(m_drivetrain.getState().Pose.getTranslation());

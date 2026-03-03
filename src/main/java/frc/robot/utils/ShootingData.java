@@ -40,31 +40,31 @@ public class ShootingData {
 
     static {
 
-        hoodAngleMap.put(0.96, Rotation2d.fromDegrees(10.0));
-        hoodAngleMap.put(1.16, Rotation2d.fromDegrees(12.0));
-        hoodAngleMap.put(1.58, Rotation2d.fromDegrees(14.0));
-        hoodAngleMap.put(2.07, Rotation2d.fromDegrees(18.5));
-        hoodAngleMap.put(2.37, Rotation2d.fromDegrees(22.0));
-        hoodAngleMap.put(2.47, Rotation2d.fromDegrees(23.0));
-        hoodAngleMap.put(2.70, Rotation2d.fromDegrees(24.0));
-        hoodAngleMap.put(2.94, Rotation2d.fromDegrees(25.0));
-        hoodAngleMap.put(3.48, Rotation2d.fromDegrees(27.0));
-        hoodAngleMap.put(3.92, Rotation2d.fromDegrees(32.0));
-        hoodAngleMap.put(4.35, Rotation2d.fromDegrees(34.0));
-        hoodAngleMap.put(4.84, Rotation2d.fromDegrees(38.0));
+        hoodAngleMap.put(0.96, Rotation2d.fromDegrees(0.0));
+        hoodAngleMap.put(1.16, Rotation2d.fromDegrees(1.5));
+        hoodAngleMap.put(1.58, Rotation2d.fromDegrees(3.0));
+        hoodAngleMap.put(2.07, Rotation2d.fromDegrees(4.5));
+        hoodAngleMap.put(2.37, Rotation2d.fromDegrees(6.0));
+        hoodAngleMap.put(2.47, Rotation2d.fromDegrees(7.5));
+        hoodAngleMap.put(2.70, Rotation2d.fromDegrees(9));
+        hoodAngleMap.put(2.94, Rotation2d.fromDegrees(10.5));
+        hoodAngleMap.put(3.48, Rotation2d.fromDegrees(12));
+        hoodAngleMap.put(3.92, Rotation2d.fromDegrees(13.5));
+        hoodAngleMap.put(4.35, Rotation2d.fromDegrees(14.0));
+        hoodAngleMap.put(4.84, Rotation2d.fromDegrees(15.0));
 
         shooterSpeedMap.put(0.96, 1500.0);
-        shooterSpeedMap.put(1.16, 1550.0);
-        shooterSpeedMap.put(1.58, 1600.0);
-        shooterSpeedMap.put(2.07, 1650.0);
-        shooterSpeedMap.put(2.37, 1700.0);
-        shooterSpeedMap.put(2.47, 1700.0);
-        shooterSpeedMap.put(2.70, 1700.0);
-        shooterSpeedMap.put(2.94, 1750.0);
-        shooterSpeedMap.put(3.48, 1750.0);
-        shooterSpeedMap.put(3.92, 1800.0);
-        shooterSpeedMap.put(4.35, 1850.0);
-        shooterSpeedMap.put(4.84, 1900.0);
+        shooterSpeedMap.put(1.16, 1850.0);
+        shooterSpeedMap.put(1.58, 2200.0);
+        shooterSpeedMap.put(2.07, 2550.0);
+        shooterSpeedMap.put(2.37, 2900.0);
+        shooterSpeedMap.put(2.47, 3150.0);
+        shooterSpeedMap.put(2.70, 3500.0);
+        shooterSpeedMap.put(2.94, 3850.0);
+        shooterSpeedMap.put(3.48, 4200.0);
+        shooterSpeedMap.put(3.92, 4550.0);
+        shooterSpeedMap.put(4.35, 4850.0);
+        shooterSpeedMap.put(4.84, 5000.0);
 
         timeOfFlightMap.put(5.68, 1.16);
         timeOfFlightMap.put(4.55, 1.12);

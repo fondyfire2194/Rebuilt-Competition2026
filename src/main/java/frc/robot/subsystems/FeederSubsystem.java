@@ -8,7 +8,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -63,8 +62,11 @@ public class FeederSubsystem extends SubsystemBase {
   @Override
   public void initSendable(SendableBuilder builder) {
     builder.setSmartDashboardType("Feeder");
+    builder.addDoubleProperty("Belt Motor RPM", () -> feederBeltMotor.getEncoder().getVelocity(), null);
     builder.addDoubleProperty("Belt Motor Amps", () -> feederBeltMotor.getOutputCurrent(), null);
     builder.addBooleanProperty("Belt Motor Fault", () -> feederBeltMotor.hasActiveFault(), null);
+
+    builder.addDoubleProperty("Roller Motor RPM", () -> feederRollerMotor.getEncoder().getVelocity(), null);
     builder.addDoubleProperty("Roller Motor Amps", () -> feederRollerMotor.getOutputCurrent(), null);
     builder.addBooleanProperty("Rolle Motor Fault", () -> feederRollerMotor.hasActiveFault(), null);
   }

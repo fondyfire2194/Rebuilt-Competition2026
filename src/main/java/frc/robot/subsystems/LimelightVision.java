@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
@@ -28,7 +26,7 @@ public class LimelightVision extends SubsystemBase {
   public int leftCam = 1;
   public int rightCam = 2;
 
-  public Cameras[] cameras = new Cameras[3];
+  public Cameras[] cameras = new Cameras[4];
 
   public String frontName;
 
@@ -36,23 +34,23 @@ public class LimelightVision extends SubsystemBase {
 
   public String rightName;
 
-  public boolean[] limelightExists;
+  public boolean[] limelightExists = new boolean[5];
 
-  public boolean[] inhibitVision;
+  public boolean[] inhibitVision = new boolean[5];
 
   public Pose2d[] mt1Pose = { new Pose2d(), new Pose2d(), new Pose2d() };
 
-  public int[] mt1TagCount;
+  public int[] mt1TagCount = new int[5];
 
   public double[][] mt1TagsSeen = new double[3][5];
 
   public double[][] mt2TagsSeen = new double[3][5];
 
-  public double[] mt1Ambiguity;
+  public double[] mt1Ambiguity = new double[5];
 
-  public double[] mt1DistToCamera;
+  public double[] mt1DistToCamera = new double[5];
 
-  public double[] mt1TimeStampSeconds;
+  public double[] mt1TimeStampSeconds = new double[5];
 
   StructPublisher<Pose2d> mt1FrontPosePublisher;
   StructPublisher<Pose2d> mt1LeftPosePublisher;
@@ -64,11 +62,11 @@ public class LimelightVision extends SubsystemBase {
 
   public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d() };
 
-  public double[] mt2ambiguity;
+  public double[] mt2ambiguity = new double[5];
 
-  public double[] mt2distToCamera;
+  public double[] mt2distToCamera = new double[5];
 
-  public int[] numberMT2Pose;
+  public int[] numberMT2Pose = new int[5];
 
   public Pose2d[] acceptedPose = { new Pose2d(), new Pose2d(), new Pose2d() };
 
@@ -78,7 +76,7 @@ public class LimelightVision extends SubsystemBase {
 
   private boolean showData;
 
-  double[] vals = { 0, 0, 0, 0, 0, 0, 0, 0 };
+  double[] vals = new double[8];
 
   /**
    * Checks if the specified limelight is connected
@@ -172,7 +170,7 @@ public class LimelightVision extends SubsystemBase {
     if (showData) {
       if (getLLHW(Constants.CameraConstants.frontCamera.camname).length > 0)
         vals = getLLHW(Constants.CameraConstants.frontCamera.camname);
-  }
+    }
 
   }
 
@@ -284,6 +282,7 @@ public class LimelightVision extends SubsystemBase {
         () -> LimelightHelpers.getTV(cameras[cameraIndex].camname), null);
     builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT1TagsSeen", () -> mt1TagsSeen[cameraIndex], null);
     builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT2TagsSeen", () -> mt2TagsSeen[cameraIndex], null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " MT2TDistance", () -> mt2distToCamera[cameraIndex], null);
 
   }
 
@@ -299,7 +298,7 @@ public class LimelightVision extends SubsystemBase {
     builder.addDoubleProperty(name + " IMU Yaw", () -> getIMUYaw(), null);
     builder.addDoubleArrayProperty(name + " MT1TagsSeen", () -> mt1TagsSeen[cameraIndex], null);
     builder.addDoubleArrayProperty(name + " MT2TagsSeen", () -> mt2TagsSeen[cameraIndex], null);
-
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " MT2TDistance", () -> mt2distToCamera[cameraIndex], null);
     builder.addDoubleProperty(name + "  Temperature", () -> vals[0], null);
     builder.addDoubleProperty(name + " CPU", () -> vals[1], null);
     builder.addDoubleProperty(name + " Ram", () -> vals[2], null);

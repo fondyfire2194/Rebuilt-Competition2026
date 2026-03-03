@@ -63,8 +63,9 @@ public class Robot extends TimedRobot {
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
                 autoHasRun = false;
-                CommandScheduler.getInstance()
-                                .schedule(new CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
+                // CommandScheduler.getInstance()
+                // .schedule(new
+                // CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
 
         }
 
@@ -80,6 +81,15 @@ public class Robot extends TimedRobot {
                 rHposePublisher.accept(FieldConstants.redHubPose);
                 bHposePublisher.accept(FieldConstants.blueHubPose);
 
+                double yaw = m_robotContainer.drivetrain.getPigeon2().getYaw().getValueAsDouble();
+      double pitch = m_robotContainer.drivetrain.getPigeon2().getPitch().getValueAsDouble();
+      double roll = m_robotContainer.drivetrain.getPigeon2().getRoll().getValueAsDouble();
+
+
+                SmartDashboard.putNumber("Pigeon Yaw", yaw);
+          SmartDashboard.putNumber("Pigeon Roll", roll);
+          SmartDashboard.putNumber("Pigeon Pitch", pitch);
+      
         }
 
         @Override

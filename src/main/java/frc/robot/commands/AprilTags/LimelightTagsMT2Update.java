@@ -51,11 +51,11 @@ public class LimelightTagsMT2Update extends Command {
             m_llv.mt2Pose[m_cameraIndex] = mt2.pose;
 
             if (mt2.rawFiducials.length > 0) {
-                m_llv.mt2ambiguity[m_cameraIndex] = mt2.rawFiducials[0].ambiguity;
-                m_llv.mt2distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
-                m_llv.numberMT2Pose[m_cameraIndex] = mt2.tagCount;
-                m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
-                m_llv.getMT2TagsSeen(m_cameraIndex, mt2.rawFiducials);
+                 m_llv.mt2ambiguity[m_cameraIndex] = mt2.rawFiducials[0].ambiguity;
+                 m_llv.mt2distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
+                 m_llv.numberMT2Pose[m_cameraIndex] = mt2.tagCount;
+                 m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
+                 m_llv.getMT2TagsSeen(m_cameraIndex, mt2.rawFiducials);
             }
 
             rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])

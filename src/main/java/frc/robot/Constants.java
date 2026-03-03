@@ -419,7 +419,7 @@ public final class Constants {
     public static Cameras frontCamera = new Cameras(
         "limelight-front",
         "10.21.94.15",
-        true,
+        false,
         frontCamPose,
         63.3,
         49.7,

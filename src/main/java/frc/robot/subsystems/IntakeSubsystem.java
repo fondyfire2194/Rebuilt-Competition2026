@@ -41,7 +41,7 @@ public class IntakeSubsystem extends SubsystemBase {
         Configs.Intake.intakeConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-        this.showData = showData;
+    this.showData = showData;
     if (showData)
       SmartDashboard.putData(this);
   }
@@ -50,6 +50,9 @@ public class IntakeSubsystem extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
     builder.setSmartDashboardType("Intake");
     builder.addDoubleProperty("Amps", () -> intakeMotor.getOutputCurrent(), null);
+    builder.addDoubleProperty("RPM", () -> intakeMotor.getEncoder().getVelocity(), null);
+    builder.addDoubleProperty("Volts Out", () -> intakeMotor.getAppliedOutput() * 12., null);
+
     builder.addBooleanProperty("Fault", () -> intakeMotor.hasActiveFault(), null);
   }
 

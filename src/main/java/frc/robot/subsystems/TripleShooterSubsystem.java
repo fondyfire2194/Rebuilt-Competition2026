@@ -136,8 +136,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
     configs.Slot0.kI = 0; // No output for integrated error
     configs.Slot0.kD = 0; // No output for error derivative
     // Peak output of 8 volts
-    configs.Voltage.withPeakForwardVoltage(Volts.of(8))
-        .withPeakReverseVoltage(Volts.of(-8));
+    configs.Voltage.withPeakForwardVoltage(Volts.of(11))
+        .withPeakReverseVoltage(Volts.of(-11));
 
     /*
      * Torque-based velocity does not require a velocity feed forward, as torque
