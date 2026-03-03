@@ -46,7 +46,6 @@ public class HoodSubsystem extends SubsystemBase {
 
     public final static double degreesPerMotorRev = degreesPerPinionRev / gearRatio;// approx .22
 
-    private SparkMaxConfig motorConfig;
     private SparkClosedLoopController closedLoopController;
     private RelativeEncoder encoder;
 
@@ -61,6 +60,8 @@ public class HoodSubsystem extends SubsystemBase {
 
     public void setHoodUsingDistance(boolean autoHood) {
         this.hoodUsingDistance = autoHood;
+        finalTargetAngle = isHoodUsingDistance() ? autoTargetAngle : manualTargetAngle;
+
     }
 
     public Command setHoodUsingDistanceCommand(boolean on) {
@@ -118,8 +119,8 @@ public class HoodSubsystem extends SubsystemBase {
         return new FunctionalCommand(
                 () -> {
                     finalTargetAngle = getHoodPosition();
-                    manualTargetAngle=finalTargetAngle;
-                    autoTargetAngle=getHoodPosition();
+                    manualTargetAngle = finalTargetAngle;
+                    autoTargetAngle = getHoodPosition();
                 }, // init
                 () -> {
                     closedLoopController.setSetpoint(finalTargetAngle, ControlType.kPosition, ClosedLoopSlot.kSlot0);
@@ -130,7 +131,7 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public void incrementHoodPosition(double val) {
-        double pos = finalTargetAngle+val;
+        double pos = finalTargetAngle + val;
         pos = MathUtil.clamp(pos, kMinPosition.in(Degrees), kMaxPosition.in(Degrees));
         finalTargetAngle = pos;
     }

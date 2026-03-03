@@ -12,6 +12,7 @@ import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -33,8 +34,15 @@ import frc.robot.utils.LoopEvents;
 public class Robot extends TimedRobot {
         private Command m_autonomousCommand;
         private final EventLoop m_eventLoop = new EventLoop();
-        StructPublisher<Pose2d> rHposePublisher;
-        StructPublisher<Pose2d> bHposePublisher;
+        NetworkTableInstance inst = NetworkTableInstance.getDefault();
+
+        private final NetworkTable hubPoseTable = inst.getTable("HubPoses");
+
+        private final StructPublisher<Pose2d> hubPoseRed = hubPoseTable.getStructTopic("HubPoseRed", Pose2d.struct)
+                        .publish();
+        private final StructPublisher<Pose2d> hubPoseBlue = hubPoseTable.getStructTopic("HubPoseBlue", Pose2d.struct)
+                        .publish();
+
         private final RobotContainer m_robotContainer;
         private LoopEvents loopEvents;
         private boolean autoHasRun;
@@ -47,25 +55,18 @@ public class Robot extends TimedRobot {
                         .withJoystickReplay();
 
         public Robot() {
-                // NetworkTableInstance inst = NetworkTableInstance.getDefault();
                 // inst.flush();
                 m_robotContainer = new RobotContainer();
                 DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
                 if (!DriverStation.isFMSAttached()) {
                         DogLog.setOptions(new DogLogOptions().withNtPublish(true));
 
-                        rHposePublisher = NetworkTableInstance.getDefault()
-                                        .getStructTopic("RedHubPose", Pose2d.struct).publish();
-                        bHposePublisher = NetworkTableInstance.getDefault()
-                                        .getStructTopic("BlueHubPose", Pose2d.struct).publish();
-
+                        hubPoseRed.set(FieldConstants.redHubPose);
+                        hubPoseBlue.set(FieldConstants.blueHubPose);
                 }
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
                 autoHasRun = false;
-                // CommandScheduler.getInstance()
-                // .schedule(new
-                // CaptureMT1Values(m_robotContainer.m_llv).ignoringDisable(true));
 
         }
 
@@ -78,18 +79,14 @@ public class Robot extends TimedRobot {
 
                 CommandScheduler.getInstance().run();
 
-                rHposePublisher.accept(FieldConstants.redHubPose);
-                bHposePublisher.accept(FieldConstants.blueHubPose);
-
                 double yaw = m_robotContainer.drivetrain.getPigeon2().getYaw().getValueAsDouble();
-      double pitch = m_robotContainer.drivetrain.getPigeon2().getPitch().getValueAsDouble();
-      double roll = m_robotContainer.drivetrain.getPigeon2().getRoll().getValueAsDouble();
-
+                double pitch = m_robotContainer.drivetrain.getPigeon2().getPitch().getValueAsDouble();
+                double roll = m_robotContainer.drivetrain.getPigeon2().getRoll().getValueAsDouble();
 
                 SmartDashboard.putNumber("Pigeon Yaw", yaw);
-          SmartDashboard.putNumber("Pigeon Roll", roll);
-          SmartDashboard.putNumber("Pigeon Pitch", pitch);
-      
+                SmartDashboard.putNumber("Pigeon Roll", roll);
+                SmartDashboard.putNumber("Pigeon Pitch", pitch);
+
         }
 
         @Override
@@ -179,17 +176,6 @@ public class Robot extends TimedRobot {
         @Override
         public void teleopPeriodic() {
 
-                // LaunchCalculator.getInstance().clearLaunchingParameters();
-
-                // double tstart = loopTimer.get();
-
-                // LaunchCalculator.getInstance().getParameters(m_robotContainer.drivetrain);
-
-                // double tend = loopTimer.get();
-
-                // SmartDashboard.putNumber("SOTF/scantime", 1000. * (tend - tstart));
-                // SmartDashboard.putNumber("SOTF/starttime", tstart);
-                // SmartDashboard.putNumber("SOTF/endtime", tend);
                 SmartDashboard.putNumber("LC/Robot Angle",
                                 m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
         }

@@ -55,18 +55,15 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
   private static double kMaxTrapVelocity = 20;
   private static double kMaxTrapAcceleration = 40;
 
-  
-
   private DoubleSubscriber kp;
   private DoubleSubscriber ki;
   private DoubleSubscriber kd;
-
 
   // Create a PID controller whose setpoint's change is subject to maximum
   // velocity and acceleration constraints.
   private final TrapezoidProfile.Constraints m_constraints = new TrapezoidProfile.Constraints(kMaxTrapVelocity,
       kMaxTrapAcceleration);
-  public  ProfiledPIDController m_controller;
+  public ProfiledPIDController m_controller;
 
   public static Distance maxDistance = Inches.of(10);
   public static Distance minDistance = Inches.of(-1);
@@ -111,23 +108,22 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
         Configs.IntakeSlideArm.intakeSlideArmConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-        
-    this.showData = showData;
 
-    if (showData)
-      SmartDashboard.putData(this);
+    this.showData = showData;
 
     slideFeedforward = new SimpleMotorFeedforward(ks, kv);
 
     intakeArmSlideMotor.getEncoder().setPosition(homeDistance.in(Inches));
 
-     kp = DogLog.tunable("IntakeSlideArm/PGain", .03, newKp -> m_controller.setP(newKp));
+    kp = DogLog.tunable("IntakeSlideArm/PGain", .03, newKp -> m_controller.setP(newKp));
     ki = DogLog.tunable("IntakeSlideArm/IGain", .0, newKi -> m_controller.setI(newKi));
     kd = DogLog.tunable("IntakeSlideArm/DGain", .0, newKd -> m_controller.setI(newKd));
-   m_controller = new ProfiledPIDController(kp.get(), ki.get(), kd.get(), m_constraints, kDt);
-
+    m_controller = new ProfiledPIDController(kp.get(), ki.get(), kd.get(), m_constraints, kDt);
 
     m_controller.setGoal(homeDistance.in(Inches));
+
+    if (showData)
+      SmartDashboard.putData(this);
   }
 
   @Override
@@ -136,9 +132,9 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
     builder.setSmartDashboardType("IntakeArm");
     builder.addDoubleProperty("Motor Volts", () -> intakeArmSlideMotor.getAppliedOutput() * 12, null);
     builder.addDoubleProperty("ActualPosition", () -> getIntakeSlidePosition().in(Inches), null);
-   // builder.addDoubleProperty("GoalPosition", () -> m_controller.getGoal().position, null);
+    builder.addDoubleProperty("GoalPosition", () -> m_controller.getGoal().position, null);
     builder.addDoubleProperty("Velocity", () -> getIntakeSlideVelocity().in(InchesPerSecond), null);
-  //  builder.addBooleanProperty("AtSetpoint", m_controller::atSetpoint, null);
+    builder.addBooleanProperty("AtSetpoint", m_controller::atSetpoint, null);
   }
 
   public void periodic() {
@@ -168,7 +164,7 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
   public void positionIntakeSlide() {
     double ff = slideFeedforward.calculate(getIntakeSlidePosition().in(Inches));
     double pidout = m_controller.calculate(getIntakeSlidePosition().in(Inches));
-    intakeArmSlideMotor.setVoltage(ff = pidout);
+    intakeArmSlideMotor.setVoltage(ff + pidout);
   }
 
   public Distance getIntakeSlidePosition() {

@@ -87,7 +87,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public void setShootUsingDistance(boolean autoShoot) {
     this.shootUsingDistance = autoShoot;
-
+    finalSetTargetRPM = isShootUsingDistance() ? autoSetTargetRPM : manualSetTargetRPM;
   }
 
   public Command setShootUsingDistanceCommand(boolean on) {
@@ -106,7 +106,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     configureMotor(leftMotor, InvertedValue.Clockwise_Positive);
     configureMotor(middleMotor, InvertedValue.Clockwise_Positive);
     configureMotor(rightMotor, InvertedValue.Clockwise_Positive);
-
+    setShootUsingDistance(false);
     if (showData)
       SmartDashboard.putData(this);
   }

@@ -48,6 +48,7 @@ public class AlignTargetOdometry extends Command {
   private SwerveRequest.FieldCentric drive;
   private final TripleShooterSubsystem shooter;
   private double distanceToHub;
+  private boolean passing;
 
   public AlignTargetOdometry(
       CommandSwerveDrivetrain drivetrain,
@@ -75,7 +76,7 @@ public class AlignTargetOdometry extends Command {
     m_alignTargetPID = new PIDController(kp.get(), ki.get(), kd.get());
 
     m_alignTargetPID.enableContinuousInput(-180, 180);
-    // if (!lob) {
+     if (!passing) {
     targetPose = AllianceUtil.getHubPose();
     m_alignTargetPID.setTolerance(0.2);
     aligning = true;
@@ -88,8 +89,8 @@ public class AlignTargetOdometry extends Command {
     
     angleToTarget = getAngleDegreesToTarget(targetPose, m_drivetrain.getState().Pose);
 
-     boolean passing =false;// AllianceFlipUtil
-    //     .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
+     passing = AllianceFlipUtil
+         .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
 
     distanceToHub = targetPose.getTranslation()
         .getDistance(m_drivetrain.getState().Pose.getTranslation());

@@ -18,6 +18,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -110,45 +111,38 @@ public class LaunchCalculator {
 
   boolean showData = true;
 
-  StructPublisher<Pose2d> robotPosePublisher;
-  StructPublisher<Pose2d> estimatedPosePublisher;
-  StructPublisher<Pose2d> lookAheadRobotPosePublisher;
-  StructPublisher<Pose2d> lookAheadPosePublisher;
+  NetworkTableInstance lc = NetworkTableInstance.getDefault();
+  private final NetworkTable hubPoseTable = lc.getTable("LaunchCalculatorPoses");
 
-  StructPublisher<Pose2d> shooterPosePublisher;
-  StructPublisher<Pose2d> stAimedPosePublisher;
-  StructPublisher<Pose2d> derivedPosePublisher;
-  StructPublisher<Pose2d> projectedHubPosePublisher;
+  private final StructPublisher<Pose2d> robotPosePublisher = hubPoseTable.getStructTopic("RobotPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> estimatedPosePublisher = hubPoseTable
+      .getStructTopic("EstimatedPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> lookAheadPosePublisher = hubPoseTable
+      .getStructTopic("LookAheadPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> loookAheadRobotPosePublisher = hubPoseTable
+      .getStructTopic("LookAheadRobotPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> shooterPosePublisher = hubPoseTable.getStructTopic("ShooterPose", Pose2d.struct)
+      .publish();
 
-  
-  
- // private static final LoggedTunableNumber maxIdleSpeed = new LoggedTunableNumber("LaunchCalculator/MaxIdleSpeed", 200);
+  private final StructPublisher<Pose2d> stAimedPosePublisher = hubPoseTable
+      .getStructTopic("StationaryAimedPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> derivedPosePublisher = hubPoseTable.getStructTopic("DerivedPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> projectedHubPosePublisher = hubPoseTable
+      .getStructTopic("ProjectedHubPose", Pose2d.struct).publish();
 
-  
+  // private static final LoggedTunableNumber maxIdleSpeed = new
+  // LoggedTunableNumber("LaunchCalculator/MaxIdleSpeed", 200);
 
   public LaunchingParameters getParameters(CommandSwerveDrivetrain drivetrain) {
     boolean passing = AllianceFlipUtil
         .applyX(drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
-    if (showData) {
-      robotPosePublisher = NetworkTableInstance.getDefault()
-          .getStructTopic("LC/RobotPose", Pose2d.struct).publish();
 
-      estimatedPosePublisher = NetworkTableInstance.getDefault()
-          .getStructTopic("LC/EstimatedPose", Pose2d.struct).publish();
-      lookAheadRobotPosePublisher = NetworkTableInstance.getDefault()
-          .getStructTopic("LC/LookAheadRobotPose", Pose2d.struct).publish();
-      lookAheadPosePublisher = NetworkTableInstance.getDefault()
-          .getStructTopic("LC/LookAheadPose", Pose2d.struct).publish();
-
-      shooterPosePublisher = NetworkTableInstance.getDefault()
-          .getStructTopic("LC/LauncherPose", Pose2d.struct).publish();
-      stAimedPosePublisher = NetworkTableInstance.getDefault()
-          .getStructTopic("LC/StAimedPose", Pose2d.struct).publish();
-      derivedPosePublisher = NetworkTableInstance.getDefault()
-          .getStructTopic("LC/DerivedPose", Pose2d.struct).publish();
-      projectedHubPosePublisher = NetworkTableInstance.getDefault()
-          .getStructTopic("LC/ProjectedHubPose", Pose2d.struct).publish();
-    }
     if (latestParameters != null) {
       return latestParameters;
     }
@@ -171,8 +165,8 @@ public class LaunchCalculator {
             robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
 
     if (showData) {
-      robotPosePublisher.accept(robotPose);
-      estimatedPosePublisher.accept(estimatedPose);
+      robotPosePublisher.set(robotPose);
+      estimatedPosePublisher.set(estimatedPose);
     }
 
     /**
@@ -193,7 +187,7 @@ public class LaunchCalculator {
     double shooterToTargetDistance = target.getDistance(shooterPose.getTranslation());
 
     if (showData) {
-      shooterPosePublisher.accept(shooterPose);
+      shooterPosePublisher.set(shooterPose);
       SmartDashboard.putNumber("LC/Lchr2TgtDist", shooterToTargetDistance);
     }
     /**
@@ -240,7 +234,7 @@ public class LaunchCalculator {
       lookaheadShooterToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
 
       if (showData) {
-        lookAheadPosePublisher.accept(lookaheadPose);
+        lookAheadPosePublisher.set(lookaheadPose);
       }
     }
 
@@ -253,7 +247,7 @@ public class LaunchCalculator {
     LinearFilter driveAngleFilter = LinearFilter.movingAverage((int) (1.5 / Constants.loopPeriodSecs));
 
     if (showData) {
-      lookAheadRobotPosePublisher.accept(lookaheadRobotPose);
+      loookAheadRobotPosePublisher.set(lookaheadRobotPose);
     }
     /**
      * 
@@ -328,11 +322,11 @@ public class LaunchCalculator {
         SmartDashboard.putBoolean("LC/Passing", latestParameters.passing);
         SmartDashboard.putNumber("LC/DAWLO", getDriveAngleWithLauncherOffset(lookaheadRobotPose, target).getDegrees());
 
-        stAimedPosePublisher.accept(getStationaryAimedPose(drivetrain.getState().Pose.getTranslation(), false));
-        derivedPosePublisher.accept(derivedPose);
+        stAimedPosePublisher.set(getStationaryAimedPose(drivetrain.getState().Pose.getTranslation(), false));
+        derivedPosePublisher.set(derivedPose);
 
         projectedHubPosePublisher
-            .accept(drivetrain.projectedOnTheMoveShootPose);
+            .set(drivetrain.projectedOnTheMoveShootPose);
 
         SmartDashboard.putNumber("LC/DriveAngle", driveAngle.getDegrees());
         SmartDashboard.putNumber("LC/projectedYDiff",

@@ -52,7 +52,6 @@ public class IntakeSubsystem extends SubsystemBase {
     builder.addDoubleProperty("Amps", () -> intakeMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("RPM", () -> intakeMotor.getEncoder().getVelocity(), null);
     builder.addDoubleProperty("Volts Out", () -> intakeMotor.getAppliedOutput() * 12., null);
-
     builder.addBooleanProperty("Fault", () -> intakeMotor.hasActiveFault(), null);
   }
 

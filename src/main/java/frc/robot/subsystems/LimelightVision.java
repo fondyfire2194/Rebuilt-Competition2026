@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -34,41 +35,53 @@ public class LimelightVision extends SubsystemBase {
 
   public String rightName;
 
-  public boolean[] limelightExists = new boolean[5];
+  public int numberOfAprilTagCameras = 4;
 
-  public boolean[] inhibitVision = new boolean[5];
+  public int numberTagsAllowed = 5;
 
-  public Pose2d[] mt1Pose = { new Pose2d(), new Pose2d(), new Pose2d() };
+  public boolean[] limelightExists = new boolean[numberOfAprilTagCameras];
 
-  public int[] mt1TagCount = new int[5];
+  public boolean[] inhibitVision = new boolean[numberTagsAllowed];
 
-  public double[][] mt1TagsSeen = new double[3][5];
+  public Pose2d[] mt1Pose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
 
-  public double[][] mt2TagsSeen = new double[3][5];
+  public int[] mt1TagCount = new int[numberTagsAllowed];
 
-  public double[] mt1Ambiguity = new double[5];
+  public double[][] mt1TagsSeen = new double[3][numberTagsAllowed];
 
-  public double[] mt1DistToCamera = new double[5];
+  public double[][] mt2TagsSeen = new double[3][numberTagsAllowed];
 
-  public double[] mt1TimeStampSeconds = new double[5];
+  public double[] mt1Ambiguity = new double[numberOfAprilTagCameras];
 
-  StructPublisher<Pose2d> mt1FrontPosePublisher;
-  StructPublisher<Pose2d> mt1LeftPosePublisher;
-  StructPublisher<Pose2d> mt1RightPosePublisher;
+  public double[] mt1DistToCamera = new double[numberTagsAllowed];
 
-  StructPublisher<Pose2d> mt2FrontPosePublisher;
-  StructPublisher<Pose2d> mt2LeftPosePublisher;
-  StructPublisher<Pose2d> mt2RightPosePublisher;
+  public double[] mt1TimeStampSeconds = new double[numberTagsAllowed];
 
-  public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d() };
+  NetworkTableInstance ll = NetworkTableInstance.getDefault();
+  private final NetworkTable llTable = ll.getTable("LimelightPoses");
 
-  public double[] mt2ambiguity = new double[5];
+  private final StructPublisher<Pose2d> mt1FrontPosePublisher = llTable.getStructTopic("MT1FrontPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> mt1LeftPosePublisher = llTable.getStructTopic("MT1LeftPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> mt1RightPosePublisher = llTable.getStructTopic("MT1RightPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> mt2FrontPosePublisher = llTable.getStructTopic("MT2FrontPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> mt2LeftPosePublisher = llTable.getStructTopic("MT2LeftPose", Pose2d.struct)
+      .publish();
+  private final StructPublisher<Pose2d> mt2RightPosePublisher = llTable.getStructTopic("MT2RightPose", Pose2d.struct)
+      .publish();
 
-  public double[] mt2distToCamera = new double[5];
+  public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
 
-  public int[] numberMT2Pose = new int[5];
+  public double[] mt2ambiguity = new double[numberOfAprilTagCameras];
 
-  public Pose2d[] acceptedPose = { new Pose2d(), new Pose2d(), new Pose2d() };
+  public double[] mt2distToCamera = new double[numberOfAprilTagCameras];
+
+  public int[] numberMT2Pose = new int[numberTagsAllowed];
+
+  public Pose2d[] acceptedPose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
 
   public boolean mt1PoseSet;
 
@@ -129,21 +142,6 @@ public class LimelightVision extends SubsystemBase {
     leftName = cameras[leftCam].camname;
 
     rightName = cameras[rightCam].camname;
-
-    mt1FrontPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("LimelightPoses/" + frontName + " MT1FrontPose", Pose2d.struct).publish();
-    mt1LeftPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("LimelightPoses/" + leftName + " MT1LeftPose", Pose2d.struct).publish();
-    mt1RightPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("LimelightPoses/" + rightName + " MT1RightPose", Pose2d.struct).publish();
-
-    mt2FrontPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("LimelightPoses/" + frontName + " MT2FrontPose", Pose2d.struct).publish();
-    mt2LeftPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("LimelightPoses/" + leftName + " MT2LeftPose", Pose2d.struct).publish();
-    mt2RightPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("LimelightPoses/" + rightName + " MT2RightPose", Pose2d.struct).publish();
-
     setCamToRobotOffset(cameras[frontCam]);
     setCamToRobotOffset(cameras[leftCam]);
     setCamToRobotOffset(cameras[rightCam]);
@@ -159,13 +157,13 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    mt1FrontPosePublisher.accept(mt1Pose[frontCam]);
-    mt1LeftPosePublisher.accept(mt1Pose[leftCam]);
-    mt1RightPosePublisher.accept(mt1Pose[rightCam]);
+    mt1FrontPosePublisher.set(mt1Pose[frontCam]);
+    mt1LeftPosePublisher.set(mt1Pose[leftCam]);
+    mt1RightPosePublisher.set(mt1Pose[rightCam]);
 
-    mt2FrontPosePublisher.accept(mt2Pose[frontCam]);
-    mt2LeftPosePublisher.accept(mt2Pose[leftCam]);
-    mt2RightPosePublisher.accept(mt2Pose[rightCam]);
+    mt2FrontPosePublisher.set(mt2Pose[frontCam]);
+    mt2LeftPosePublisher.set(mt2Pose[leftCam]);
+    mt2RightPosePublisher.set(mt2Pose[rightCam]);
 
     if (showData) {
       if (getLLHW(Constants.CameraConstants.frontCamera.camname).length > 0)
