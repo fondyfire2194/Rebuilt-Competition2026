@@ -15,6 +15,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -26,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.ShiftDetectionCommand;
-import frc.robot.commands.AprilTags.CaptureMT1Values;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LoopEvents;
@@ -55,14 +55,16 @@ public class Robot extends TimedRobot {
                         .withJoystickReplay();
 
         public Robot() {
+                hubPoseRed.set(FieldConstants.redHubPose);
+                hubPoseBlue.set(FieldConstants.blueHubPose);
                 // inst.flush();
                 m_robotContainer = new RobotContainer();
-                DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
+                DataLogManager.start();
+                DogLog.setOptions(new DogLogOptions().withCaptureDs(false));
+                DriverStation.startDataLog(DataLogManager.getLog());
                 if (!DriverStation.isFMSAttached()) {
                         DogLog.setOptions(new DogLogOptions().withNtPublish(true));
 
-                        hubPoseRed.set(FieldConstants.redHubPose);
-                        hubPoseBlue.set(FieldConstants.blueHubPose);
                 }
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
@@ -78,7 +80,6 @@ public class Robot extends TimedRobot {
                 m_timeAndJoystickReplay.update();
 
                 CommandScheduler.getInstance().run();
-
 
         }
 
