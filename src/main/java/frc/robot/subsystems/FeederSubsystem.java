@@ -11,6 +11,7 @@ import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -18,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants;
 import frc.robot.Constants.FeederSetpoints;
+import frc.robot.utils.Logger;
 
 public class FeederSubsystem extends SubsystemBase {
   /** Creates a new FeederSubsystem. */
@@ -74,6 +76,13 @@ public class FeederSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    Logger.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
+    Logger.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
+    Logger.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+    Logger.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
+    Logger.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
+    Logger.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+
   }
 
   public void runFeederRollerMotor(double power) {

@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants;
+import frc.robot.utils.Logger;
 
 public class HoodSubsystem extends SubsystemBase {
     public static final Angle kMinPosition = Degrees.of(0.0);
@@ -188,6 +189,13 @@ public class HoodSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        Logger.log("Hood/FinalTargetAngle", finalTargetAngle);
+        Logger.log("Hood/ManualTargetAngle", manualTargetAngle);
+        Logger.log("Hood/AutoTargetAngle", autoTargetAngle);
+        Logger.log("Hood/UseAutoTarget", isHoodUsingDistance());
+        Logger.log("Hood/CurrentAngle", getHoodPosition());
+        Logger.log("Hood/AngleError", finalTargetAngle - getHoodPosition());
+        Logger.log("Hood/AtTarget", isPositionWithinTolerance());
     }
 
     @Override

@@ -18,6 +18,7 @@ import frc.robot.Constants.CameraConstants.Cameras;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.IMUData;
 import frc.robot.utils.LimelightHelpers.RawFiducial;
+import frc.robot.utils.Logger;
 
 public class LimelightVision extends SubsystemBase {
   /** Creates a new LimelightVision. */
@@ -160,6 +161,15 @@ public class LimelightVision extends SubsystemBase {
     mt1FrontPosePublisher.set(mt1Pose[frontCam]);
     mt1LeftPosePublisher.set(mt1Pose[leftCam]);
     mt1RightPosePublisher.set(mt1Pose[rightCam]);
+
+    Logger.log("FrontCamMT2Pose", mt2Pose[frontCam]);
+    Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
+    Logger.log("RightCamMT2Pose", mt2Pose[rightCam]);
+    Logger.log("FrontCamTagsSeen", mt2TagIDsSeen[frontCam]);
+    Logger.log("LeftCamTagsSeen", mt2TagIDsSeen[leftCam]);
+    Logger.log("RightCamTagsSeen", mt2TagIDsSeen[rightCam]);
+
+    Logger.log("FrontCamPipeline", LimelightHelpers.getCurrentPipelineType(frontName));
 
     mt2FrontPosePublisher.set(mt2Pose[frontCam]);
     mt2LeftPosePublisher.set(mt2Pose[leftCam]);

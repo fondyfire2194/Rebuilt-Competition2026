@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.CanbusConstants;
+import frc.robot.utils.Logger;
 
 public class TripleShooterSubsystem extends SubsystemBase {
   /** Creates a new TripleShooterSubsystem. */
@@ -321,7 +322,19 @@ public class TripleShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("SHTRTST", tst);
+
+
+    Logger.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
+    Logger.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
+    Logger.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
+    Logger.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
+    Logger.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
+    Logger.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
+    Logger.log("Shooter/UseDistForRPM", isShootUsingDistance());
+    Logger.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
+    Logger.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
+    Logger.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
+
   }
 
   public void setDistanceToHub(double distance) {

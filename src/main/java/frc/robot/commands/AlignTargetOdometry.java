@@ -20,6 +20,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
+import frc.robot.utils.Logger;
 import frc.robot.utils.ShootingData;
 import frc.robot.utils.geometry.AllianceFlipUtil;
 
@@ -110,6 +111,13 @@ public class AlignTargetOdometry extends Command {
             .withRotationalRate(rotationVal * RobotConstants.MaxAngularRate));
 
     m_drivetrain.alignedToTarget = Math.abs(angleToTarget) < m_drivetrain.shootTolerance;
+
+    Logger.log("AlignedToHub", m_drivetrain.alignedToTarget);
+    Logger.log("AlignError", m_alignTargetPID.getError());
+    Logger.log("AlignDistance", distanceToHub);
+    Logger.log("AlignAngle", angleToTarget);
+    Logger.log("AlignHubAngle", HoodSubsystem.autoTargetAngle);
+    Logger.log("AlighShootSpeed", shooter.autoSetTargetRPM);
 
   }
 

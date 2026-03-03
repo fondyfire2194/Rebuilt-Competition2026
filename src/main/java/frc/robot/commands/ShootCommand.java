@@ -4,6 +4,8 @@
 
 package frc.robot.commands;
 
+import frc.robot.utils.Logger;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FeederSetpoints;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -44,7 +46,10 @@ public class ShootCommand extends Command {
         || m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance() && m_swerve.alignedToTarget) {
       m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
       m_feeder.runFeederRollerMotor(FeederSetpoints.kFeedRollerSetpoint);
+
     }
+    Logger.log("AllShootAtSpeed", m_shooter.allVelocityInTolerance());
+    Logger.log("HoodInPosition", m_hood.isPositionWithinTolerance());
   }
 
   // Called once the command ends or is interrupted.

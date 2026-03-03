@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
+import frc.robot.utils.Logger;
 
 public class IntakeSlideArmSubsystem extends SubsystemBase {
 
@@ -138,6 +139,12 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
   }
 
   public void periodic() {
+    Logger.log("IntakeSlideArm/Position", getIntakeSlidePosition());
+    Logger.log("IntakeSlideArm/Velocity", getIntakeSlideVelocity());
+
+    Logger.log("IntakeSlideArm/Volts", intakeArmSlideMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+    Logger.log("IntakeSlideArm/Amps", intakeArmSlideMotor.getOutputCurrent());
+    Logger.log("IntakeSlideArm/Goal", m_controller.getGoal().position);
 
   }
 

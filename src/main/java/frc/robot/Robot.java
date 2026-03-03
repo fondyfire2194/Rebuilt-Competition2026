@@ -7,7 +7,6 @@ package frc.robot;
 import com.ctre.phoenix6.HootAutoReplay;
 import com.ctre.phoenix6.SignalLogger;
 
-import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,8 +14,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
@@ -29,6 +26,7 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.LimelightHelpers;
+import frc.robot.utils.Logger;
 import frc.robot.utils.LoopEvents;
 
 public class Robot extends TimedRobot {
@@ -59,14 +57,17 @@ public class Robot extends TimedRobot {
                 hubPoseBlue.set(FieldConstants.blueHubPose);
                 // inst.flush();
                 m_robotContainer = new RobotContainer();
-                DataLogManager.start();
-                
-                DogLog.setOptions(new DogLogOptions().withCaptureDs(false));
-                DriverStation.startDataLog(DataLogManager.getLog());
-              //  if (!DriverStation.isFMSAttached()) {
-                        DogLog.setOptions(new DogLogOptions().withNtPublish(true));
 
-              //  }
+                Logger.setOptions(
+                                new DogLogOptions()
+                                                .withCaptureDs(false)
+                                                .withCaptureNt(false)
+                                                .withLogExtras(true)
+                                                .withNtPublish(true)
+                                                .withUseLogThread(false)
+                                                .withLogEntryQueueCapacity(2000));
+                Logger.setEnabled(true);
+
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
                 autoHasRun = false;

@@ -16,8 +16,10 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
+import frc.robot.utils.Logger;
 
 public class AutoAlignHub extends Command {
 
@@ -31,7 +33,7 @@ public class AutoAlignHub extends Command {
   private double rotationVal;
   private boolean aligning;
   private Timer elapsedTime;
-
+  private double distanceToHub;
   private double angleToTarget;
 
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
@@ -69,9 +71,9 @@ public class AutoAlignHub extends Command {
   public void execute() {
 
     angleToTarget = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
-
-    m_shooter.setDistanceToHub(targetPose.getTranslation()
-        .getDistance(m_swerve.getState().Pose.getTranslation()));
+    distanceToHub = targetPose.getTranslation()
+        .getDistance(m_swerve.getState().Pose.getTranslation());
+    m_shooter.setDistanceToHub(distanceToHub);
 
     rotationVal = m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(), angleToTarget);
 
@@ -82,13 +84,20 @@ public class AutoAlignHub extends Command {
 
     alignedToTarget = Math.abs(angleToTarget) < m_toleranceDegrees;
 
+    Logger.log("AlignedToHub", m_swerve.alignedToTarget);
+    Logger.log("AlignError", m_alignTargetPID.getError());
+    Logger.log("AlignDistance", distanceToHub);
+    Logger.log("AlignAngle", angleToTarget);
+    Logger.log("AlignHubAngle", HoodSubsystem.autoTargetAngle);
+    Logger.log("AlighShootSpeed", m_shooter.autoSetTargetRPM);
+
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
     m_alignTargetPID.reset();
-   m_swerve.setControl(drive
+    m_swerve.setControl(drive
         .withVelocityX(0)
         .withVelocityY(0)
         .withRotationalRate(0));
@@ -98,7 +107,7 @@ public class AutoAlignHub extends Command {
   @Override
   public boolean isFinished() {
     return alignedToTarget || elapsedTime.hasElapsed(2) ||
-                          RobotBase.isSimulation();
+        RobotBase.isSimulation();
   }
 
   public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
