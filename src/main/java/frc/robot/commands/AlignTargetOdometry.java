@@ -117,7 +117,7 @@ public class AlignTargetOdometry extends Command {
     Logger.log("AlignDistance", distanceToHub);
     Logger.log("AlignAngle", angleToTarget);
     Logger.log("AlignHubAngle", HoodSubsystem.autoTargetAngle);
-    Logger.log("AlighShootSpeed", shooter.autoSetTargetRPM);
+    Logger.log("AlignShootSpeed", shooter.autoSetTargetRPM);
 
   }
 

@@ -4,8 +4,12 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 
@@ -24,9 +28,13 @@ import frc.robot.utils.Logger;
 public class FeederSubsystem extends SubsystemBase {
   /** Creates a new FeederSubsystem. */
 
-  private SparkMax feederBeltMotor;
+  public SparkMax feederBeltMotor;
 
-  private SparkMax feederRollerMotor;
+  public SparkMax feederRollerMotor;
+  
+    private SparkClosedLoopController closedLoopController;
+    private RelativeEncoder encoder;
+
 
   private double feederRollerPowerSim;
   private double feederBeltPowerSim;
@@ -50,6 +58,9 @@ public class FeederSubsystem extends SubsystemBase {
         Configs.Feeder.feederRollerConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
+
+        
+    closedLoopController = feederRollerMotor.getClosedLoopController();
 
     feederBeltMotor.configure(
         Configs.Feeder.feederBeltConfig,
@@ -88,6 +99,12 @@ public class FeederSubsystem extends SubsystemBase {
   public void runFeederRollerMotor(double power) {
     feederRollerMotor.set(power);
     feederRollerPowerSim = power;
+  }
+
+  public void runFeederRollerAtVelocity(){
+      
+      closedLoopController.setSetpoint(3500, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+  
   }
 
   public void stopFeederRollerMotor() {

@@ -408,12 +408,12 @@ public final class Constants {
      * 
      */
     static Pose3d frontCamPose = new Pose3d(
-        Units.inchesToMeters(9.5), // front of robot
+        Units.inchesToMeters(13), // front of robot
         Units.inchesToMeters(0), // on LR center
-        Units.inchesToMeters(8), // high
+        Units.inchesToMeters(20.25), // high
         new Rotation3d(
             Units.degreesToRadians(0), // no roll
-            Units.degreesToRadians(20), // angled up
+            Units.degreesToRadians(28), // angled up
             Units.degreesToRadians(0)));// facing forward
 
     public static Cameras frontCamera = new Cameras(

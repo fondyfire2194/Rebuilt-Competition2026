@@ -91,7 +91,7 @@ public final class Configs {
     static {
       // Configure basic settings of the intake motor
       hoodConfig
-          .inverted(true)
+          .inverted(false)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(5)
           .smartCurrentLimit(40);
@@ -127,7 +127,7 @@ public final class Configs {
       feederBeltConfig
           .inverted(true)
           .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(1.0)
+          .openLoopRampRate(1.)
           .smartCurrentLimit(80);
     }
 
@@ -136,8 +136,17 @@ public final class Configs {
       feederRollerConfig
           .inverted(false)
           .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(1.0)
+          .openLoopRampRate(.1)
           .smartCurrentLimit(80);
+
+           feederRollerConfig.closedLoop
+          .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+          // Set PID values for position control. We don't need to pass a closed loop
+          // slot, as it will default to slot 0.
+          .p(0.25)
+          .i(0)
+          .d(0)
+          .outputRange(-.9, .9);
     }
   }
 }

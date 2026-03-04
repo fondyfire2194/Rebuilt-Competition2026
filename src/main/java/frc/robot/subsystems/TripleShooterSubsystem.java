@@ -136,9 +136,9 @@ public class TripleShooterSubsystem extends SubsystemBase {
     configs.Slot0.kP = 0.02; // An error of 1 rotation per second results in 0.11 V output
     configs.Slot0.kI = 0; // No output for integrated error
     configs.Slot0.kD = 0; // No output for error derivative
-    // Peak output of 8 volts
-    configs.Voltage.withPeakForwardVoltage(Volts.of(11))
-        .withPeakReverseVoltage(Volts.of(-11));
+    // Peak output of 10 volts
+    configs.Voltage.withPeakForwardVoltage(Volts.of(10))
+        .withPeakReverseVoltage(Volts.of(-10));
 
     /*
      * Torque-based velocity does not require a velocity feed forward, as torque
@@ -187,6 +187,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
         velocityVoltage
             .withVelocity(RPM.of(finalSetTargetRPM))
             .withAcceleration(targetAcceleration)
+            .withSlot(0)
             .withEnableFOC(true));
   }
 
@@ -323,17 +324,24 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
 
-
     Logger.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
     Logger.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
     Logger.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
     Logger.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
     Logger.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
     Logger.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
+    Logger.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
+
     Logger.log("Shooter/UseDistForRPM", isShootUsingDistance());
     Logger.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
     Logger.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
     Logger.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
+    Logger.log("Shooter/LeftAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
+    Logger.log("Shooter/MiddleAmps", middleMotor.getStatorCurrent().getValue().in(Amps));
+    Logger.log("Shooter/RightAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
+    Logger.log("Shooter/RightVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
+    Logger.log("Shooter/MilddleVolts", middleMotor.getMotorVoltage().getValue().in(Volts));
+    Logger.log("Shooter/RightVolts", rightMotor.getMotorVoltage().getValue().in(Volts));
 
   }
 

@@ -252,8 +252,10 @@ public class LimelightVision extends SubsystemBase {
     for (int i = 0; i < mt1TagIDsSeen.length; i++) {
       mt1TagIDsSeen[cameraPointer][i] = 0;
     }
-    for (int i = 0; i < rawFiducial.length; i++) {
-      mt1TagIDsSeen[cameraPointer][i] = rawFiducial[i].id;
+    if (rawFiducial != null) {
+      for (int i = 0; i < rawFiducial.length; i++) {
+        mt1TagIDsSeen[cameraPointer][i] = rawFiducial[i].id;
+      }
     }
   }
 
@@ -261,8 +263,10 @@ public class LimelightVision extends SubsystemBase {
     for (int i = 0; i < mt2TagIDsSeen.length - 1; i++) {
       mt2TagIDsSeen[cameraPointer][i] = 0;
     }
-    for (int i = 0; i < rawFiducial.length; i++) {
-      mt2TagIDsSeen[cameraPointer][i] = rawFiducial[i].id;
+    if (rawFiducial != null) {
+      for (int i = 0; i < rawFiducial.length; i++) {
+        mt2TagIDsSeen[cameraPointer][i] = rawFiducial[i].id;
+      }
     }
   }
 

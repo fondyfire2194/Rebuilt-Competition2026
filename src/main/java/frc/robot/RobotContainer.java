@@ -252,7 +252,7 @@ public class RobotContainer {
                                                 Commands.parallel(m_shooter.setShootUsingDistanceCommand(false),
                                                                 m_hood.setHoodUsingDistanceCommand(false)),
                                                 Commands.parallel(m_shooter.setShootUsingDistanceCommand(true),
-                                                                m_hood.setHoodUsingDistanceCommand(true)),
+                                                                m_hood.setHoodUsingDistanceCommand(false)),
                                                 () -> m_shooter.isShootUsingDistance()), Set.of()));
 
                 driver.povRight().onTrue(Commands.runOnce(() -> drivetrain.resetRotation(new Rotation2d()))

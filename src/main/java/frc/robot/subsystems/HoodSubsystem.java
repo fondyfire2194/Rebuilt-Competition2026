@@ -27,7 +27,7 @@ import frc.robot.utils.Logger;
 
 public class HoodSubsystem extends SubsystemBase {
     public static final Angle kMinPosition = Degrees.of(0.0);
-    public static final Angle kMaxPosition = Degrees.of(15.);
+    public static final Angle kMaxPosition = Degrees.of(10.);
 
     private static final double kPositionTolerance = 0.01;
 

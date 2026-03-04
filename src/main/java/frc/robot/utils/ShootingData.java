@@ -32,39 +32,40 @@ public class ShootingData {
     public static final double xPassTarget = Units.inchesToMeters(25);
     public static final double yPassTarget = Units.inchesToMeters(50);
 
-    
-  public static final double minDistance = .9;
-  public static final double maxDistance = 4.9;
-  public static final double passingMinDistance = 0;
-  public static final double passingMaxDistance = 12;
+    public static final double minDistance = .9;
+    public static final double maxDistance = 4.9;
+    public static final double passingMinDistance = 0;
+    public static final double passingMaxDistance = 12;
 
     static {
 
-        hoodAngleMap.put(0.96, Rotation2d.fromDegrees(0.0));
-        hoodAngleMap.put(1.16, Rotation2d.fromDegrees(1.5));
-        hoodAngleMap.put(1.58, Rotation2d.fromDegrees(3.0));
-        hoodAngleMap.put(2.07, Rotation2d.fromDegrees(4.5));
-        hoodAngleMap.put(2.37, Rotation2d.fromDegrees(6.0));
-        hoodAngleMap.put(2.47, Rotation2d.fromDegrees(7.5));
-        hoodAngleMap.put(2.70, Rotation2d.fromDegrees(9));
-        hoodAngleMap.put(2.94, Rotation2d.fromDegrees(10.5));
-        hoodAngleMap.put(3.48, Rotation2d.fromDegrees(12));
-        hoodAngleMap.put(3.92, Rotation2d.fromDegrees(13.5));
-        hoodAngleMap.put(4.35, Rotation2d.fromDegrees(14.0));
-        hoodAngleMap.put(4.84, Rotation2d.fromDegrees(15.0));
+        hoodAngleMap.put(1.73, Rotation2d.fromDegrees(4.));
+        hoodAngleMap.put(2.3, Rotation2d.fromDegrees(6.));
+        hoodAngleMap.put(3., Rotation2d.fromDegrees(7.5));
+        hoodAngleMap.put(4.33, Rotation2d.fromDegrees(9));
+        hoodAngleMap.put(5.04, Rotation2d.fromDegrees(9.0));
+        hoodAngleMap.put(6., Rotation2d.fromDegrees(9.5));
 
-        shooterSpeedMap.put(0.96, 1500.0);
-        shooterSpeedMap.put(1.16, 1850.0);
-        shooterSpeedMap.put(1.58, 2200.0);
-        shooterSpeedMap.put(2.07, 2550.0);
-        shooterSpeedMap.put(2.37, 2900.0);
-        shooterSpeedMap.put(2.47, 3150.0);
-        shooterSpeedMap.put(2.70, 3500.0);
-        shooterSpeedMap.put(2.94, 3850.0);
-        shooterSpeedMap.put(3.48, 4200.0);
-        shooterSpeedMap.put(3.92, 4550.0);
-        shooterSpeedMap.put(4.35, 4850.0);
-        shooterSpeedMap.put(4.84, 5000.0);
+        // hoodAngleMap.put(2.70, Rotation2d.fromDegrees(9));
+        // hoodAngleMap.put(2.94, Rotation2d.fromDegrees(10.5));
+        // hoodAngleMap.put(3.48, Rotation2d.fromDegrees(12));
+        // hoodAngleMap.put(3.92, Rotation2d.fromDegrees(13.5));
+        // hoodAngleMap.put(4.35, Rotation2d.fromDegrees(14.0));
+        // hoodAngleMap.put(4.84, Rotation2d.fromDegrees(15.0));
+
+        shooterSpeedMap.put(1.73, 2600.0);
+        shooterSpeedMap.put(2.3, 2800.0);
+        shooterSpeedMap.put(3., 3000.0);
+        shooterSpeedMap.put(4.33, 3500.0);
+        shooterSpeedMap.put(5.04, 3800.0);
+        shooterSpeedMap.put(6., 4100.);
+
+        // shooterSpeedMap.put(2.70, 3500.0);
+        // shooterSpeedMap.put(2.94, 3850.0);
+        // shooterSpeedMap.put(3.48, 4200.0);
+        // shooterSpeedMap.put(3.92, 4550.0);
+        // shooterSpeedMap.put(4.35, 4850.0);
+        // shooterSpeedMap.put(4.84, 5000.0);
 
         timeOfFlightMap.put(5.68, 1.16);
         timeOfFlightMap.put(4.55, 1.12);

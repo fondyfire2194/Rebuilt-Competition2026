@@ -25,6 +25,7 @@ import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
+import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.Logger;
 import frc.robot.utils.LoopEvents;
@@ -82,6 +83,10 @@ public class Robot extends TimedRobot {
                 m_timeAndJoystickReplay.update();
 
                 CommandScheduler.getInstance().run();
+
+                double distanceToHub = AllianceUtil.getHubPose().getTranslation()
+                                .getDistance(m_robotContainer.drivetrain.getState().Pose.getTranslation());
+                SmartDashboard.putNumber("DIST2Hub", distanceToHub);
 
         }
 
