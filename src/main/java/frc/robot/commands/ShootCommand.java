@@ -18,14 +18,16 @@ public class ShootCommand extends Command {
   private final HoodSubsystem m_hood;
   private final FeederSubsystem m_feeder;
   private final CommandSwerveDrivetrain m_swerve;
+  private boolean m_bypassInterlocks;
 
   public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
-      CommandSwerveDrivetrain swerve) {
+      CommandSwerveDrivetrain swerve, boolean bypassInterlocks) {
     // Use addRequirements() here to declare subsystem dependencies.
     m_shooter = shooter;
     m_hood = hood;
     m_feeder = feeder;
     m_swerve = swerve;
+    m_bypassInterlocks = bypassInterlocks;
   }
 
   // Called when the command is initially scheduled.
@@ -39,6 +41,7 @@ public class ShootCommand extends Command {
   public void execute() {
 
     m_shooter.runAllVelocityVoltage();
+    m_shooter.bypassShootInterlocks = m_bypassInterlocks;
 
     if (m_shooter.bypassShootInterlocks
         || m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance() && m_swerve.alignedToTarget) {

@@ -6,12 +6,10 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
@@ -99,6 +97,8 @@ public class HoodSubsystem extends SubsystemBase {
 
         encoder.setPosition(kMinPosition.in(Degrees));
 
+        setHoodUsingDistance(false);
+
         this.showData = showData;
         if (showData)
             SmartDashboard.putData(this);
@@ -142,7 +142,9 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public Command setManualTargetCommand(double position) {
-        return Commands.runOnce(() -> manualTargetAngle = position);
+        return Commands.sequence(
+            Commands.runOnce(() -> finalTargetAngle = position),
+                Commands.runOnce(() -> manualTargetAngle = position));
     }
 
     public double getHoodPosition() {

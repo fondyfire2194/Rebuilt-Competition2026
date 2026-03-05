@@ -93,7 +93,7 @@ public class Robot extends TimedRobot {
         @Override
         public void disabledInit() {
                 if (RobotBase.isSimulation())
-                        m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
+                        m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d(Math.PI/4)));
 
         }
 

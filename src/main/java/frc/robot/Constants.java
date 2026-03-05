@@ -313,9 +313,11 @@ public final class Constants {
   public static final class FeederSetpoints {
     public static final double kFeedRollerSetpoint = 0.95;
     public static final double kFeedBeltSetpoint = 0.95;
-
+ public static double kRollerRPM=4500;
     public static final double kFeedRollerJogSetpoint = 0.5;
     public static final double kFeedBeltJogSetpoint = 0.5;
+   
+    
 
   }
 

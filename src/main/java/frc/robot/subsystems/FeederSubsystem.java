@@ -103,7 +103,7 @@ public class FeederSubsystem extends SubsystemBase {
 
   public void runFeederRollerAtVelocity(){
       
-      closedLoopController.setSetpoint(3500, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+      closedLoopController.setSetpoint(FeederSetpoints.kRollerRPM, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
   
   }
 

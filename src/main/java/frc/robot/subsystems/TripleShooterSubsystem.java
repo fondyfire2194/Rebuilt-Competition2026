@@ -4,12 +4,13 @@
 
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -17,8 +18,8 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -27,9 +28,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.CanbusConstants;
 import frc.robot.utils.Logger;
+import frc.robot.utils.TunableTalonFXPid;
 
 public class TripleShooterSubsystem extends SubsystemBase {
   /** Creates a new TripleShooterSubsystem. */
@@ -49,9 +52,9 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   private final VoltageOut voltageRequest = new VoltageOut(0);
 
-  StatusCode statusL = StatusCode.StatusCodeNotInitialized;
-  StatusCode statusM = StatusCode.StatusCodeNotInitialized;
-  StatusCode statusR = StatusCode.StatusCodeNotInitialized;
+  public static StatusCode statusL = StatusCode.StatusCodeNotInitialized;
+  public static StatusCode statusM = StatusCode.StatusCodeNotInitialized;
+  public static StatusCode statusR = StatusCode.StatusCodeNotInitialized;
 
   private DutyCycleOut dc_out = new DutyCycleOut(0.0);
 
@@ -80,7 +83,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   private boolean shootUsingDistance;
 
-  public boolean bypassShootInterlocks;
+  public boolean bypassShootInterlocks = true;
 
   public boolean isShootUsingDistance() {
     return shootUsingDistance;
@@ -104,80 +107,22 @@ public class TripleShooterSubsystem extends SubsystemBase {
     middleMotor = new TalonFX(CANIDConstants.centerShooterID, CanbusConstants.kCANivoreCANBus);
     rightMotor = new TalonFX(CANIDConstants.rightShooterID, CanbusConstants.kCANivoreCANBus);
 
-    configureMotor(leftMotor, InvertedValue.Clockwise_Positive);
-    configureMotor(middleMotor, InvertedValue.Clockwise_Positive);
-    configureMotor(rightMotor, InvertedValue.Clockwise_Positive);
+    Configs.Shooter.configureLeftMotor(leftMotor, InvertedValue.Clockwise_Positive);
+    Configs.Shooter.configureMiddleMotor(middleMotor, InvertedValue.Clockwise_Positive);
+    Configs.Shooter.configureRightMotor(rightMotor, InvertedValue.Clockwise_Positive);
+
     setShootUsingDistance(false);
     if (showData)
       SmartDashboard.putData(this);
-  }
 
-  private void configureMotor(TalonFX motor, InvertedValue invertDirection) {
-    final TalonFXConfiguration configs = new TalonFXConfiguration()
-        .withMotorOutput(
-            new MotorOutputConfigs()
-                .withInverted(invertDirection)
-                .withNeutralMode(NeutralModeValue.Coast))
-        .withCurrentLimits(
-            new CurrentLimitsConfigs()
-                // stator current limit to help avoid brownouts without impacting performance.
-                .withSupplyCurrentLimit(Amps.of(40))
-                .withSupplyCurrentLimitEnable(true)
-                .withStatorCurrentLimit(Amps.of(80))
-                .withStatorCurrentLimitEnable(true));
-
-    /*
-     * Voltage-based velocity requires a velocity feed forward to account for the
-     * back-emf of the motor
-     */
-    configs.Slot0.kS = 0.1; // To account for friction, add 0.1 V of static feedforward
-    configs.Slot0.kV = 0.12; // Kraken X60 is a 500 kV motor, 500 rpm per V = 8.333 rps per V, 1/8.33 = 0.12
-                             // volts / rotation per second
-    configs.Slot0.kP = 0.02; // An error of 1 rotation per second results in 0.11 V output
-    configs.Slot0.kI = 0; // No output for integrated error
-    configs.Slot0.kD = 0; // No output for error derivative
-    // Peak output of 10 volts
-    configs.Voltage.withPeakForwardVoltage(Volts.of(10))
-        .withPeakReverseVoltage(Volts.of(-10));
-
-    /*
-     * Torque-based velocity does not require a velocity feed forward, as torque
-     * will accelerate the rotor up to the desired velocity by itself
-     */
-
-    configs.Slot1.kS = 2.5; // To account for friction, add 2.5 A of static feedforward
-    configs.Slot1.kP = 5; // An error of 1 rotation per second results in 5 A output
-    configs.Slot1.kI = 0; // No output for integrated error
-    configs.Slot1.kD = 0; // No output for error derivative
-    // Peak output of 40 A
-    configs.TorqueCurrent.withPeakForwardTorqueCurrent(Amps.of(40))
-        .withPeakReverseTorqueCurrent(Amps.of(-40));
-
-    /* Retry config apply up to 5 times, report if failure */
-
-    for (int i = 0; i < 5; ++i) {
-      statusL = leftMotor.getConfigurator().apply(configs);
-      if (statusL.isOK())
-        break;
-    }
-    for (int i = 0; i < 5; ++i) {
-      statusM = middleMotor.getConfigurator().apply(configs);
-      if (statusM.isOK())
-        break;
-    }
-    for (int i = 0; i < 5; ++i) {
-      statusR = rightMotor.getConfigurator().apply(configs);
-      if (statusR.isOK())
-        break;
-    }
     if (!statusL.isOK()) {
-      System.out.println("Could not apply configs, error code: " + statusL.toString());
+      DogLog.log("Left Shooter", "Could not apply configs, error code: " + statusL.toString());
     }
     if (!statusM.isOK()) {
-      System.out.println("Could not apply configs, error code: " + statusM.toString());
+      DogLog.log("Middle Shooter", "Could not apply configs, error code: " + statusL.toString());
     }
     if (!statusR.isOK()) {
-      System.out.println("Could not apply configs, error code: " + statusR.toString());
+      DogLog.log("Right Shooter", "Could not apply configs, error code: " + statusL.toString());
     }
 
   }
@@ -213,7 +158,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public void runVelocityTorque(TalonFX motor) {
     motor.setControl(
         velocityTorque
-            .withVelocity(manualSetTargetRPM));
+            .withVelocity(manualSetTargetRPM / 60));
   }
 
   public void setPercentOutput(TalonFX motor, double percentOutput) {
