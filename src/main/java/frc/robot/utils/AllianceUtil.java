@@ -1,17 +1,20 @@
 package frc.robot.utils;
 
+import java.util.Optional;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.FieldConstants;
-
-import java.util.Optional;
-
+import frc.robot.utils.geometry.AllianceFlipUtil;
 
 public class AllianceUtil {
-  
+
+  public static Rotation2d bumpRotation2d = new Rotation2d();
+
   public static boolean isRedAlliance() {
     Optional<Alliance> alliance = DriverStation.getAlliance();
     if (alliance.isPresent()) {
@@ -55,24 +58,51 @@ public class AllianceUtil {
     return isRedAlliance() ? FieldConstants.redHubPose : FieldConstants.blueHubPose;
   }
 
+  public static void getBumpCrossAngle(Pose2d robotPose) {
+
+    boolean inNeutralZone = AllianceFlipUtil
+        .applyX(robotPose
+            .getX()) > FieldConstants.LinesVertical.hubCenter;
+    SmartDashboard.putBoolean("AAAAINNEUT", inNeutralZone);
+    SmartDashboard.putBoolean("AAAARED", isRedAlliance());
+    SmartDashboard.putBoolean("AAAABLUE", isBlueAlliance());
+
+    if (isBlueAlliance())
+      if (!inNeutralZone)
+        bumpRotation2d = Rotation2d.fromDegrees(-45);
+      else
+        bumpRotation2d = Rotation2d.fromDegrees(135);
+      
+    if (isRedAlliance())
+      if (!inNeutralZone)
+        bumpRotation2d = Rotation2d.fromDegrees(45);
+      else
+        bumpRotation2d = Rotation2d.fromDegrees(135);
+
+    SmartDashboard.putNumber("AAAAAAAAAAAANGLE", bumpRotation2d.getDegrees());
+  }
+
   // public static Pose2d getLobPose() {
-  //   return isRedAlliance() ? FieldConstants.lobRedAlliance : FieldConstants.lobBlueAlliance;
+  // return isRedAlliance() ? FieldConstants.lobRedAlliance :
+  // FieldConstants.lobBlueAlliance;
   // }
 
   // public static Pose2d getSourceShootPose() {
-  //   return isRedAlliance() ? GeometryUtil
-  //       .flipFieldPose(FieldConstants.sourceShootBlue) : FieldConstants.sourceShootBlue;
+  // return isRedAlliance() ? GeometryUtil
+  // .flipFieldPose(FieldConstants.sourceShootBlue) :
+  // FieldConstants.sourceShootBlue;
   // }
 
   // public static Pose2d getSourceClearStagePose() {
-  //   return isRedAlliance() ? GeometryUtil
-  //       .flipFieldPose(FieldConstants.sourceClearStagePoseBlue) : FieldConstants.sourceClearStagePoseBlue;
+  // return isRedAlliance() ? GeometryUtil
+  // .flipFieldPose(FieldConstants.sourceClearStagePoseBlue) :
+  // FieldConstants.sourceClearStagePoseBlue;
   // }
 
   // public static Pose2d getAmpClearStagePose() {
-  //   return isRedAlliance() ? GeometryUtil
-  //       .flipFieldPose(FieldConstants.ampClearStagePoseBlue) : FieldConstants.ampClearStagePoseBlue;
+  // return isRedAlliance() ? GeometryUtil
+  // .flipFieldPose(FieldConstants.ampClearStagePoseBlue) :
+  // FieldConstants.ampClearStagePoseBlue;
   // }
-
 
 }

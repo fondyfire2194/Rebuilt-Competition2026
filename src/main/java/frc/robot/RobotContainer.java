@@ -6,15 +6,12 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
+
 import java.util.Set;
 import java.util.function.DoubleSupplier;
-import java.util.function.Predicate;
-
-import org.opencv.ml.DTrees;
 
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.SteerRequestType;
-import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.PointWheelsAt;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
@@ -23,21 +20,20 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
@@ -54,8 +50,8 @@ import frc.robot.subsystems.IntakeSlideArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
+import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.ShootingData;
-import frc.robot.utils.TunableTalonFXPid;
 
 public class RobotContainer {
 
@@ -74,6 +70,13 @@ public class RobotContainer {
 
         private final SwerveRequest.FieldCentric forwardStraightVelocity = new SwerveRequest.FieldCentric()
                         .withDriveRequestType(DriveRequestType.Velocity);
+
+        private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle = new SwerveRequest.FieldCentricFacingAngle()
+                        .withDeadband(RobotConstants.MaxSpeed * 0.1)
+                        .withRotationalDeadband(RobotConstants.MaxAngularRate * 0.1) // Add a 10% deadband
+                        .withHeadingPID(7, 0, 0)
+                        .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage); // Use open-loop control
+                                                                                              // for drive motors
 
         private final CommandXboxController driver = new CommandXboxController(0);
         public final CommandXboxController codriver = new CommandXboxController(1);
@@ -213,7 +216,7 @@ public class RobotContainer {
                 // .applyRequest(() -> point.withModuleDirection(
                 // new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
-                driver.leftTrigger().whileTrue(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain,true));
+                driver.leftTrigger().whileTrue(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, true));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
@@ -229,11 +232,11 @@ public class RobotContainer {
                                 Commands.sequence(
                                                 m_shooter.setShootUsingDistanceCommand(false),
                                                 m_hood.setHoodUsingDistanceCommand(false),
-                                                m_shooter.runAllVelocityVoltageCommand()));
+                                                m_shooter.runAllVelocityVoltageCommand()))
                                 // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_shooter, drive,
                                 // driver));
-                                // .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
-                                //                 driver, false));
+                                .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
+                                                driver, false));
 
                 driver.rightBumper().onTrue(
                                 Commands.parallel(
@@ -241,9 +244,10 @@ public class RobotContainer {
                                                 m_shooter.stopAllShootersCommand(),
                                                 m_feeder.stopFeederRollerCommand(),
                                                 m_feeder.stopFeederBeltCommand(),
-                                                m_intake.stopIntakeCommand()));
+                                                m_intake.stopIntakeCommand()))
+                .whileTrue(Commands.defer(this::driveAtHubAngle, Set.of(drivetrain)));
 
-                 driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
+                driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
                 driver.y().onTrue(
                                 new DeferredCommand(() -> m_hood.incrementHoodCommand(.5), Set.of()));
@@ -387,15 +391,16 @@ public class RobotContainer {
 
         public void configureBumpControllerBindings() {
 
-                bumpdriver.leftBumper().whileTrue(drivetrain.applyRequest(() -> forwardStraightVelocity
-                
-                                .withVelocityX(1.5).withVelocityY(0.)));
+                // bumpdriver.leftBumper().whileTrue(drivetrain.applyRequest(() ->
+                // forwardStraightVelocity
+                // .withVelocityX(1.5).withVelocityY(0.)));
 
                 bumpdriver.leftTrigger().whileTrue(drivetrain.applyRequest(() -> forwardStraightVelocity
                                 .withVelocityX(2.).withVelocityY(0)));
 
-                bumpdriver.rightBumper().whileTrue(drivetrain.applyRequest(() -> forwardStraightVelocity
-                                .withVelocityX(2.5).withVelocityY(0)));
+                // bumpdriver.rightBumper().whileTrue(drivetrain.applyRequest(() ->
+                // forwardStraightVelocity
+                // .withVelocityX(2.5).withVelocityY(0)));
 
                 bumpdriver.rightTrigger().whileTrue(drivetrain.applyRequest(() -> forwardStraightVelocity
                                 .withVelocityX(3.).withVelocityY(0)));
@@ -409,7 +414,7 @@ public class RobotContainer {
 
                 bumpdriver.x().whileTrue(
                                 drivetrain.applyRequest(() -> forwardStraightVelocity
-                                                .withVelocityX(-2.5).withVelocityY(0 )));
+                                                .withVelocityX(-2.5).withVelocityY(0)));
 
                 bumpdriver.a().whileTrue(
                                 drivetrain.applyRequest(() -> forwardStraightVelocity
@@ -419,8 +424,14 @@ public class RobotContainer {
                                 drivetrain.applyRequest(() -> forwardStraight
                                                 .withVelocityX(0).withVelocityY(1)));
 
-                bumpdriver.povLeft().onTrue(drivetrain
-                                .applyRequest(() -> point.withModuleDirection(new Rotation2d())));
+                bumpdriver.leftBumper().whileTrue(Commands.defer(this::driveAtHubAngle, Set.of(drivetrain)));
+
+                bumpdriver.rightBumper().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(-bumpdriver.getLeftY() * RobotConstants.MaxSpeed)
+                                                .withVelocityY(-bumpdriver.getLeftX() * RobotConstants.MaxSpeed)
+                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
+
                 bumpdriver.povUp().onTrue(drivetrain
                                 .applyRequest(() -> point.withModuleDirection(new Rotation2d(Math.PI / 2))));
                 bumpdriver.povRight().onTrue(drivetrain
@@ -439,7 +450,7 @@ public class RobotContainer {
                                                 && m_hood.isPositionWithinTolerance()
                                                 && m_shooter.allVelocityInTolerance());
 
-                autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain,false));
+                autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false));
 
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 
@@ -584,7 +595,7 @@ public class RobotContainer {
                 NamedCommands.registerCommand("ALIGN_TO_HUB", new AutoAlignHub(drivetrain, m_shooter, 1));
 
                 NamedCommands.registerCommand("SHOOT_COMMAND",
-                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain,false));
+                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false));
                 NamedCommands.registerCommand("END_SHOOT_COMMAND", m_shooter.stopAllShootersCommand());
 
                 NamedCommands.registerCommand("START_SHOOTERS", m_shooter.runAllVelocityVoltageCommand());
@@ -606,6 +617,17 @@ public class RobotContainer {
                 /* Run the path selected from the auto chooser */
                 return autoChooser.getSelected();
                 // return new PathPlannerAuto("SimpleAuto");
+        }
+
+        private Command driveAtHubAngle() {
+                return Commands.sequence(
+                                Commands.runOnce(() -> AllianceUtil.getBumpCrossAngle(drivetrain.getState().Pose)),
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
+                                                .withVelocityX(-driver.getLeftY() * RobotConstants.MaxSpeed)
+                                                .withVelocityY(-driver.getLeftX() * RobotConstants.MaxSpeed)
+                                                .withTargetDirection(AllianceUtil.bumpRotation2d)));
+
         }
 
 }

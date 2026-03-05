@@ -61,10 +61,10 @@ public class Robot extends TimedRobot {
 
                 Logger.setOptions(
                                 new DogLogOptions()
-                                                .withCaptureDs(false)
-                                                .withCaptureNt(false)
-                                                .withLogExtras(true)
                                                 .withNtPublish(true)
+                                                .withCaptureNt(true)
+                                                .withCaptureDs(true)
+                                                .withLogExtras(true)
                                                 .withUseLogThread(false)
                                                 .withLogEntryQueueCapacity(2000));
                 Logger.setEnabled(true);
@@ -92,8 +92,6 @@ public class Robot extends TimedRobot {
 
         @Override
         public void disabledInit() {
-                if (RobotBase.isSimulation())
-                        m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d(Math.PI/4)));
 
         }
 
@@ -135,6 +133,11 @@ public class Robot extends TimedRobot {
 
         @Override
         public void teleopInit() {
+
+                if (RobotBase.isSimulation() && AllianceUtil.isBlueAlliance())
+                        m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
+                if (RobotBase.isSimulation() && AllianceUtil.isRedAlliance())
+                        m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
 
                 loopTimer.start();
                 if (RobotBase.isReal()) {
