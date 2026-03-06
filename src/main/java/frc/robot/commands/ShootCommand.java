@@ -5,6 +5,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.Constants.FeederSetpoints;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
@@ -47,10 +48,9 @@ public class ShootCommand extends Command {
         || m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance() && m_swerve.alignedToTarget) {
 
       m_feeder.runFeederRollerAtVelocity();
-      // m_feeder.runFeederRollerMotor(FeederSetpoints.kFeedRollerSetpoint);
-      if (Math.abs(m_feeder.feederRollerMotor.getEncoder().getVelocity()) > 3000)
+      if (Math.abs(
+          m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt)
         m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
-
     }
   }
 

@@ -56,7 +56,7 @@ public final class Constants {
     }
 
     public static double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired
-                                                                                       // top // speed
+    // top // speed
     public static double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
 
   }
@@ -302,6 +302,14 @@ public final class Constants {
       public static final double oppHubCenter = aprilTagFieldLayout.getTagPose(4).get().getX() + Hub.width / 2.0;
       public static final double oppAllianceZone = aprilTagFieldLayout.getTagPose(10).get().getX();
     }
+
+    public static final double xPassFromFieldEdge = 2;
+    public static final double yPassFromFieldEdge = 2;
+
+    public static final Pose2d outpostPassingTargetPose = new Pose2d(xPassFromFieldEdge, yPassFromFieldEdge,
+        new Rotation2d());
+    public static final Pose2d depotPassingTargetPose = new Pose2d(xPassFromFieldEdge,
+        FieldConstants.fieldWidth - yPassFromFieldEdge, new Rotation2d());
   }
 
   public static final class IntakeSetpoints {
@@ -313,11 +321,12 @@ public final class Constants {
   public static final class FeederSetpoints {
     public static final double kFeedRollerSetpoint = 0.95;
     public static final double kFeedBeltSetpoint = 0.95;
- public static double kRollerRPM=4500;
+
     public static final double kFeedRollerJogSetpoint = 0.5;
     public static final double kFeedBeltJogSetpoint = 0.5;
-   
-    
+
+    public static double kRollerShootRPM = 4500;
+    public static double rollerSpeedToStartBelt = 3500;
 
   }
 

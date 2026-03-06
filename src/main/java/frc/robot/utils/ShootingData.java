@@ -81,8 +81,8 @@ public class ShootingData {
         passingShooterSpeedMap.put(6.62, 180.0);
         passingShooterSpeedMap.put(7.80, 200.0);
 
-        passingTimeOfFlightMap.put(passingMinDistance, 0.0);
-        passingTimeOfFlightMap.put(passingMaxDistance, 0.0);
+        passingTimeOfFlightMap.put(passingMinDistance, 1.);
+        passingTimeOfFlightMap.put(passingMaxDistance, 1.5);
 
     }
 

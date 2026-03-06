@@ -30,7 +30,14 @@ public class HoodSubsystem extends SubsystemBase {
     private static final double kPositionTolerance = 0.01;
 
     private static double manualTargetAngle;
+
     public static double autoTargetAngle;
+
+    public static void setAutoTargetAngle(double autoAngle) {
+        autoTargetAngle = autoAngle;
+        finalTargetAngle = autoAngle;
+    }
+
     private static double finalTargetAngle;
 
     private final SparkMax hoodMotor;
@@ -143,7 +150,7 @@ public class HoodSubsystem extends SubsystemBase {
 
     public Command setManualTargetCommand(double position) {
         return Commands.sequence(
-            Commands.runOnce(() -> finalTargetAngle = position),
+                Commands.runOnce(() -> finalTargetAngle = position),
                 Commands.runOnce(() -> manualTargetAngle = position));
     }
 

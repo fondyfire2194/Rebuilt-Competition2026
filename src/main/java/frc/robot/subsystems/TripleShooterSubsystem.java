@@ -70,7 +70,13 @@ public class TripleShooterSubsystem extends SubsystemBase {
   private Distance distanceToHub;
 
   private double manualSetTargetRPM = 2000;
-  public double autoSetTargetRPM = 2500;
+  private double autoSetTargetRPM = 2500;
+
+  public void setAutoSetTargetRPM(double autoSetTargetRPM) {
+    this.autoSetTargetRPM = autoSetTargetRPM;
+    finalSetTargetRPM = autoSetTargetRPM;
+  }
+
   private double finalSetTargetRPM;
 
   private AngularAcceleration targetAcceleration = RotationsPerSecondPerSecond.of(500);
@@ -84,6 +90,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
   private boolean shootUsingDistance;
 
   public boolean bypassShootInterlocks = true;
+
+  public boolean isShootOnTheMove;
 
   public boolean isShootUsingDistance() {
     return shootUsingDistance;

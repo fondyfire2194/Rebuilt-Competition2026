@@ -58,6 +58,18 @@ public class AllianceUtil {
     return isRedAlliance() ? FieldConstants.redHubPose : FieldConstants.blueHubPose;
   }
 
+  public static Pose2d getOutpostPassingPose() {
+    return isRedAlliance()
+        ? AllianceFlipUtil.apply(FieldConstants.outpostPassingTargetPose)
+        : FieldConstants.outpostPassingTargetPose;
+  }
+
+  public static Pose2d getDepotPassingPose() {
+    return isRedAlliance()
+        ? AllianceFlipUtil.apply(FieldConstants.depotPassingTargetPose)
+        : FieldConstants.depotPassingTargetPose;
+  }
+
   public static void getBumpCrossAngle(Pose2d robotPose) {
 
     boolean inNeutralZone = AllianceFlipUtil
@@ -72,7 +84,7 @@ public class AllianceUtil {
         bumpRotation2d = Rotation2d.fromDegrees(-45);
       else
         bumpRotation2d = Rotation2d.fromDegrees(135);
-      
+
     if (isRedAlliance())
       if (!inNeutralZone)
         bumpRotation2d = Rotation2d.fromDegrees(45);
@@ -80,6 +92,14 @@ public class AllianceUtil {
         bumpRotation2d = Rotation2d.fromDegrees(135);
 
     SmartDashboard.putNumber("AAAAAAAAAAAANGLE", bumpRotation2d.getDegrees());
+  }
+
+  public static Pose2d getPassingTargetPose(Pose2d robotPose) {
+if(isBlueAlliance())
+   return robotPose.getY() < FieldConstants.fieldWidth / 2 ? getOutpostPassingPose() : getDepotPassingPose();
+else
+   return robotPose.getY() >= FieldConstants.fieldWidth / 2 ? getOutpostPassingPose() : getDepotPassingPose();
+
   }
 
   // public static Pose2d getLobPose() {

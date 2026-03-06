@@ -4,10 +4,7 @@
 
 package frc.robot.utils;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-
-import java.util.function.DoubleSupplier;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
@@ -21,14 +18,14 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Configs.Hood;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.LauncherConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.utils.geometry.AllianceFlipUtil;
+import frc.robot.utils.geometry.Bounds;
 import frc.robot.utils.geometry.GeomUtil;
 
 /**
@@ -74,7 +71,6 @@ public class LaunchCalculator {
   public static LaunchCalculator getInstance() {
     if (instance == null)
       instance = new LaunchCalculator();
-
     return instance;
   }
 
@@ -128,13 +124,33 @@ public class LaunchCalculator {
   private final StructPublisher<Pose2d> shooterPosePublisher = hubPoseTable.getStructTopic("ShooterPose", Pose2d.struct)
       .publish();
 
-  private final StructPublisher<Pose2d> stAimedPosePublisher = hubPoseTable
+  private final StructPublisher<Pose2d> stationaryAimedPosePublisher = hubPoseTable
       .getStructTopic("StationaryAimedPose", Pose2d.struct)
       .publish();
   private final StructPublisher<Pose2d> derivedPosePublisher = hubPoseTable.getStructTopic("DerivedPose", Pose2d.struct)
       .publish();
   private final StructPublisher<Pose2d> projectedHubPosePublisher = hubPoseTable
       .getStructTopic("ProjectedHubPose", Pose2d.struct).publish();
+
+  // Passing targets
+  private static final double xPassTarget = Units.inchesToMeters(37);
+  private static final double yPassTarget = Units.inchesToMeters(65);
+  // Boxes of bad
+  // Under tower
+  private static final Bounds towerBound = new Bounds(0, Units.inchesToMeters(46), Units.inchesToMeters(129),
+      Units.inchesToMeters(168));
+
+  // Behind the hubs
+  private static final Bounds nearHubBound = new Bounds(
+      FieldConstants.LinesVertical.neutralZoneNear,
+      FieldConstants.LinesVertical.neutralZoneNear + Units.inchesToMeters(120),
+      FieldConstants.LinesHorizontal.rightBumpStart,
+      FieldConstants.LinesHorizontal.leftBumpEnd);
+  private static final Bounds farHubBound = new Bounds(
+      FieldConstants.LinesVertical.oppAllianceZone,
+      FieldConstants.fieldLength,
+      FieldConstants.LinesHorizontal.rightBumpStart,
+      FieldConstants.LinesHorizontal.leftBumpEnd);
 
   // private static final LoggedTunableNumber maxIdleSpeed = new
   // LoggedTunableNumber("LaunchCalculator/MaxIdleSpeed", 200);
@@ -179,9 +195,9 @@ public class LaunchCalculator {
      */
 
     Translation2d target = passing
-        ? getPassingTarget(drivetrain)
+        ? getPassingTarget(drivetrain.getState().Pose)
         : AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
-
+    DogLog.log("LC/Tgt", target);
     Pose2d shooterPose = estimatedPose.transformBy(LauncherConstants.toTransform2d(LauncherConstants.robotToShooter));
 
     double shooterToTargetDistance = target.getDistance(shooterPose.getTranslation());
@@ -220,7 +236,7 @@ public class LaunchCalculator {
         : ShootingData.timeOfFlightMap.get(shooterToTargetDistance);
     Pose2d lookaheadPose = shooterPose;
     double lookaheadShooterToTargetDistance = shooterToTargetDistance;
-
+    DogLog.log("LC/LookAheadTargteDistance", lookaheadShooterToTargetDistance);
     // loop to get better time of filght
     for (int i = 0; i < loops; i++) {
       timeOfFlight = passing
@@ -280,9 +296,17 @@ public class LaunchCalculator {
       SmartDashboard.putNumber("LC/LkAhdLchr2TgtDis", lookaheadShooterToTargetDistance);
     }
 
+    // Check if inside a box of bad
+    var flippedPose = AllianceFlipUtil.apply(estimatedPose);
+    boolean insideTowerBadBox = towerBound.contains(flippedPose.getTranslation());
+    boolean behindNearHub = nearHubBound.contains(flippedPose.getTranslation());
+    boolean behindFarHub = farHubBound.contains(flippedPose.getTranslation());
+    boolean outsideOfBadBoxes = !(insideTowerBadBox || behindNearHub || behindFarHub);
+
     // Construct parameters
     latestParameters = new LaunchingParameters(
-        lookaheadShooterToTargetDistance >= (passing ? ShootingData.passingMinDistance : ShootingData.minDistance)
+        outsideOfBadBoxes &&
+            lookaheadShooterToTargetDistance >= (passing ? ShootingData.passingMinDistance : ShootingData.minDistance)
             && lookaheadShooterToTargetDistance <= (passing ? ShootingData.passingMaxDistance
                 : ShootingData.maxDistance),
         driveAngle,
@@ -322,7 +346,7 @@ public class LaunchCalculator {
         SmartDashboard.putBoolean("LC/Passing", latestParameters.passing);
         SmartDashboard.putNumber("LC/DAWLO", getDriveAngleWithLauncherOffset(lookaheadRobotPose, target).getDegrees());
 
-        stAimedPosePublisher.set(getStationaryAimedPose(drivetrain.getState().Pose.getTranslation(), false));
+        stationaryAimedPosePublisher.set(getStationaryAimedPose(drivetrain.getState().Pose.getTranslation(), false));
         derivedPosePublisher.set(derivedPose);
 
         projectedHubPosePublisher
@@ -374,29 +398,14 @@ public class LaunchCalculator {
     latestParameters = null;
   }
 
-  public Translation2d getPassingTarget(CommandSwerveDrivetrain drivetrain) {
-    double flippedY = AllianceFlipUtil.applyX(drivetrain.getState().Pose.getTranslation().getMeasureX().in(Meters));
+  public Translation2d getPassingTarget(Pose2d robotpose) {
+    double flippedY = AllianceFlipUtil.apply(robotpose).getTranslation().getY();
     boolean mirror = flippedY > FieldConstants.LinesHorizontal.center;
-
-    // Check if we need to interpolate
-    if (FieldConstants.fieldWidth - ShootingData.hubPassLine > flippedY && flippedY > ShootingData.hubPassLine) {
-      double interpolateZoneAmount = ((mirror ? FieldConstants.fieldWidth - flippedY : flippedY)
-          - ShootingData.hubPassLine)
-          / (FieldConstants.LinesHorizontal.center - ShootingData.hubPassLine);
-      var unflippedPoseY = mirror
-          ? FieldConstants.fieldWidth
-              - MathUtil.interpolate(ShootingData.yPassTarget, ShootingData.passingMinDistance, interpolateZoneAmount)
-          : MathUtil.interpolate(ShootingData.yPassTarget, ShootingData.passingMinDistance, interpolateZoneAmount);
-      Translation2d flippedGoalTranslation = AllianceFlipUtil
-          .apply(new Translation2d(ShootingData.xPassTarget, unflippedPoseY));
-      return flippedGoalTranslation;
-    }
 
     // Fixed passing target
     Translation2d flippedGoalTranslation = AllianceFlipUtil.apply(
         new Translation2d(
-            ShootingData.xPassTarget,
-            mirror ? FieldConstants.fieldWidth - ShootingData.yPassTarget : ShootingData.yPassTarget));
+            xPassTarget, mirror ? FieldConstants.fieldWidth - yPassTarget : yPassTarget));
 
     return flippedGoalTranslation;
   }

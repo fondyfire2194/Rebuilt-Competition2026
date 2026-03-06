@@ -22,14 +22,12 @@ import com.pathplanner.lib.events.EventTrigger;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -37,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
+import frc.robot.commands.DriveWithShootOnTheMove;
 import frc.robot.commands.PIDDriveToPose;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AprilTags.CaptureMT1Values;
@@ -216,8 +215,9 @@ public class RobotContainer {
                 // .applyRequest(() -> point.withModuleDirection(
                 // new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
-                driver.leftTrigger().whileTrue(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, true));
-
+                driver.leftTrigger().whileTrue(
+                                Commands.defer(
+                                                () -> shootCommand(driver.a().getAsBoolean()), Set.of()));
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
                                                 m_intakeArm.intakeArmSlideToClearPositionCommand(),
@@ -230,10 +230,10 @@ public class RobotContainer {
 
                 driver.leftBumper().onTrue(
                                 Commands.sequence(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_hood.setHoodUsingDistanceCommand(false),
+                                                m_shooter.setShootUsingDistanceCommand(true),
+                                                m_hood.setHoodUsingDistanceCommand(true),
                                                 m_shooter.runAllVelocityVoltageCommand()))
-                                // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_shooter, drive,
+                                // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
                                 // driver));
                                 .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
                                                 driver, false));
@@ -245,7 +245,7 @@ public class RobotContainer {
                                                 m_feeder.stopFeederRollerCommand(),
                                                 m_feeder.stopFeederBeltCommand(),
                                                 m_intake.stopIntakeCommand()))
-                .whileTrue(Commands.defer(this::driveAtHubAngle, Set.of(drivetrain)));
+                                .whileTrue(Commands.defer(this::driveAtHubAngle, Set.of(drivetrain)));
 
                 driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
@@ -402,23 +402,35 @@ public class RobotContainer {
                 // forwardStraightVelocity
                 // .withVelocityX(2.5).withVelocityY(0)));
 
-                bumpdriver.rightTrigger().whileTrue(drivetrain.applyRequest(() -> forwardStraightVelocity
-                                .withVelocityX(3.).withVelocityY(0)));
-
-                bumpdriver.a().whileTrue(drivetrain.applyRequest(() -> forwardStraightVelocity
-                                .withVelocityX(-1.5).withVelocityY(0)));
-
-                bumpdriver.b().whileTrue(
-                                drivetrain.applyRequest(() -> forwardStraightVelocity
-                                                .withVelocityX(-2.).withVelocityY(0)));
-
-                bumpdriver.x().whileTrue(
-                                drivetrain.applyRequest(() -> forwardStraightVelocity
-                                                .withVelocityX(-2.5).withVelocityY(0)));
+                bumpdriver.rightTrigger().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(2.25)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
 
                 bumpdriver.a().whileTrue(
-                                drivetrain.applyRequest(() -> forwardStraightVelocity
-                                                .withVelocityX(-3.).withVelocityY(0.5)));
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(2.5)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
+
+                bumpdriver.b().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(2.75)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
+
+                bumpdriver.x().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(3.)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
+
+                bumpdriver.a().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(3.25)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
 
                 bumpdriver.y().onTrue(
                                 drivetrain.applyRequest(() -> forwardStraight
@@ -445,8 +457,9 @@ public class RobotContainer {
 
                 autoShootTrigger = new Trigger(
                                 () -> m_shooter.hubIsActive
-                                                && m_shooter.isShootUsingDistance()
+                                                && m_shooter.isShootOnTheMove
                                                 && drivetrain.alignedToTarget
+                                                && drivetrain.isAligning
                                                 && m_hood.isPositionWithinTolerance()
                                                 && m_shooter.allVelocityInTolerance());
 
@@ -629,5 +642,24 @@ public class RobotContainer {
                                                 .withTargetDirection(AllianceUtil.bumpRotation2d)));
 
         }
+
+        private Command shootCommand(boolean bypass) {
+                return new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, bypass);
+        }
+
+        //
+        // //Breakover Angle (B°) = 2 × tan-1(2 × Ground Clearance (GC) / Wheelbase
+        // (WB)).
+        // tan(B/2)/2 = Ground Clearance (GC) / Wheelbase (WB)
+        // Ground Clearance = WheelBase * tan(B/2)/2
+        // For B = 5 degrees tan/2 = .06
+        // 20" WB GC = 1.2
+        // 23" WB GC = 1.38"
+        // 31" WB GC 1.8"
+        // Track width is 2 * 11.6875 and wheel base is 2 * 10.1875 inches
+        // Diagonal between wheels = 2*15.5 = 31
+        // Ramp angle is 15 degrees and width is 44 inches
+        // Ramp height is then 22 * tan 15 = 22 * .268 = 5.9 inches
+        // Ramp slope length is 22/cos 15 = 22.77 inches
 
 }

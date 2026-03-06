@@ -18,13 +18,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
+import com.revrobotics.spark.config.SparkMaxConfig;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.IntakeSlideArmSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
-import frc.robot.utils.TunableTalonFXPid;
-
-import com.revrobotics.spark.config.SparkMaxConfig;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -157,8 +154,7 @@ public final class Configs {
           .p(0.00005)
           .i(0)
           .d(0)
-          .outputRange(-1, 1)
-           .feedForward
+          .outputRange(-1, 1).feedForward
           // kV is now in Volts, so we multiply by the nominal voltage (12V)
           .kV(12.0 / 5767, ClosedLoopSlot.kSlot0);
     }
@@ -214,7 +210,7 @@ public final class Configs {
           break;
       }
 
-      TunableTalonFXPid.create("TuneLeftShooter", motor, leftConfigs);
+      // TunableTalonFXPid.create("TuneLeftShooter", motor, leftConfigs);
     }
 
     public static void configureMiddleMotor(TalonFX motor, InvertedValue invertDirection) {
@@ -263,7 +259,7 @@ public final class Configs {
           break;
       }
 
-      TunableTalonFXPid.create("TuneMiddleShooter", motor, middleConfigs);
+      // TunableTalonFXPid.create("TuneMiddleShooter", motor, middleConfigs);
     }
 
     public static void configureRightMotor(TalonFX motor, InvertedValue invertDirection) {
@@ -312,7 +308,7 @@ public final class Configs {
           break;
       }
 
-      TunableTalonFXPid.create("TuneRightShooter", motor, rightConfigs);
+      // TunableTalonFXPid.create("TuneRightShooter", motor, rightConfigs);
     }
 
   }

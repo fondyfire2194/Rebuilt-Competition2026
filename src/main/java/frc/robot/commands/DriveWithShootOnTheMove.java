@@ -4,12 +4,14 @@
 
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -92,15 +94,22 @@ public class DriveWithShootOnTheMove extends Command {
     LaunchCalculator.LaunchingParameters lp = LaunchCalculator.getInstance().getParameters(m_drivetrain);
     SmartDashboard.putBoolean("LC/lp", false);
     if (lp != null) {
-      SmartDashboard.putBoolean("LC/lp", true);
 
-      boolean passing = lp.passing();
-
+      DogLog.log("LC/RPM", lp.flywheelSpeed());
       shooter.autoSetTargetRPM = lp.flywheelSpeed();
+
+      DogLog.log("LC/HoodAngle", lp.hoodAngle());
+      DogLog.log("LC/Passing", lp.passing());
+      DogLog.log("LC/Distance", lp.distance());
+      DogLog.log("LC/Valid", lp.isValid());
+      DogLog.log("LC/TimeOfFlight", lp.timeOfFlight());
+       DogLog.log("LC/DriveAngle", lp.driveAngle().getDegrees());
+      
 
       HoodSubsystem.autoTargetAngle = lp.hoodAngle();
 
-      SmartDashboard.putNumber("LC/pomtsa", m_drivetrain.projectedOnTheMoveShootAngle.getDegrees());
+      DogLog.log("LC/pomtsa", m_drivetrain.projectedOnTheMoveShootAngle.getDegrees());
+
       angleError = m_drivetrain.getState().Pose.getRotation().minus(lp.driveAngle()).getDegrees();
 
       rotationVal = lp.driveVelocity()

@@ -43,12 +43,11 @@ public class AlignTargetOdometry extends Command {
   public PIDController m_alignTargetPID;
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
-  private boolean aligning;
   private double angleToTarget;
 
   private SwerveRequest.FieldCentric drive;
   private final TripleShooterSubsystem shooter;
-  private double distanceToHub;
+  private double distanceToTarget;
   private boolean passing;
 
   public AlignTargetOdometry(
@@ -77,11 +76,9 @@ public class AlignTargetOdometry extends Command {
     m_alignTargetPID = new PIDController(kp.get(), ki.get(), kd.get());
 
     m_alignTargetPID.enableContinuousInput(-180, 180);
-    if (!passing) {
-      targetPose = AllianceUtil.getHubPose();
-    }
+
     m_alignTargetPID.setTolerance(0.2);
-    aligning = true;
+    m_drivetrain.isAligning = true;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -92,15 +89,19 @@ public class AlignTargetOdometry extends Command {
 
     passing = AllianceFlipUtil
         .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
+    if (!passing) {
+      targetPose = AllianceUtil.getHubPose();
+    } else
+      targetPose = AllianceUtil.getPassingTargetPose(m_drivetrain.getState().Pose);
 
-    distanceToHub = targetPose.getTranslation()
+    distanceToTarget = targetPose.getTranslation()
         .getDistance(m_drivetrain.getState().Pose.getTranslation());
 
-    shooter.autoSetTargetRPM = passing ? ShootingData.passingShooterSpeedMap.get(distanceToHub)
-        : ShootingData.shooterSpeedMap.get(distanceToHub);
+    shooter.setAutoSetTargetRPM(passing ? ShootingData.passingShooterSpeedMap.get(distanceToTarget)
+        : ShootingData.shooterSpeedMap.get(distanceToTarget));
 
-    HoodSubsystem.autoTargetAngle = passing ? ShootingData.passingHoodAngleMap.get(distanceToHub).getDegrees()
-        : ShootingData.hoodAngleMap.get(distanceToHub).getDegrees();
+    HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
+        : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
     rotationVal = m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
 
@@ -112,19 +113,21 @@ public class AlignTargetOdometry extends Command {
 
     m_drivetrain.alignedToTarget = Math.abs(angleToTarget) < m_drivetrain.shootTolerance;
 
-    Logger.log("AlignedToHub", m_drivetrain.alignedToTarget);
-    Logger.log("AlignError", m_alignTargetPID.getError());
-    Logger.log("AlignDistance", distanceToHub);
-    Logger.log("AlignAngle", angleToTarget);
-    Logger.log("AlignHubAngle", HoodSubsystem.autoTargetAngle);
-    Logger.log("AlignShootSpeed", shooter.autoSetTargetRPM);
+    Logger.log("Align/AlignedToHub", m_drivetrain.alignedToTarget);
+    Logger.log("Align/AlignError", m_alignTargetPID.getError());
+    Logger.log("Align/AlignDistance", distanceToTarget);
+    Logger.log("Align/AlignAngle", angleToTarget);
+    Logger.log("Align/AlignHubAngle", HoodSubsystem.autoTargetAngle);
+    Logger.log("Align/AlignShootSpeed", shooter.autoSetTargetRPM);
+    Logger.log("Align/Passing", passing);
+    Logger.log("Align/TargetPose", targetPose);
 
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    aligning = false;
+    m_drivetrain.isAligning = false;
 
   }
 
