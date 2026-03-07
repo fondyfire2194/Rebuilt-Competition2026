@@ -30,7 +30,7 @@ public class AlignTargetOdometry extends Command {
   private SlewRateLimiter strafeLimiter = new SlewRateLimiter(3.0);
   private SlewRateLimiter rotationLimiter = new SlewRateLimiter(3.0);
 
-  private final CommandSwerveDrivetrain m_drivetrain;
+  private final CommandSwerveDrivetrain m_swerve;
   private final HoodSubsystem hood;
 
 
@@ -42,6 +42,7 @@ public class AlignTargetOdometry extends Command {
   private final TripleShooterSubsystem shooter;
   private double distanceToTarget;
   private boolean passing;
+  private double tempI;
 
   public AlignTargetOdometry(
       CommandSwerveDrivetrain drivetrain,
@@ -51,37 +52,38 @@ public class AlignTargetOdometry extends Command {
       CommandXboxController controller,
       boolean feed) {
 
-    m_drivetrain = drivetrain;
+    m_swerve = drivetrain;
     m_controller = controller;
     this.hood = hood;
     this.feed = feed;
     this.drive = drive;
     this.shooter = shooter;
-    addRequirements(m_drivetrain);
+    addRequirements(m_swerve);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
    
-    m_drivetrain.isAligning = true;
+    tempI = m_swerve.m_alignTargetPID.getI();
+    m_swerve.isAligning = true;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
 
-    angleToTarget = getAngleDegreesToTarget(targetPose, m_drivetrain.getState().Pose);
+    angleToTarget = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
     passing = AllianceFlipUtil
-        .applyX(m_drivetrain.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
+        .applyX(m_swerve.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
     if (!passing) {
       targetPose = AllianceUtil.getHubPose();
     } else
-      targetPose = AllianceUtil.getPassingTargetPose(m_drivetrain.getState().Pose);
+      targetPose = AllianceUtil.getPassingTargetPose(m_swerve.getState().Pose);
 
     distanceToTarget = targetPose.getTranslation()
-        .getDistance(m_drivetrain.getState().Pose.getTranslation());
+        .getDistance(m_swerve.getState().Pose.getTranslation());
 
     shooter.setAutoSetTargetRPM(passing ? ShootingData.passingShooterSpeedMap.get(distanceToTarget)
         : ShootingData.shooterSpeedMap.get(distanceToTarget));
@@ -89,18 +91,25 @@ public class AlignTargetOdometry extends Command {
     HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
         : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
-    rotationVal = m_drivetrain.m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
+        
+    if (Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
+      m_swerve.m_alignTargetPID.setI(0);
+    } else
+      m_swerve.m_alignTargetPID.setI(tempI);
 
-    m_drivetrain.setControl(
+
+    rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(), angleToTarget);
+
+    m_swerve.setControl(
         drive.withVelocityX(-m_controller.getLeftY() * RobotConstants.MaxSpeed)
             .withVelocityY(-m_controller.getLeftX() * RobotConstants.MaxSpeed)
             // // negative X (left)
             .withRotationalRate(rotationVal * RobotConstants.MaxAngularRate));
 
-    m_drivetrain.alignedToTarget = Math.abs(angleToTarget) < m_drivetrain.shootTolerance;
+    m_swerve.alignedToTarget = Math.abs(angleToTarget) < m_swerve.shootTolerance;
 
-    Logger.log("Align/AlignedToHub", m_drivetrain.alignedToTarget);
-    Logger.log("Align/AlignError",m_drivetrain. m_alignTargetPID.getError());
+    Logger.log("Align/AlignedToHub", m_swerve.alignedToTarget);
+    Logger.log("Align/AlignError",m_swerve. m_alignTargetPID.getError());
     Logger.log("Align/AlignDistance", distanceToTarget);
     Logger.log("Align/AlignAngle", angleToTarget);
     Logger.log("Align/AlignHubAngle", HoodSubsystem.autoTargetAngle);
@@ -113,7 +122,7 @@ public class AlignTargetOdometry extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_drivetrain.isAligning = false;
+    m_swerve.isAligning = false;
 
   }
 

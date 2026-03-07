@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
@@ -29,6 +30,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -129,16 +131,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public boolean alignedToTarget;
     public double shootTolerance = .5;
 
-    public PIDController m_alignTargetPID;
+    public PIDController m_alignTargetPID = new PIDController(.01, 0, 0);
 
-    private DoubleSubscriber alignkp;
-    private DoubleSubscriber alignki;
-    private DoubleSubscriber alignkd;
+    private DoubleSubscriber alignkp = DogLog.tunable("Align/PGain", .0, newKp -> m_alignTargetPID.setI(newKp));
+    private DoubleSubscriber alignki = DogLog.tunable("Align/IGain", .0, newKi -> m_alignTargetPID.setI(newKi));
+    private DoubleSubscriber alignkd = DogLog.tunable("Align/DGain", .0, newKd -> m_alignTargetPID.setI(newKd));
 
     public Pose2d projectedOnTheMoveShootPose = new Pose2d();
     public Rotation2d projectedOnTheMoveShootAngle = new Rotation2d();
     public Rotation2d bumpr2d;
     public boolean isAligning;
+    public double alignIzone = 3;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -160,6 +163,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
+        m_alignTargetPID.enableContinuousInput(-180, 180);
+        m_alignTargetPID.setIntegratorRange(-.01, .01);
+        m_alignTargetPID.reset();
 
     }
 
@@ -187,7 +193,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        setupAlignPID();
     }
 
     /**
@@ -229,7 +234,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        setupAlignPID();
+
     }
 
     private void configureAutoBuilder() {
@@ -395,19 +400,5 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 0.0 // Goal end velocity in meters/sec
         );
 
-    }
-
-    private void setupAlignPID() {
-
-        alignkp = DogLog.tunable("Align/PGain", .03, newKp -> m_alignTargetPID.setP(newKp));
-        alignkd = DogLog.tunable("Align/IGain", .0, newKi -> m_alignTargetPID.setI(newKi));
-        alignkd = DogLog.tunable("Align/DGain", .0, newKd -> m_alignTargetPID.setI(newKd));
-        m_alignTargetPID = new PIDController(alignkp.get(), alignki.get(), alignkd.get());
-
-        m_alignTargetPID.enableContinuousInput(-180, 180);
-        m_alignTargetPID.setIZone(1);
-        m_alignTargetPID.setIntegratorRange(-.01, .01);
-        m_alignTargetPID.setI(.0001);
-        m_alignTargetPID.reset();
     }
 }

@@ -28,13 +28,13 @@ public class AutoAlignHub extends Command {
   private SwerveRequest.FieldCentric drive;
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
-  private boolean aligning;
   private Timer elapsedTime;
   private double distanceToHub;
   private double angleToTarget;
 
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
   private boolean alignedToTarget;
+  private double tempI;
 
   public AutoAlignHub(
       CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, double toleranceDegrees) {
@@ -50,10 +50,11 @@ public class AutoAlignHub extends Command {
   public void initialize() {
     targetPose = AllianceUtil.getHubPose();
 
-    aligning = true;
+    m_swerve.isAligning = true;
     elapsedTime = new Timer();
     elapsedTime.reset();
     elapsedTime.start();
+    tempI = m_swerve.m_alignTargetPID.getI();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -65,7 +66,13 @@ public class AutoAlignHub extends Command {
         .getDistance(m_swerve.getState().Pose.getTranslation());
     m_shooter.setDistanceToHub(distanceToHub);
 
-    rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(), angleToTarget);
+    if (Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
+      m_swerve.m_alignTargetPID.setI(0);
+    } else
+      m_swerve.m_alignTargetPID.setI(tempI);
+
+    rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(),
+        angleToTarget);
 
     m_swerve.setControl(drive
         .withVelocityX(0)
@@ -75,7 +82,7 @@ public class AutoAlignHub extends Command {
     alignedToTarget = Math.abs(angleToTarget) < m_toleranceDegrees;
 
     Logger.log("AlignedToHub", m_swerve.alignedToTarget);
-    Logger.log("AlignError",m_swerve. m_alignTargetPID.getError());
+    Logger.log("AlignError", m_swerve.m_alignTargetPID.getError());
     Logger.log("AlignDistance", distanceToHub);
     Logger.log("AlignAngle", angleToTarget);
     Logger.log("AlignHubAngle", HoodSubsystem.autoTargetAngle);
@@ -86,7 +93,8 @@ public class AutoAlignHub extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-   m_swerve. m_alignTargetPID.reset();
+    m_swerve.m_alignTargetPID.reset();
+    m_swerve.isAligning = false;
     m_swerve.setControl(drive
         .withVelocityX(0)
         .withVelocityY(0)
