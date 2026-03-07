@@ -191,6 +191,10 @@ public class Robot extends TimedRobot {
         @Override
         public void testInit() {
                 CommandScheduler.getInstance().cancelAll();
+                m_robotContainer.fuelSim.clearFuel();
+                 m_robotContainer.fuelSim.spawnStartingFuel(); // spawns fuel in the depots
+                // and neutral zone
+
         }
 
         @Override
@@ -204,6 +208,7 @@ public class Robot extends TimedRobot {
 
         @Override
         public void simulationPeriodic() {
+                m_robotContainer.fuelSim.updateSim();
         }
 
         public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {

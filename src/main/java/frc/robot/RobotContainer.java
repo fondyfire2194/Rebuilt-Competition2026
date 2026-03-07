@@ -5,9 +5,12 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -22,16 +25,19 @@ import com.pathplanner.lib.events.EventTrigger;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
+import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
@@ -50,7 +56,9 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
+import frc.robot.utils.FuelSim;
 import frc.robot.utils.ShootingData;
+import frc.robot.utils.SimRobotFuelSim;
 
 public class RobotContainer {
 
@@ -86,6 +94,9 @@ public class RobotContainer {
 
         private final Telemetry logger = new Telemetry(RobotConstants.MaxSpeed, drivetrain);
 
+        public FuelSim fuelSim;
+        public SimRobotFuelSim fuelRobotSim;
+
         /* Path follower */
         private SendableChooser<Command> autoChooser;
 
@@ -106,9 +117,9 @@ public class RobotContainer {
         // public final PowerDistribution pdh;
 
         private boolean showShooterData = false;
-        private boolean showHubData = false;
+        private boolean showHoodData = true;
         private boolean showFeederData = false;
-        private boolean showIntakeData = false;
+        private boolean showIntakeData = true;
         private boolean showIntakeArmData = false;
         private boolean showLLData = false;
 
@@ -153,7 +164,7 @@ public class RobotContainer {
         public RobotContainer() {
 
                 m_shooter = new TripleShooterSubsystem(showShooterData);
-                m_hood = new HoodSubsystem(showHubData);
+                m_hood = new HoodSubsystem(showHoodData);
                 m_feeder = new FeederSubsystem(showFeederData);
                 m_intake = new IntakeSubsystem(showIntakeData);
                 m_intakeArm = new IntakeSlideArmSubsystem(showIntakeArmData);
@@ -168,6 +179,12 @@ public class RobotContainer {
                 m_shooter.middleMotorActive = true;
                 m_shooter.rightMotorActive = true;
 
+                if (RobotBase.isSimulation()) {
+                        configureFuelSim();
+                        fuelRobotSim = new SimRobotFuelSim(fuelSim, drivetrain, m_hood, m_shooter);
+                        configureFuelSimRobot(fuelRobotSim::canIntake, fuelRobotSim::intakeFuel);
+
+                }
                 setDefaultCommands();
                 configurePresets();
                 configureDriverBindings();
@@ -216,8 +233,13 @@ public class RobotContainer {
                 // new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
                 driver.leftTrigger().whileTrue(
-                                Commands.defer(
-                                                () -> shootCommand(driver.a().getAsBoolean()), Set.of()));
+                                Commands.either(
+                                                Commands.defer(
+                                                                () -> shootCommand(driver.a().getAsBoolean()),
+                                                                Set.of()),
+                                                Commands.run(() -> fuelRobotSim.launchFuel()),
+                                                () -> RobotBase.isReal()));
+
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
                                                 m_intakeArm.intakeArmSlideToClearPositionCommand(),
@@ -645,6 +667,33 @@ public class RobotContainer {
 
         private Command shootCommand(boolean bypass) {
                 return new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, bypass);
+        }
+
+        private void configureFuelSim() {
+                fuelSim = new FuelSim();
+                fuelSim.clearFuel();
+                fuelSim.spawnStartingFuel();
+
+                fuelSim.start();
+                fuelSim.enableAirResistance();
+        }
+
+        private void configureFuelSimRobot(BooleanSupplier ableToIntake, Runnable intakeCallback) {
+                fuelSim.registerRobot(
+                                Dimensions.FULL_WIDTH.in(Meters),
+                                Dimensions.FULL_LENGTH.in(Meters),
+                                Dimensions.BUMPER_HEIGHT.in(Meters),
+                                () -> drivetrain.getState().Pose,
+                                () -> drivetrain.getState().Speeds);
+                fuelSim.registerIntake(
+                                -Dimensions.FULL_LENGTH.div(2).in(Meters),
+                                Dimensions.FULL_LENGTH.div(2).in(Meters),
+                                -Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
+                                -Dimensions.FULL_WIDTH.div(2).in(Meters),
+                                () -> m_intake.intakeRunning(), // intake.isRightDeployed() &&
+                                                                // ableToIntake.getAsBoolean(),
+                                intakeCallback);
+
         }
 
         //

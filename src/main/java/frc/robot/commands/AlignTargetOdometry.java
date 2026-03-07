@@ -6,12 +6,9 @@ package frc.robot.commands;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import dev.doglog.DogLog;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.FieldConstants;
@@ -36,11 +33,7 @@ public class AlignTargetOdometry extends Command {
   private final CommandSwerveDrivetrain m_drivetrain;
   private final HoodSubsystem hood;
 
-  private DoubleSubscriber kp;
-  private DoubleSubscriber ki;
-  private DoubleSubscriber kd;
 
-  public PIDController m_alignTargetPID;
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
   private double angleToTarget;
@@ -70,14 +63,7 @@ public class AlignTargetOdometry extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    kp = DogLog.tunable("Align/PGain", .03, newKp -> m_alignTargetPID.setP(newKp));
-    ki = DogLog.tunable("Align/IGain", .0, newKi -> m_alignTargetPID.setI(newKi));
-    kd = DogLog.tunable("Align/DGain", .0, newKd -> m_alignTargetPID.setI(newKd));
-    m_alignTargetPID = new PIDController(kp.get(), ki.get(), kd.get());
-
-    m_alignTargetPID.enableContinuousInput(-180, 180);
-
-    m_alignTargetPID.setTolerance(0.2);
+   
     m_drivetrain.isAligning = true;
   }
 
@@ -103,7 +89,7 @@ public class AlignTargetOdometry extends Command {
     HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
         : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
-    rotationVal = m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
+    rotationVal = m_drivetrain.m_alignTargetPID.calculate(m_drivetrain.getState().Pose.getRotation().getDegrees(), angleToTarget);
 
     m_drivetrain.setControl(
         drive.withVelocityX(-m_controller.getLeftY() * RobotConstants.MaxSpeed)
@@ -114,7 +100,7 @@ public class AlignTargetOdometry extends Command {
     m_drivetrain.alignedToTarget = Math.abs(angleToTarget) < m_drivetrain.shootTolerance;
 
     Logger.log("Align/AlignedToHub", m_drivetrain.alignedToTarget);
-    Logger.log("Align/AlignError", m_alignTargetPID.getError());
+    Logger.log("Align/AlignError",m_drivetrain. m_alignTargetPID.getError());
     Logger.log("Align/AlignDistance", distanceToTarget);
     Logger.log("Align/AlignAngle", angleToTarget);
     Logger.log("Align/AlignHubAngle", HoodSubsystem.autoTargetAngle);

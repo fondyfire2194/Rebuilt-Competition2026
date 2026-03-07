@@ -40,6 +40,10 @@ public class HoodSubsystem extends SubsystemBase {
 
     private static double finalTargetAngle;
 
+    public static double getFinalTargetAngle() {
+        return finalTargetAngle;
+    }
+
     private final SparkMax hoodMotor;
 
     private final static double gearRatio = 139;
@@ -112,7 +116,7 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     public boolean isPositionWithinTolerance() {
-        return MathUtil.isNear(finalTargetAngle, getHoodPosition(), kPositionTolerance);
+        return MathUtil.isNear(finalTargetAngle, getHoodAngle(), kPositionTolerance);
     }
 
     public Command positionToHomeCommand() {
@@ -126,9 +130,9 @@ public class HoodSubsystem extends SubsystemBase {
     public Command positionHoodCommand() {
         return new FunctionalCommand(
                 () -> {
-                    finalTargetAngle = getHoodPosition();
+                    finalTargetAngle = getHoodAngle();
                     manualTargetAngle = finalTargetAngle;
-                    autoTargetAngle = getHoodPosition();
+                    autoTargetAngle = getHoodAngle();
                 }, // init
                 () -> {
                     closedLoopController.setSetpoint(finalTargetAngle, ControlType.kPosition, ClosedLoopSlot.kSlot0);
@@ -154,7 +158,7 @@ public class HoodSubsystem extends SubsystemBase {
                 Commands.runOnce(() -> manualTargetAngle = position));
     }
 
-    public double getHoodPosition() {
+    public double getHoodAngle() {
         return hoodMotor.getEncoder().getPosition();
     }
 
@@ -169,9 +173,9 @@ public class HoodSubsystem extends SubsystemBase {
     public Command jogHoodUpCommand() {
         return this.startEnd(
                 () -> {
-                    if (getHoodPosition() < kMaxPosition.in(Degrees))
+                    if (getHoodAngle() < kMaxPosition.in(Degrees))
                         this.runHoodMotor(Constants.HoodSetpoints.jogHoodMotor);
-                    manualTargetAngle = getHoodPosition();
+                    manualTargetAngle = getHoodAngle();
                 }, () -> {
                     this.runHoodMotor(0.0);
                 }).withName("JogHoodUp");
@@ -180,9 +184,9 @@ public class HoodSubsystem extends SubsystemBase {
     public Command jogHoodDownCommand() {
         return this.startEnd(
                 () -> {
-                    if (getHoodPosition() > kMinPosition.in(Degrees))
+                    if (getHoodAngle() > kMinPosition.in(Degrees))
                         this.runHoodMotor(-Constants.HoodSetpoints.jogHoodMotor);
-                    manualTargetAngle = getHoodPosition();
+                    manualTargetAngle = getHoodAngle();
                 }, () -> {
                     this.runHoodMotor(0.0);
                 }).withName("JogHoodDown");
@@ -202,8 +206,8 @@ public class HoodSubsystem extends SubsystemBase {
         Logger.log("Hood/ManualTargetAngle", manualTargetAngle);
         Logger.log("Hood/AutoTargetAngle", autoTargetAngle);
         Logger.log("Hood/UseAutoTarget", isHoodUsingDistance());
-        Logger.log("Hood/CurrentAngle", getHoodPosition());
-        Logger.log("Hood/AngleError", finalTargetAngle - getHoodPosition());
+        Logger.log("Hood/CurrentAngle", getHoodAngle());
+        Logger.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
         Logger.log("Hood/AtTarget", isPositionWithinTolerance());
     }
 

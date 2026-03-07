@@ -5,7 +5,9 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
@@ -23,6 +25,7 @@ import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,11 +35,14 @@ import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.CanbusConstants;
 import frc.robot.utils.Logger;
-import frc.robot.utils.TunableTalonFXPid;
 
 public class TripleShooterSubsystem extends SubsystemBase {
   /** Creates a new TripleShooterSubsystem. */
   private static final AngularVelocity kVelocityTolerance = RPM.of(100);
+
+  public LinearVelocity shooterLinearVelocity = MetersPerSecond.of(1);
+
+  private final Distance shooterRollerDiameter = Inches.of(3.);
 
   public final TalonFX leftMotor;
 
@@ -70,11 +76,13 @@ public class TripleShooterSubsystem extends SubsystemBase {
   private Distance distanceToHub;
 
   private double manualSetTargetRPM = 2000;
-  private double autoSetTargetRPM = 2500;
+
+  public double autoSetTargetRPM = 2500;
 
   public void setAutoSetTargetRPM(double autoSetTargetRPM) {
     this.autoSetTargetRPM = autoSetTargetRPM;
     finalSetTargetRPM = autoSetTargetRPM;
+    shooterLinearVelocity = MetersPerSecond.of(shooterRollerDiameter.in(Meters) * Math.PI * finalSetTargetRPM / 60.);
   }
 
   private double finalSetTargetRPM;
@@ -100,6 +108,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public void setShootUsingDistance(boolean autoShoot) {
     this.shootUsingDistance = autoShoot;
     finalSetTargetRPM = isShootUsingDistance() ? autoSetTargetRPM : manualSetTargetRPM;
+
   }
 
   public Command setShootUsingDistanceCommand(boolean on) {
