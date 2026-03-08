@@ -132,16 +132,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public double shootTolerance = .5;
 
     public PIDController m_alignTargetPID = new PIDController(.01, 0, 0);
-
-    private DoubleSubscriber alignkp = DogLog.tunable("Align/PGain", .0, newKp -> m_alignTargetPID.setI(newKp));
+    public double alignIzone = 3;
+    private DoubleSubscriber alignkp = DogLog.tunable("Align/PGain", .0, newKp -> m_alignTargetPID.setP(newKp));
     private DoubleSubscriber alignki = DogLog.tunable("Align/IGain", .0, newKi -> m_alignTargetPID.setI(newKi));
-    private DoubleSubscriber alignkd = DogLog.tunable("Align/DGain", .0, newKd -> m_alignTargetPID.setI(newKd));
+    private DoubleSubscriber alignkd = DogLog.tunable("Align/DGain", .0, newKd -> m_alignTargetPID.setD(newKd));
 
     public Pose2d projectedOnTheMoveShootPose = new Pose2d();
     public Rotation2d projectedOnTheMoveShootAngle = new Rotation2d();
     public Rotation2d bumpr2d;
     public boolean isAligning;
-    public double alignIzone = 3;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -164,9 +163,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
         configureAutoBuilder();
         m_alignTargetPID.enableContinuousInput(-180, 180);
-        m_alignTargetPID.setIntegratorRange(-.01, .01);
+        m_alignTargetPID.setIntegratorRange(-.1, .1);
         m_alignTargetPID.reset();
-
     }
 
     /**
@@ -302,6 +300,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public void periodic() {
 
+        SmartDashboard.putNumber("AAAAAAAAPPPPP", m_alignTargetPID.getP());
         /*
          * Periodically try to apply the operator perspective.
          * If we haven't applied the operator perspective before, then we should apply

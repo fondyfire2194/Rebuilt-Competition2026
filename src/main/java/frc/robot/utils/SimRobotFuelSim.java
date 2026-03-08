@@ -9,6 +9,8 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.LauncherConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
@@ -24,6 +26,7 @@ public class SimRobotFuelSim {
     CommandSwerveDrivetrain drivetrain;
     HoodSubsystem hood;
     TripleShooterSubsystem shooter;
+    public double angle = 0;
 
     public SimRobotFuelSim(FuelSim fuelSim, CommandSwerveDrivetrain drivetrain, HoodSubsystem hood,
             TripleShooterSubsystem shooter) {
@@ -46,12 +49,22 @@ public class SimRobotFuelSim {
         if (fuelStored == 0)
             return;
         fuelStored--;
+        SmartDashboard.putNumber("AAAAAAAAAFUEL", fuelStored);
+        SmartDashboard.putNumber("AAAAAAAAAngle", shooter.shooterLinearVelocity.in(MetersPerSecond));
+        SmartDashboard.putNumber("AAAAAAAARPM", shooter.finalSetTargetRPM);
+        
+      SmartDashboard.putNumber("AAAAAAAAAAAAAAAVel", angle);
 
         fuelSim.launchFuel(
                 shooter.shooterLinearVelocity,
-                Degrees.of(-45).minus(Degrees.of(HoodSubsystem.getFinalTargetAngle())),
+                Degrees.of(angle),
+                // Degrees.of(angle).minus(Degrees.of(HoodSubsystem.getFinalTargetAngle())),
                 Degrees.of(drivetrain.getState().Pose.getRotation().getDegrees()),
-                LauncherConstants.robotToShooter.getMeasureZ());
+                LauncherConstants.robotToShooterFuelSim.getMeasureZ());
+    }
+
+    public Command incAngle() {
+        return Commands.runOnce(() -> angle += 10);
     }
 
 }

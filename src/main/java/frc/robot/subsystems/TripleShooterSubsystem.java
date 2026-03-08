@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -82,10 +83,12 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public void setAutoSetTargetRPM(double autoSetTargetRPM) {
     this.autoSetTargetRPM = autoSetTargetRPM;
     finalSetTargetRPM = autoSetTargetRPM;
-    shooterLinearVelocity = MetersPerSecond.of(shooterRollerDiameter.in(Meters) * Math.PI * finalSetTargetRPM / 60.);
+    shooterLinearVelocity = angularToLinearVelocity(RPM.of(finalSetTargetRPM),shooterRollerDiameter);
+    SmartDashboard.putNumber("AAAAAAAAARPMLV", shooterLinearVelocity.in(MetersPerSecond));
+
   }
 
-  private double finalSetTargetRPM;
+  public double finalSetTargetRPM;
 
   private AngularAcceleration targetAcceleration = RotationsPerSecondPerSecond.of(500);
 
@@ -314,4 +317,13 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public Distance getDistanceToHub() {
     return distanceToHub;
   }
+
+  public static LinearVelocity angularToLinearVelocity(AngularVelocity vel, Distance radius) {
+    return MetersPerSecond.of(vel.in(RadiansPerSecond) * radius.in(Meters) * 0.54);
+  }
+
+  public LinearVelocity getLinearExitVelocity() {
+    return angularToLinearVelocity(RadiansPerSecond.of(finalSetTargetRPM), shooterRollerDiameter);
+  }
+
 }

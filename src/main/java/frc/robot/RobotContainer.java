@@ -258,16 +258,16 @@ public class RobotContainer {
                                 // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
                                 // driver));
                                 .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
-                                                driver, false));
+                                                driver));
 
-                driver.rightBumper().onTrue(
-                                Commands.parallel(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_shooter.stopAllShootersCommand(),
-                                                m_feeder.stopFeederRollerCommand(),
-                                                m_feeder.stopFeederBeltCommand(),
-                                                m_intake.stopIntakeCommand()))
-                                .whileTrue(Commands.defer(this::driveAtHubAngle, Set.of(drivetrain)));
+                driver.rightBumper().onTrue(fuelRobotSim.incAngle());
+                                // Commands.parallel(
+                                //                 m_shooter.setShootUsingDistanceCommand(false),
+                                //                 m_shooter.stopAllShootersCommand(),
+                                //                 m_feeder.stopFeederRollerCommand(),
+                                //                 m_feeder.stopFeederBeltCommand(),
+                                //                 m_intake.stopIntakeCommand()))
+                                // .whileTrue(Commands.defer(this::driveAtHubAngle, Set.of(drivetrain)));
 
                 driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
@@ -673,7 +673,6 @@ public class RobotContainer {
                 fuelSim = new FuelSim();
                 fuelSim.clearFuel();
                 fuelSim.spawnStartingFuel();
-
                 fuelSim.start();
                 fuelSim.enableAirResistance();
         }

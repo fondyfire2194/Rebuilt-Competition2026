@@ -24,7 +24,6 @@ import frc.robot.utils.geometry.AllianceFlipUtil;
 public class AlignTargetOdometry extends Command {
   /** Creates a new AlignToTagSet */
   CommandXboxController m_controller;
-  private boolean feed;
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
   private SlewRateLimiter translationLimiter = new SlewRateLimiter(3.0);
   private SlewRateLimiter strafeLimiter = new SlewRateLimiter(3.0);
@@ -32,7 +31,6 @@ public class AlignTargetOdometry extends Command {
 
   private final CommandSwerveDrivetrain m_swerve;
   private final HoodSubsystem hood;
-
 
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
@@ -45,17 +43,15 @@ public class AlignTargetOdometry extends Command {
   private double tempI;
 
   public AlignTargetOdometry(
-      CommandSwerveDrivetrain drivetrain,
+      CommandSwerveDrivetrain swerve,
       TripleShooterSubsystem shooter,
       HoodSubsystem hood,
       SwerveRequest.FieldCentric drive,
-      CommandXboxController controller,
-      boolean feed) {
+      CommandXboxController controller) {
 
-    m_swerve = drivetrain;
+    m_swerve = swerve;
     m_controller = controller;
     this.hood = hood;
-    this.feed = feed;
     this.drive = drive;
     this.shooter = shooter;
     addRequirements(m_swerve);
@@ -64,7 +60,7 @@ public class AlignTargetOdometry extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-   
+
     tempI = m_swerve.m_alignTargetPID.getI();
     m_swerve.isAligning = true;
   }
@@ -91,14 +87,13 @@ public class AlignTargetOdometry extends Command {
     HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
         : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
-        
     if (Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
       m_swerve.m_alignTargetPID.setI(0);
     } else
       m_swerve.m_alignTargetPID.setI(tempI);
 
-
-    rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(), angleToTarget);
+    rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(),
+        angleToTarget);
 
     m_swerve.setControl(
         drive.withVelocityX(-m_controller.getLeftY() * RobotConstants.MaxSpeed)
@@ -109,13 +104,14 @@ public class AlignTargetOdometry extends Command {
     m_swerve.alignedToTarget = Math.abs(angleToTarget) < m_swerve.shootTolerance;
 
     Logger.log("Align/AlignedToHub", m_swerve.alignedToTarget);
-    Logger.log("Align/AlignError",m_swerve. m_alignTargetPID.getError());
+    Logger.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
     Logger.log("Align/AlignDistance", distanceToTarget);
     Logger.log("Align/AlignAngle", angleToTarget);
     Logger.log("Align/AlignHubAngle", HoodSubsystem.autoTargetAngle);
     Logger.log("Align/AlignShootSpeed", shooter.autoSetTargetRPM);
     Logger.log("Align/Passing", passing);
     Logger.log("Align/TargetPose", targetPose);
+    Logger.log("Align/AccumIntegral", m_swerve.m_alignTargetPID.getAccumulatedError());
 
   }
 
@@ -123,7 +119,7 @@ public class AlignTargetOdometry extends Command {
   @Override
   public void end(boolean interrupted) {
     m_swerve.isAligning = false;
-
+    m_swerve.m_alignTargetPID.reset();
   }
 
   // Returns true when the command should end.
