@@ -255,19 +255,19 @@ public class RobotContainer {
                                                 m_shooter.setShootUsingDistanceCommand(true),
                                                 m_hood.setHoodUsingDistanceCommand(true),
                                                 m_shooter.runAllVelocityVoltageCommand()))
-                                // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
-                                // driver));
-                                .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
+                                .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
                                                 driver));
+                // .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
+                // driver));
 
-                driver.rightBumper().onTrue(fuelRobotSim.incAngle());
-                                // Commands.parallel(
-                                //                 m_shooter.setShootUsingDistanceCommand(false),
-                                //                 m_shooter.stopAllShootersCommand(),
-                                //                 m_feeder.stopFeederRollerCommand(),
-                                //                 m_feeder.stopFeederBeltCommand(),
-                                //                 m_intake.stopIntakeCommand()))
-                                // .whileTrue(Commands.defer(this::driveAtHubAngle, Set.of(drivetrain)));
+                driver.rightBumper().onTrue(
+                                Commands.parallel(
+                                                m_shooter.setShootUsingDistanceCommand(false),
+                                                m_shooter.stopAllShootersCommand(),
+                                                m_feeder.stopFeederRollerCommand(),
+                                                m_feeder.stopFeederBeltCommand(),
+                                                m_intake.stopIntakeCommand()))
+                                .whileTrue(Commands.defer(this::driveAtBumpAngle, Set.of(drivetrain)));
 
                 driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
@@ -458,7 +458,7 @@ public class RobotContainer {
                                 drivetrain.applyRequest(() -> forwardStraight
                                                 .withVelocityX(0).withVelocityY(1)));
 
-                bumpdriver.leftBumper().whileTrue(Commands.defer(this::driveAtHubAngle, Set.of(drivetrain)));
+                bumpdriver.leftBumper().whileTrue(Commands.defer(this::driveAtBumpAngle, Set.of(drivetrain)));
 
                 bumpdriver.rightBumper().whileTrue(
                                 drivetrain.applyRequest(() -> driveFacingAngle
@@ -654,7 +654,7 @@ public class RobotContainer {
                 // return new PathPlannerAuto("SimpleAuto");
         }
 
-        private Command driveAtHubAngle() {
+        private Command driveAtBumpAngle() {
                 return Commands.sequence(
                                 Commands.runOnce(() -> AllianceUtil.getBumpCrossAngle(drivetrain.getState().Pose)),
                                 drivetrain.applyRequest(() -> driveFacingAngle

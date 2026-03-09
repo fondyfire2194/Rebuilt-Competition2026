@@ -4,10 +4,13 @@
 
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
+
+import java.util.function.Supplier;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -15,16 +18,22 @@ import dev.doglog.DogLog;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.LaunchCalculator;
+import frc.robot.utils.ShootingData;
+import frc.robot.utils.geometry.AllianceFlipUtil;
 
 /**
  * This routine is enabled by holding a gamepad trigger/ bumper while using the
@@ -48,13 +57,12 @@ public class DriveWithShootOnTheMove extends Command {
 
   private final CommandSwerveDrivetrain m_drivetrain;
   private final HoodSubsystem m_hood;
-  private double kp = .05;
+  private double kp = .0025;
   private double ki = .0;
   private double kd = .0;
 
   public PIDController m_alignTargetPID = new PIDController(kp, ki, kd);
   private double rotationVal;
-  private double angleError;
   private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
@@ -62,6 +70,10 @@ public class DriveWithShootOnTheMove extends Command {
   private final TripleShooterSubsystem shooter;
   private double deadband = .02;
   private Pose2d targetPose;
+  private boolean passing;
+  private static Distance distance;
+  private static Distance newDistance;
+  private static Time timeOfFlight;
 
   public DriveWithShootOnTheMove(
       CommandSwerveDrivetrain drivetrain,
@@ -91,58 +103,58 @@ public class DriveWithShootOnTheMove extends Command {
   @Override
   public void execute() {
 
-    LaunchCalculator.LaunchingParameters lp = LaunchCalculator.getInstance().getParameters(m_drivetrain);
-    SmartDashboard.putBoolean("LC/lp", false);
-    if (lp != null) {
+    Pose2d robotPose = m_drivetrain.getState().Pose;
 
-      DogLog.log("LC/RPM", lp.flywheelSpeed());
-      shooter.autoSetTargetRPM = lp.flywheelSpeed();
+    passing = AllianceFlipUtil
+        .applyX(robotPose.getX()) > FieldConstants.LinesVertical.hubCenter;
+    if (!passing) {
+      targetPose = AllianceUtil.getHubPose();
+    } else
+      targetPose = AllianceUtil.getPassingTargetPose(robotPose);
 
-      DogLog.log("LC/HoodAngle", lp.hoodAngle());
-      DogLog.log("LC/Passing", lp.passing());
-      DogLog.log("LC/Distance", lp.distance());
-      DogLog.log("LC/Valid", lp.isValid());
-      DogLog.log("LC/TimeOfFlight", lp.timeOfFlight());
-       DogLog.log("LC/DriveAngle", lp.driveAngle().getDegrees());
-      
+    Translation2d aimPoint = calculateLeadTarget(m_drivetrain, () -> targetPose.getTranslation());
 
-      HoodSubsystem.autoTargetAngle = lp.hoodAngle();
+    double distanceToTarget = newDistance.in(Meters);
 
-      DogLog.log("LC/pomtsa", m_drivetrain.projectedOnTheMoveShootAngle.getDegrees());
+    shooter.setAutoSetTargetRPM(passing ? ShootingData.passingShooterSpeedMap.get(distanceToTarget)
+        : ShootingData.shooterSpeedMap.get(distanceToTarget));
 
-      angleError = m_drivetrain.getState().Pose.getRotation().minus(lp.driveAngle()).getDegrees();
+    HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
+        : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
-      rotationVal = lp.driveVelocity()
-          + lp.driveAngle()
-              .minus(m_drivetrain.getState().Pose.getRotation())
-              .getRadians() * kp
+    distanceToTarget = targetPose.getTranslation()
+        .getDistance(robotPose.getTranslation());
 
-          + (lp.driveVelocity()
-              - m_drivetrain.getState().Speeds.omegaRadiansPerSecond) * kd;
+    shooter.setAutoSetTargetRPM(passing ? ShootingData.passingShooterSpeedMap.get(distanceToTarget)
+        : ShootingData.shooterSpeedMap.get(distanceToTarget));
 
-      rotationVal = m_alignTargetPID.calculate(lp.driveVelocity() + angleError, 0);
+    HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
+        : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
-      double gamePadRotate = m_controller.getRightX();
+    Pose2d aimPose = new Pose2d(aimPoint, new Rotation2d(Math.PI));
 
-      if (Math.abs(gamePadRotate) < deadband)
-        gamePadRotate = 0;
+    double targetDegrees = getAngleDegreesToTarget(robotPose, aimPose);
 
-      m_drivetrain.setControl(
-          drive.withVelocityX(-m_controller.getLeftY() * MaxSpeed)
-              .withVelocityY(-m_controller.getLeftX() * MaxSpeed)
-              // // negative X (left)
-              .withRotationalRate(gamePadRotate + rotationVal * MaxAngularRate));
+    rotationVal = -m_alignTargetPID.calculate(robotPose.getRotation().getDegrees(), targetDegrees);
 
-      SmartDashboard.putNumber("LC/Rotval", rotationVal);
+    m_drivetrain.setControl(
+        drive.withVelocityX(-m_controller.getLeftY() * MaxSpeed)
+            .withVelocityY(-m_controller.getLeftX() * MaxSpeed)
+            // // negative X (left)
+            .withRotationalRate(rotationVal * MaxAngularRate));
 
-      SmartDashboard.putNumber("LC/AngleError", angleError);
+    m_drivetrain.alignedToTarget = Math.abs(m_alignTargetPID.getError()) < m_drivetrain.shootTolerance;
 
-      m_drivetrain.alignedToTarget = Math.abs(angleError) < m_drivetrain.shootTolerance;
+    DogLog.log("SOTM/RobotPose", robotPose);
+    DogLog.log("SOTM/TargetPose", targetPose);
+    DogLog.log("SOTM/AimPose", aimPose);
 
-      SmartDashboard.putBoolean("LC/AlignedToAngle", m_drivetrain.alignedToTarget);
-
-      LaunchCalculator.getInstance().clearLaunchingParameters();
-    }
+    DogLog.log("SOTM/Passing", passing);
+    DogLog.log("SOTM/AimPos", aimPoint);
+    DogLog.log("SOTM/Distance", distanceToTarget);
+    DogLog.log("SOTM/DegreesToTarget", targetDegrees);
+    DogLog.log("SOTM/RotnVal", rotationVal);
+    DogLog.log("SOTM/RotnError", m_alignTargetPID.getError());
 
   }
 
@@ -162,4 +174,35 @@ public class DriveWithShootOnTheMove extends Command {
     double YDiff = targetPose.getY() - robotPose.getY();
     return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
   }
+
+  private static Translation2d calculateLeadTarget(CommandSwerveDrivetrain drive, Supplier<Translation2d> target) {
+    Translation2d robotPos = drive.getState().Pose.getTranslation();
+    Translation2d targetPos = target.get();
+
+    ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(drive.getState().Speeds,
+        drive.getState().Pose.getRotation());
+    Translation2d velocityVec = new Translation2d(fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond);
+
+    distance = Meters.of(targetPos.getDistance(drive.getState().Pose.getTranslation()));
+
+    timeOfFlight = Seconds.of(ShootingData.timeOfFlightMap.get(distance.in(Meters)));
+
+    Translation2d aimPoint = new Translation2d();
+
+    for (int i = 0; i < 20; i++) {
+
+      Translation2d motionOffset = velocityVec.times(timeOfFlight.in(Seconds));
+
+      aimPoint = targetPos.minus(motionOffset);
+
+      newDistance = Meters.of(aimPoint.getDistance(robotPos));
+
+      timeOfFlight = Seconds.of(ShootingData.timeOfFlightMap.get(newDistance.in(Meters)));
+
+      DogLog.log("ShootOnTheMove/Target", new Pose2d(aimPoint, Rotation2d.kZero));
+
+    }
+    return aimPoint;
+  }
+
 }

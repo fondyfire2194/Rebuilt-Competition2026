@@ -5,8 +5,13 @@
 package frc.robot.utils;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,14 +24,18 @@ import frc.robot.subsystems.TripleShooterSubsystem;
 /** Add your docs here. */
 public class SimRobotFuelSim {
 
+    private static final DistanceUnit Meters = null;
     private final int CAPACITY = 30;
     private final FuelSim fuelSim;
     private int fuelStored = 800;
     LinearVelocity launchVelocity = MetersPerSecond.of(3);
     CommandSwerveDrivetrain drivetrain;
     HoodSubsystem hood;
-    TripleShooterSubsystem shooter;
-    public double angle = 0;
+    TripleShooterSubsystem shooter;    
+    
+    
+
+    public double angle = 50;
 
     public SimRobotFuelSim(FuelSim fuelSim, CommandSwerveDrivetrain drivetrain, HoodSubsystem hood,
             TripleShooterSubsystem shooter) {
@@ -50,17 +59,27 @@ public class SimRobotFuelSim {
             return;
         fuelStored--;
         SmartDashboard.putNumber("AAAAAAAAAFUEL", fuelStored);
-        SmartDashboard.putNumber("AAAAAAAAAngle", shooter.shooterLinearVelocity.in(MetersPerSecond));
         SmartDashboard.putNumber("AAAAAAAARPM", shooter.finalSetTargetRPM);
-        
-      SmartDashboard.putNumber("AAAAAAAAAAAAAAAVel", angle);
+
+        SmartDashboard.putNumber("AAAAAAAAAAAAAAAVel", angle);
+
+        LinearVelocity initialVelocity = MetersPerSecond.of(6.75);
+        SmartDashboard.putNumber("AAAAAAAAALinVel", initialVelocity.in(MetersPerSecond));
 
         fuelSim.launchFuel(
-                shooter.shooterLinearVelocity,
-                Degrees.of(angle),
+                initialVelocity,
+                Degrees.of(125),
                 // Degrees.of(angle).minus(Degrees.of(HoodSubsystem.getFinalTargetAngle())),
                 Degrees.of(drivetrain.getState().Pose.getRotation().getDegrees()),
                 LauncherConstants.robotToShooterFuelSim.getMeasureZ());
+    }
+
+    public static AngularVelocity linearToAngularVelocity(LinearVelocity vel, Distance radius) {
+        return RadiansPerSecond.of(vel.in(MetersPerSecond) / radius.in(Meters) / 0.54);
+    }
+
+    public static LinearVelocity angularToLinearVelocity(AngularVelocity vel, Distance radius) {
+        return MetersPerSecond.of(vel.in(RadiansPerSecond) * radius.in(Meters) * 0.54);
     }
 
     public Command incAngle() {

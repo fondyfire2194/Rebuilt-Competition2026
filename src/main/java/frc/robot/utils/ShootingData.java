@@ -67,10 +67,10 @@ public class ShootingData {
         // shooterSpeedMap.put(4.35, 4850.0);
         // shooterSpeedMap.put(4.84, 5000.0);
 
-        timeOfFlightMap.put(5.68, 1.16);
-        timeOfFlightMap.put(4.55, 1.12);
-        timeOfFlightMap.put(3.15, 1.11);
-        timeOfFlightMap.put(1.88, 1.09);
+        timeOfFlightMap.put(5.68, .7);
+        timeOfFlightMap.put(4.55, .77);
+        timeOfFlightMap.put(3.15, .8);
+        timeOfFlightMap.put(1.88, .88);
         timeOfFlightMap.put(1.38, 0.90);
 
         passingHoodAngleMap.put(5.46, Rotation2d.fromDegrees(0.0));
