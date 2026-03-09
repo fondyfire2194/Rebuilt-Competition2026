@@ -3,8 +3,7 @@
   "robotLength": 0.762,
   "holonomicMode": true,
   "pathFolders": [
-    "DepotStart",
-    "TestAndTune"
+    "DepotStart"
   ],
   "autoFolders": [
     "TestAndTune"
