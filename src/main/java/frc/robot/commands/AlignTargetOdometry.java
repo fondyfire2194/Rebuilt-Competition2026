@@ -34,42 +34,41 @@ public class AlignTargetOdometry extends Command {
 
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
-  private double angleToTarget;
+  private double targetDegrees;
 
   private SwerveRequest.FieldCentric drive;
   private final TripleShooterSubsystem shooter;
   private double distanceToTarget;
   private boolean passing;
-  private double tempI;
+
+  private final double m_toleranceDegrees;
 
   public AlignTargetOdometry(
       CommandSwerveDrivetrain swerve,
       TripleShooterSubsystem shooter,
       HoodSubsystem hood,
       SwerveRequest.FieldCentric drive,
-      CommandXboxController controller) {
+      CommandXboxController controller,
+      double toleranceDegrees) {
 
     m_swerve = swerve;
     m_controller = controller;
     this.hood = hood;
     this.drive = drive;
     this.shooter = shooter;
+    m_toleranceDegrees = toleranceDegrees;
     addRequirements(m_swerve);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-
-    tempI = m_swerve.m_alignTargetPID.getI();
     m_swerve.isAligning = true;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-
-    angleToTarget = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
     passing = AllianceFlipUtil
         .applyX(m_swerve.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
@@ -87,13 +86,16 @@ public class AlignTargetOdometry extends Command {
     HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
         : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
+    targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
+
     if (Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
-      m_swerve.m_alignTargetPID.setI(0);
+      m_swerve.m_alignTargetPID.setIntegratorRange(0,0);
     } else
-      m_swerve.m_alignTargetPID.setI(tempI);
+        m_swerve.m_alignTargetPID.setIntegratorRange(-.1,.1);
+  
 
     rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(),
-        angleToTarget);
+        targetDegrees);
 
     m_swerve.setControl(
         drive.withVelocityX(-m_controller.getLeftY() * RobotConstants.MaxSpeed)
@@ -101,17 +103,18 @@ public class AlignTargetOdometry extends Command {
             // // negative X (left)
             .withRotationalRate(rotationVal * RobotConstants.MaxAngularRate));
 
-    m_swerve.alignedToTarget = Math.abs(angleToTarget) < m_swerve.shootTolerance;
+    m_swerve.alignedToTarget = Math.abs(m_swerve.m_alignTargetPID.getError()) < m_toleranceDegrees;
 
     Logger.log("Align/AlignedToHub", m_swerve.alignedToTarget);
     Logger.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
     Logger.log("Align/AlignDistance", distanceToTarget);
-    Logger.log("Align/AlignAngle", angleToTarget);
-    Logger.log("Align/AlignHubAngle", HoodSubsystem.autoTargetAngle);
-    Logger.log("Align/AlignShootSpeed", shooter.autoSetTargetRPM);
+    Logger.log("Align/AlignAngle", targetDegrees);
+    Logger.log("Align/HoodAngle", HoodSubsystem.autoTargetAngle);
+    Logger.log("Align/ShootSpeed", shooter.autoSetTargetRPM);
     Logger.log("Align/Passing", passing);
     Logger.log("Align/TargetPose", targetPose);
     Logger.log("Align/AccumIntegral", m_swerve.m_alignTargetPID.getAccumulatedError());
+    Logger.log("Align/RotationVal", rotationVal);
 
   }
 

@@ -23,16 +23,14 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
-import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -42,10 +40,7 @@ import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.DriveWithShootOnTheMove;
-import frc.robot.commands.PIDDriveToPose;
 import frc.robot.commands.ShootCommand;
-import frc.robot.commands.AprilTags.CaptureMT1Values;
-import frc.robot.commands.AprilTags.PickAndSetPosetoMT1;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.AddressableLEDSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -94,8 +89,9 @@ public class RobotContainer {
 
         private final Telemetry logger = new Telemetry(RobotConstants.MaxSpeed, drivetrain);
 
-        public FuelSim fuelSim;
-        public SimRobotFuelSim fuelRobotSim;
+        public static FuelSim fuelSim;
+
+        public static SimRobotFuelSim fuelRobotSim;
 
         /* Path follower */
         private SendableChooser<Command> autoChooser;
@@ -172,7 +168,7 @@ public class RobotContainer {
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
                 registerNamedCommands();
-                // registerEventTriggers();
+                registerEventTriggers();
                 // configurePDH();
 
                 m_shooter.leftMotorActive = true;
@@ -233,16 +229,13 @@ public class RobotContainer {
                 // new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
                 driver.leftTrigger().whileTrue(
-                                Commands.either(
-                                                Commands.defer(
-                                                                () -> shootCommand(driver.a().getAsBoolean()),
-                                                                Set.of()),
-                                                Commands.run(() -> fuelRobotSim.launchFuel()),
-                                                () -> RobotBase.isReal()));
+                                Commands.defer(
+                                                () -> shootCommand(driver.a().getAsBoolean()),
+                                                Set.of()));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
-                                                m_intakeArm.intakeArmSlideToClearPositionCommand(),
+                                                m_intakeArm.intakeArmSlideToIntakePositionCommand(),
                                                 m_intake.startIntakeCommand()))
                                 .onFalse(
                                                 Commands.sequence(
@@ -255,10 +248,10 @@ public class RobotContainer {
                                                 m_shooter.setShootUsingDistanceCommand(true),
                                                 m_hood.setHoodUsingDistanceCommand(true),
                                                 m_shooter.runAllVelocityVoltageCommand()))
-                                .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
-                                                driver));
-                // .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
-                // driver));
+                                // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
+                                // driver));
+                                .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
+                                                driver, 1));
 
                 driver.rightBumper().onTrue(
                                 Commands.parallel(
@@ -485,7 +478,8 @@ public class RobotContainer {
                                                 && m_hood.isPositionWithinTolerance()
                                                 && m_shooter.allVelocityInTolerance());
 
-                autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false));
+                // autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder,
+                // drivetrain, false));
 
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 
@@ -608,26 +602,13 @@ public class RobotContainer {
         }
 
         private void registerNamedCommands() {
-                NamedCommands.registerCommand("USE_MT1",
-                                Commands.sequence(
-                                                new CaptureMT1Values(m_llv),
-                                                new PickAndSetPosetoMT1(m_llv, drivetrain)));
 
-                NamedCommands.registerCommand("USE_MT2", Commands.runOnce(() -> m_llv.useMT2 = true));
-
-                NamedCommands.registerCommand("DRIVE_TO_DEPOT_RECOVER_POSE",
-                                new PIDDriveToPose(drivetrain, new Pose2d()));
-
-                NamedCommands.registerCommand("MOVE_TO_DEPOT_INTAKE_POSE",
-                                drivetrain.pathFindToPose(new Pose2d(), drivetrain.pathConstraints));
-
-                NamedCommands.registerCommand("START_INTAKE", m_intake.startIntakeCommand().asProxy());
-                NamedCommands.registerCommand("STOP_INTAKE", m_intake.stopIntakeCommand());
-
-                NamedCommands.registerCommand("INTAKE_ARM_DOWN", m_intakeArm.intakeArmSlideToClearPositionCommand());
-                NamedCommands.registerCommand("INTAKE_ARM_UP", m_intakeArm.intakeArmSlideToClearPositionCommand());
-
-                NamedCommands.registerCommand("ALIGN_TO_HUB", new AutoAlignHub(drivetrain, m_shooter, 1));
+                NamedCommands.registerCommand("ALIGN_AND_SHOOT",
+                                Commands.deadline(
+                                                Commands.waitSeconds(5),
+                                                new AutoAlignHub(drivetrain, m_shooter, 1),
+                                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false))
+                                                .andThen(m_shooter.stopAllShootersCommand()));
 
                 NamedCommands.registerCommand("SHOOT_COMMAND",
                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false));
@@ -636,15 +617,20 @@ public class RobotContainer {
                 NamedCommands.registerCommand("START_SHOOTERS", m_shooter.runAllVelocityVoltageCommand());
                 NamedCommands.registerCommand("STOP_SHOOTERS", m_shooter.stopAllShootersCommand());
 
-                NamedCommands.registerCommand("START CLIMBER", Commands.none());
-                NamedCommands.registerCommand("STOP_CLIMBER", Commands.none());
-
         }
 
         private void registerEventTriggers() {
 
-                EventTrigger example = new EventTrigger("Example");
-                example.onTrue(Commands.none());
+                EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
+                runIntake.onTrue(
+                                Commands.sequence(
+                                                m_intake.startIntakeCommand(),
+                                                m_intakeArm.intakeArmSlideToIntakePositionCommand()));
+                EventTrigger endIntake = new EventTrigger("END_INTAKE");
+                endIntake.onTrue(
+                                Commands.sequence(
+                                                m_intake.stopIntakeCommand(),
+                                                m_intakeArm.intakeArmSlideToClearPositionCommand()));
 
         }
 
@@ -666,7 +652,10 @@ public class RobotContainer {
         }
 
         private Command shootCommand(boolean bypass) {
-                return new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, bypass);
+                return Commands.either(
+                                Commands.run(() -> fuelRobotSim.launchFuel()),
+                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, bypass),
+                                () -> RobotBase.isSimulation());
         }
 
         private void configureFuelSim() {
@@ -689,8 +678,7 @@ public class RobotContainer {
                                 Dimensions.FULL_LENGTH.div(2).in(Meters),
                                 -Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
                                 -Dimensions.FULL_WIDTH.div(2).in(Meters),
-                                () -> m_intake.intakeRunning(), // intake.isRightDeployed() &&
-                                                                // ableToIntake.getAsBoolean(),
+                                () -> m_intake.intakeRunning(),
                                 intakeCallback);
 
         }

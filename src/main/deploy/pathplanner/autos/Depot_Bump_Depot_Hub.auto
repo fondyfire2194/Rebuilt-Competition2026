@@ -1,0 +1,43 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "DepBmpDep"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ALIGN_AND_SHOOT"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "DepotBehindHubDepot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ALIGN_AND_SHOOT"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

@@ -7,18 +7,20 @@ package frc.robot.commands;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.Logger;
+import frc.robot.utils.ShootingData;
 
 public class AutoAlignHub extends Command {
 
@@ -29,11 +31,10 @@ public class AutoAlignHub extends Command {
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
   private Timer elapsedTime;
-  private double distanceToHub;
-  private double angleToTarget;
+  private double distanceToTarget;
+  private double targetDegrees;
 
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
-  private boolean alignedToTarget;
   private double tempI;
 
   public AutoAlignHub(
@@ -48,6 +49,10 @@ public class AutoAlignHub extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    drive = new SwerveRequest.FieldCentric()
+        .withDeadband(RobotConstants.MaxSpeed * 0.1)
+        .withRotationalDeadband(RobotConstants.MaxAngularRate * 0.1) // Add a 10% deadband
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     targetPose = AllianceUtil.getHubPose();
 
     m_swerve.isAligning = true;
@@ -61,33 +66,41 @@ public class AutoAlignHub extends Command {
   @Override
   public void execute() {
 
-    angleToTarget = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
-    distanceToHub = targetPose.getTranslation()
-        .getDistance(m_swerve.getState().Pose.getTranslation());
-    m_shooter.setDistanceToHub(distanceToHub);
+    Pose2d robotPose = m_swerve.getState().Pose;
+
+    distanceToTarget = targetPose.getTranslation()
+        .getDistance(robotPose.getTranslation());
+
+    m_shooter.setAutoSetTargetRPM(ShootingData.shooterSpeedMap.get(distanceToTarget));
+
+    HoodSubsystem.setAutoTargetAngle(ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
+
+    targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
     if (Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
-      m_swerve.m_alignTargetPID.setI(0);
+      m_swerve.m_alignTargetPID.setIntegratorRange(0, 0);
     } else
-      m_swerve.m_alignTargetPID.setI(tempI);
+      m_swerve.m_alignTargetPID.setIntegratorRange(-.1, .1);
 
     rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(),
-        angleToTarget);
+        targetDegrees);
 
     m_swerve.setControl(drive
         .withVelocityX(0)
         .withVelocityY(0)
         .withRotationalRate(rotationVal * MaxAngularRate));
 
-    alignedToTarget = Math.abs(angleToTarget) < m_toleranceDegrees;
+    m_swerve.alignedToTarget = Math.abs(m_swerve.m_alignTargetPID.getError()) < m_toleranceDegrees;
 
-    Logger.log("AlignedToHub", m_swerve.alignedToTarget);
-    Logger.log("AlignError", m_swerve.m_alignTargetPID.getError());
-    Logger.log("AlignDistance", distanceToHub);
-    Logger.log("AlignAngle", angleToTarget);
-    Logger.log("AlignHubAngle", HoodSubsystem.autoTargetAngle);
-    Logger.log("AlighShootSpeed", m_shooter.autoSetTargetRPM);
-
+    Logger.log("Align/AlignedToHub", m_swerve.alignedToTarget);
+    Logger.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
+    Logger.log("Align/AlignDistance", distanceToTarget);
+    Logger.log("Align/AlignAngle", targetDegrees);
+    Logger.log("Align/HoodAngle", HoodSubsystem.autoTargetAngle);
+    Logger.log("Align/ShootSpeed", m_shooter.autoSetTargetRPM);
+    Logger.log("Align/TargetPose", targetPose);
+    Logger.log("Align/AccumIntegral", m_swerve.m_alignTargetPID.getAccumulatedError());
+    Logger.log("Align/RotationVal", rotationVal);
   }
 
   // Called once the command ends or is interrupted.
@@ -104,8 +117,7 @@ public class AutoAlignHub extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return alignedToTarget || elapsedTime.hasElapsed(2) ||
-        RobotBase.isSimulation();
+    return false;
   }
 
   public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
@@ -113,4 +125,5 @@ public class AutoAlignHub extends Command {
     double YDiff = targetPose.getY() - robotPose.getY();
     return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
   }
+
 }

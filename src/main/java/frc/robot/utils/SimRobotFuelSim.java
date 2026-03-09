@@ -5,7 +5,6 @@
 package frc.robot.utils;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -25,15 +24,14 @@ import frc.robot.subsystems.TripleShooterSubsystem;
 public class SimRobotFuelSim {
 
     private static final DistanceUnit Meters = null;
-    private final int CAPACITY = 30;
+    private final int CAPACITY = 60;
     private final FuelSim fuelSim;
-    private int fuelStored = 800;
+    private int fuelStored = 8;
     LinearVelocity launchVelocity = MetersPerSecond.of(3);
     CommandSwerveDrivetrain drivetrain;
     HoodSubsystem hood;
     TripleShooterSubsystem shooter;    
-    
-    
+
 
     public double angle = 50;
 
@@ -70,7 +68,7 @@ public class SimRobotFuelSim {
                 initialVelocity,
                 Degrees.of(125),
                 // Degrees.of(angle).minus(Degrees.of(HoodSubsystem.getFinalTargetAngle())),
-                Degrees.of(drivetrain.getState().Pose.getRotation().getDegrees()),
+                Degrees.of(drivetrain.getState().Pose.getRotation().getDegrees()+15),
                 LauncherConstants.robotToShooterFuelSim.getMeasureZ());
     }
 
