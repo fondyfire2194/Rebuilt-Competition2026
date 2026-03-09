@@ -32,6 +32,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
+import frc.robot.utils.Logger;
 import frc.robot.utils.ShootingData;
 import frc.robot.utils.geometry.AllianceFlipUtil;
 
@@ -55,7 +56,7 @@ public class DriveWithShootOnTheMove extends Command {
   private SlewRateLimiter strafeLimiter = new SlewRateLimiter(3.0);
   private SlewRateLimiter rotationLimiter = new SlewRateLimiter(3.0);
 
-  private final CommandSwerveDrivetrain m_drivetrain;
+  private final CommandSwerveDrivetrain m_swerve;
   private final HoodSubsystem m_hood;
   private double kp = .0025;
   private double ki = .0;
@@ -68,7 +69,6 @@ public class DriveWithShootOnTheMove extends Command {
 
   private SwerveRequest.FieldCentric drive;
   private final TripleShooterSubsystem shooter;
-  private double deadband = .02;
   private Pose2d targetPose;
   private boolean passing;
   private static Distance distance;
@@ -76,18 +76,18 @@ public class DriveWithShootOnTheMove extends Command {
   private static Time timeOfFlight;
 
   public DriveWithShootOnTheMove(
-      CommandSwerveDrivetrain drivetrain,
+      CommandSwerveDrivetrain swerve,
       HoodSubsystem hood,
       TripleShooterSubsystem shooter,
       SwerveRequest.FieldCentric drive,
       CommandXboxController controller) {
 
-    m_drivetrain = drivetrain;
+    m_swerve = swerve;
     m_hood = hood;
     m_controller = controller;
     this.drive = drive;
     this.shooter = shooter;
-    addRequirements(m_drivetrain);
+    addRequirements(m_swerve);
   }
 
   // Called when the command is initially scheduled.
@@ -97,13 +97,15 @@ public class DriveWithShootOnTheMove extends Command {
     // if (!lob) {
     targetPose = AllianceUtil.getHubPose();
     m_alignTargetPID.setTolerance(0.2);
+    m_swerve.isAligning = true;
+    shooter.isShootOnTheMove = true;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
 
-    Pose2d robotPose = m_drivetrain.getState().Pose;
+    Pose2d robotPose = m_swerve.getState().Pose;
 
     passing = AllianceFlipUtil
         .applyX(robotPose.getX()) > FieldConstants.LinesVertical.hubCenter;
@@ -112,14 +114,14 @@ public class DriveWithShootOnTheMove extends Command {
     } else
       targetPose = AllianceUtil.getPassingTargetPose(robotPose);
 
-    Translation2d aimPoint = calculateLeadTarget(m_drivetrain, () -> targetPose.getTranslation());
+    Translation2d aimPoint = calculateLeadTarget(m_swerve, () -> targetPose.getTranslation());
 
     double distanceToTarget = newDistance.in(Meters);
 
     shooter.setAutoSetTargetRPM(passing ? ShootingData.passingShooterSpeedMap.get(distanceToTarget)
         : ShootingData.shooterSpeedMap.get(distanceToTarget));
 
-    HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
+    m_hood.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
         : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
     distanceToTarget = targetPose.getTranslation()
@@ -128,39 +130,44 @@ public class DriveWithShootOnTheMove extends Command {
     shooter.setAutoSetTargetRPM(passing ? ShootingData.passingShooterSpeedMap.get(distanceToTarget)
         : ShootingData.shooterSpeedMap.get(distanceToTarget));
 
-    HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
-        : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
-
     Pose2d aimPose = new Pose2d(aimPoint, new Rotation2d(Math.PI));
 
-    double targetDegrees = getAngleDegreesToTarget(robotPose, aimPose);
+    double targetDegrees = getAngleDegreesToTarget(aimPose, robotPose);
 
-    rotationVal = -m_alignTargetPID.calculate(robotPose.getRotation().getDegrees(), targetDegrees);
+    if (Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
+      m_swerve.m_alignTargetPID.setIntegratorRange(0, 0);
+    } else
+      m_swerve.m_alignTargetPID.setIntegratorRange(-.1, .1);
 
-    m_drivetrain.setControl(
+    rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(),
+        targetDegrees);
+
+    m_swerve.setControl(
         drive.withVelocityX(-m_controller.getLeftY() * MaxSpeed)
             .withVelocityY(-m_controller.getLeftX() * MaxSpeed)
             // // negative X (left)
             .withRotationalRate(rotationVal * MaxAngularRate));
 
-    m_drivetrain.alignedToTarget = Math.abs(m_alignTargetPID.getError()) < m_drivetrain.shootTolerance;
+    m_swerve.alignedToTarget = Math.abs(m_alignTargetPID.getError()) < m_swerve.shootTolerance;
 
     DogLog.log("SOTM/RobotPose", robotPose);
     DogLog.log("SOTM/TargetPose", targetPose);
     DogLog.log("SOTM/AimPose", aimPose);
-
     DogLog.log("SOTM/Passing", passing);
     DogLog.log("SOTM/AimPos", aimPoint);
     DogLog.log("SOTM/Distance", distanceToTarget);
     DogLog.log("SOTM/DegreesToTarget", targetDegrees);
     DogLog.log("SOTM/RotnVal", rotationVal);
-    DogLog.log("SOTM/RotnError", m_alignTargetPID.getError());
+    DogLog.log("SOTM/RotnError", m_alignTargetPID.getError());    
+    Logger.log("SOTM/AlignedToHub", m_swerve.alignedToTarget);
 
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    shooter.isShootOnTheMove = false;
+    m_swerve.isAligning = false;
   }
 
   // Returns true when the command should end.
@@ -199,8 +206,7 @@ public class DriveWithShootOnTheMove extends Command {
 
       timeOfFlight = Seconds.of(ShootingData.timeOfFlightMap.get(newDistance.in(Meters)));
 
-      DogLog.log("ShootOnTheMove/Target", new Pose2d(aimPoint, Rotation2d.kZero));
-
+     
     }
     return aimPoint;
   }

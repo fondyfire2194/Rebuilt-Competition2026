@@ -25,6 +25,7 @@ import com.pathplanner.lib.events.EventTrigger;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -89,9 +90,6 @@ public class RobotContainer {
 
         private final Telemetry logger = new Telemetry(RobotConstants.MaxSpeed, drivetrain);
 
-        public static FuelSim fuelSim;
-
-        public static SimRobotFuelSim fuelRobotSim;
 
         /* Path follower */
         private SendableChooser<Command> autoChooser;
@@ -102,7 +100,7 @@ public class RobotContainer {
 
         private final FeederSubsystem m_feeder;
 
-        private final IntakeSubsystem m_intake;
+        final IntakeSubsystem m_intake;
 
         private final IntakeSlideArmSubsystem m_intakeArm;
 
@@ -175,12 +173,6 @@ public class RobotContainer {
                 m_shooter.middleMotorActive = true;
                 m_shooter.rightMotorActive = true;
 
-                if (RobotBase.isSimulation()) {
-                        configureFuelSim();
-                        fuelRobotSim = new SimRobotFuelSim(fuelSim, drivetrain, m_hood, m_shooter);
-                        configureFuelSimRobot(fuelRobotSim::canIntake, fuelRobotSim::intakeFuel);
-
-                }
                 setDefaultCommands();
                 configurePresets();
                 configureDriverBindings();
@@ -248,10 +240,10 @@ public class RobotContainer {
                                                 m_shooter.setShootUsingDistanceCommand(true),
                                                 m_hood.setHoodUsingDistanceCommand(true),
                                                 m_shooter.runAllVelocityVoltageCommand()))
-                                // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
-                                // driver));
-                                .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
-                                                driver, 1));
+                                .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
+                                                driver));
+                // .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
+                // driver, 1));
 
                 driver.rightBumper().onTrue(
                                 Commands.parallel(
@@ -478,8 +470,8 @@ public class RobotContainer {
                                                 && m_hood.isPositionWithinTolerance()
                                                 && m_shooter.allVelocityInTolerance());
 
-                // autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder,
-                // drivetrain, false));
+                autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder,
+                                drivetrain, false));
 
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 
@@ -606,7 +598,7 @@ public class RobotContainer {
                 NamedCommands.registerCommand("ALIGN_AND_SHOOT",
                                 Commands.deadline(
                                                 Commands.waitSeconds(5),
-                                                new AutoAlignHub(drivetrain, m_shooter, 1),
+                                                new AutoAlignHub(drivetrain, m_shooter, m_hood, 1),
                                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false))
                                                 .andThen(m_shooter.stopAllShootersCommand()));
 
@@ -653,36 +645,12 @@ public class RobotContainer {
 
         private Command shootCommand(boolean bypass) {
                 return Commands.either(
-                                Commands.run(() -> fuelRobotSim.launchFuel()),
+                                Commands.run(() -> Robot.fuelRobotSim.launchFuel()),
                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, bypass),
                                 () -> RobotBase.isSimulation());
         }
 
-        private void configureFuelSim() {
-                fuelSim = new FuelSim();
-                fuelSim.clearFuel();
-                fuelSim.spawnStartingFuel();
-                fuelSim.start();
-                fuelSim.enableAirResistance();
-        }
-
-        private void configureFuelSimRobot(BooleanSupplier ableToIntake, Runnable intakeCallback) {
-                fuelSim.registerRobot(
-                                Dimensions.FULL_WIDTH.in(Meters),
-                                Dimensions.FULL_LENGTH.in(Meters),
-                                Dimensions.BUMPER_HEIGHT.in(Meters),
-                                () -> drivetrain.getState().Pose,
-                                () -> drivetrain.getState().Speeds);
-                fuelSim.registerIntake(
-                                -Dimensions.FULL_LENGTH.div(2).in(Meters),
-                                Dimensions.FULL_LENGTH.div(2).in(Meters),
-                                -Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
-                                -Dimensions.FULL_WIDTH.div(2).in(Meters),
-                                () -> m_intake.intakeRunning(),
-                                intakeCallback);
-
-        }
-
+        
         //
         // //Breakover Angle (B°) = 2 × tan-1(2 × Ground Clearance (GC) / Wheelbase
         // (WB)).

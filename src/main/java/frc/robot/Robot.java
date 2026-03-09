@@ -4,6 +4,11 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+
+import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.HootAutoReplay;
 import com.ctre.phoenix6.SignalLogger;
 
@@ -22,13 +27,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
+import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.AllianceUtil;
+import frc.robot.utils.FuelSim;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.Logger;
 import frc.robot.utils.LoopEvents;
+import frc.robot.utils.SimRobotFuelSim;
 
 public class Robot extends TimedRobot {
         private Command m_autonomousCommand;
@@ -47,6 +55,10 @@ public class Robot extends TimedRobot {
         private boolean autoHasRun;
 
         Timer loopTimer = new Timer();
+
+        public static FuelSim fuelSim;
+
+        public static SimRobotFuelSim fuelRobotSim;
 
         /* log and replay timestamp and joystick data */
         private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -72,6 +84,12 @@ public class Robot extends TimedRobot {
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
                 autoHasRun = false;
+                fuelSim=new FuelSim();
+                configureFuelSim();
+                fuelRobotSim = new SimRobotFuelSim(
+                                fuelSim, m_robotContainer.drivetrain, m_robotContainer.m_hood,
+                                m_robotContainer.m_shooter);
+                configureFuelSimRobot(() -> m_robotContainer.m_intake.intakeRunning(), () -> fuelRobotSim.canIntake());
 
         }
 
@@ -119,7 +137,7 @@ public class Robot extends TimedRobot {
                                 new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
                                                 m_robotContainer.drivetrain),
                                 new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
-
+ configureFuelSim();
         }
 
         @Override
@@ -140,6 +158,7 @@ public class Robot extends TimedRobot {
                         m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
 
                 loopTimer.start();
+
                 if (RobotBase.isReal()) {
                         LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
                                         CameraConstants.apriltagPipeline);
@@ -166,11 +185,12 @@ public class Robot extends TimedRobot {
                                                         m_robotContainer.drivetrain),
                                         new LimelightTagsMT2Update(m_robotContainer.m_llv,
                                                         m_robotContainer.m_llv.rightCam,
-                                                        m_robotContainer.drivetrain),
-                                        new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
+                                                        m_robotContainer.drivetrain));
 
                         m_robotContainer.m_llv.useMT2 = true;
                 }
+
+                // m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
                 CommandScheduler.getInstance()
                                 .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
                                                 m_robotContainer.m_leds));
@@ -179,9 +199,6 @@ public class Robot extends TimedRobot {
 
         @Override
         public void teleopPeriodic() {
-
-                SmartDashboard.putNumber("LC/Robot Angle",
-                                m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
         }
 
         @Override
@@ -191,9 +208,6 @@ public class Robot extends TimedRobot {
         @Override
         public void testInit() {
                 CommandScheduler.getInstance().cancelAll();
-                m_robotContainer.fuelSim.clearFuel();
-                 m_robotContainer.fuelSim.spawnStartingFuel(); // spawns fuel in the depots
-                // and neutral zone
 
         }
 
@@ -208,13 +222,37 @@ public class Robot extends TimedRobot {
 
         @Override
         public void simulationPeriodic() {
-                m_robotContainer.fuelSim.updateSim();
+                fuelSim.updateSim();
         }
 
         public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
                 double XDiff = targetPose.getX() - robotPose.getX();
                 double YDiff = targetPose.getY() - robotPose.getY();
                 return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
+        }
+
+        void configureFuelSim() {
+                fuelSim.clearFuel();
+                fuelSim.spawnStartingFuel();
+                fuelSim.start();
+                fuelSim.enableAirResistance();
+        }
+
+        public void configureFuelSimRobot(BooleanSupplier ableToIntake, Runnable intakeCallback) {
+                fuelSim.registerRobot(
+                                Dimensions.FULL_WIDTH.in(Meters),
+                                Dimensions.FULL_LENGTH.in(Meters),
+                                Dimensions.BUMPER_HEIGHT.in(Meters),
+                                () -> m_robotContainer.drivetrain.getState().Pose,
+                                () -> m_robotContainer.drivetrain.getState().Speeds);
+                fuelSim.registerIntake(
+                                -Dimensions.FULL_LENGTH.div(2).in(Meters),
+                                Dimensions.FULL_LENGTH.div(2).in(Meters),
+                                -Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
+                                -Dimensions.FULL_WIDTH.div(2).in(Meters),
+                                () -> m_robotContainer.m_intake.intakeRunning(),
+                                intakeCallback);
+
         }
 
 }

@@ -139,6 +139,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public Rotation2d projectedOnTheMoveShootAngle = new Rotation2d();
     public Rotation2d bumpr2d;
     public boolean isAligning;
+    
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -298,7 +299,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public void periodic() {
 
-        SmartDashboard.putNumber("AAAAAAAAPPPPP", m_alignTargetPID.getP());
         /*
          * Periodically try to apply the operator perspective.
          * If we haven't applied the operator perspective before, then we should apply

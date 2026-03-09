@@ -85,8 +85,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     this.autoSetTargetRPM = autoSetTargetRPM;
     finalSetTargetRPM = autoSetTargetRPM;
     shooterLinearVelocity = angularToLinearVelocity(RPM.of(finalSetTargetRPM), shooterRollerDiameter);
-    SmartDashboard.putNumber("AAAAAAAAARPMLV", shooterLinearVelocity.in(MetersPerSecond));
-
+   
   }
 
   public double finalSetTargetRPM;

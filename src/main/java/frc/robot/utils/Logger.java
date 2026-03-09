@@ -65,6 +65,8 @@ public class Logger extends DogLog {
     log(key, value, DEFAULT_LOG_FREQUENCY);
   }
 
+
+
   // Float
   public static void log(String key, float value, double frequencySeconds) {
     if (shouldLog(key, frequencySeconds)) {

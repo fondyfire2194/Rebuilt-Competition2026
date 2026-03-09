@@ -6,15 +6,13 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants.FeederSetpoints;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.Constants.FeederSetpoints;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
-import frc.robot.utils.FuelSim;
-import frc.robot.utils.SimRobotFuelSim;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ShootCommand extends Command {
@@ -59,7 +57,7 @@ public class ShootCommand extends Command {
     }
 
     if (RobotBase.isSimulation())
-      RobotContainer.fuelRobotSim.launchFuel();
+      Robot.fuelRobotSim.launchFuel();
   }
 
   // Called once the command ends or is interrupted.

@@ -15,13 +15,13 @@ import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.utils.Logger;
 
 public class AddressableLEDSubsystem extends SubsystemBase {
   /** Creates a new AddressableLEDSubsystem. */
@@ -151,12 +151,11 @@ public class AddressableLEDSubsystem extends SubsystemBase {
      * 
      */
 
-    SmartDashboard.putBoolean("HUBACTIVE", hubIsActive);
-    SmartDashboard.putBoolean("WarningShoot", fiveSecondWarningEndOfShoot);
-    SmartDashboard.putBoolean("WarningPickup", fiveSecondWarningEndOfPickup);
-    SmartDashboard.putBoolean("WarningEndGame", endGameWarning);
-    SmartDashboard.putBoolean("AllianceShootActive", currentAllianceShootActive);
-    SmartDashboard.putString("HiAuto-GameData", gameData);
+    Logger.log("LEDS/WarningShoot", fiveSecondWarningEndOfShoot);
+    Logger.log("LEDS/WarningPickup", fiveSecondWarningEndOfPickup);
+    Logger.log("LEDS/WarningEndGame", endGameWarning);
+    Logger.log("LEDS/AllianceShootActive", currentAllianceShootActive);
+    Logger.log("LEDS/HiAuto-GameData", gameData);
     m_led.setData(m_buffer);
   }
 

@@ -83,7 +83,7 @@ public class AlignTargetOdometry extends Command {
     shooter.setAutoSetTargetRPM(passing ? ShootingData.passingShooterSpeedMap.get(distanceToTarget)
         : ShootingData.shooterSpeedMap.get(distanceToTarget));
 
-    HoodSubsystem.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
+    hood.setAutoTargetAngle(passing ? ShootingData.passingHoodAngleMap.get(distanceToTarget).getDegrees()
         : ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
     targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);

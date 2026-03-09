@@ -34,7 +34,7 @@ public class HoodSubsystem extends SubsystemBase {
 
     public static double autoTargetAngle;
 
-    public static void setAutoTargetAngle(double autoAngle) {
+    public void setAutoTargetAngle(double autoAngle) {
         autoTargetAngle = autoAngle;
         finalTargetAngle = autoAngle;
     }

@@ -56,14 +56,9 @@ public class SimRobotFuelSim {
         if (fuelStored == 0)
             return;
         fuelStored--;
-        SmartDashboard.putNumber("AAAAAAAAAFUEL", fuelStored);
-        SmartDashboard.putNumber("AAAAAAAARPM", shooter.finalSetTargetRPM);
-
-        SmartDashboard.putNumber("AAAAAAAAAAAAAAAVel", angle);
-
+     
         LinearVelocity initialVelocity = MetersPerSecond.of(6.75);
-        SmartDashboard.putNumber("AAAAAAAAALinVel", initialVelocity.in(MetersPerSecond));
-
+       
         fuelSim.launchFuel(
                 initialVelocity,
                 Degrees.of(125),

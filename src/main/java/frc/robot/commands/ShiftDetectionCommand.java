@@ -8,11 +8,12 @@ import java.util.Optional;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.AddressableLEDSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
+import frc.robot.utils.Logger;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ShiftDetectionCommand extends Command {
@@ -29,12 +30,14 @@ public class ShiftDetectionCommand extends Command {
 
   private final double driverWarningTime = 5;
   private int shiftNumber = 0;
-  
 
   double matchTime;
+  double teleopTime = 134;
 
-  private boolean hubIsActive;
+  // private boolean hubIsActive;
   private boolean blueActiveFirst;
+
+  Timer shiftTimer = new Timer();
 
   // https://docs.wpilib.org/en/stable/docs/yearly-overview/2026-game-data.html
   public ShiftDetectionCommand(TripleShooterSubsystem shooter, AddressableLEDSubsystem leds) {
@@ -46,30 +49,36 @@ public class ShiftDetectionCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    shiftTimer.restart();
+    shiftNumber = 0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    matchTime = DriverStation.getMatchTime();
+
+    matchTime = teleopTime - shiftTimer.get();
+
     m_leds.gameData = DriverStation.getGameSpecificMessage();// letter is high auto score alliance
 
-    hubIsActive = isHubActive();
-    m_shooter.hubIsActive = hubIsActive;
-    m_leds.hubIsActive = hubIsActive;
+    m_shooter.hubIsActive = isHubActive();
 
-    m_leds.fiveSecondWarningEndOfShoot = hubIsActive && getFiveSecondWarning();
-    m_leds.fiveSecondWarningEndOfPickup = !hubIsActive && getFiveSecondWarning();
+    m_leds.hubIsActive = m_shooter.hubIsActive;
+
+    m_leds.fiveSecondWarningEndOfShoot = m_shooter.hubIsActive && getFiveSecondWarning();
+    m_leds.fiveSecondWarningEndOfPickup = !m_shooter.hubIsActive && getFiveSecondWarning();
     m_leds.endGameWarning = getEndGameWarning();
     m_leds.inEndGame = getInEndGame();
     m_leds.endOfMatch = endOfMatch();
 
-    SmartDashboard.putNumber("MatchTime", matchTime);
-    SmartDashboard.putNumber("ShiftNum", shiftNumber);
-    SmartDashboard.putBoolean("BLUEFIRST", blueActiveFirst);
-    SmartDashboard.putNumber("ShiftTimeLeft", getTimeLeftInShift());
 
-    SmartDashboard.putBoolean("EndOfMatch", endOfMatch());
+    Logger.log("SHDET/HubActive",m_shooter.hubIsActive);
+    Logger.log("SHDET/MatchTime", matchTime);
+    Logger.log("SHDET/ShiftNum", shiftNumber);
+    Logger.log("SHDET/BLUEFIRST", blueActiveFirst);
+    Logger.log("SHDET/ShiftTimeLeft", getTimeLeftInShift());
+
+    Logger.log("EndOfMatch", endOfMatch());
   }
 
   // Called once the command ends or is interrupted.
@@ -123,7 +132,7 @@ public class ShiftDetectionCommand extends Command {
     };
 
     if (m_leds.forceFirstAlliance) {
-     m_leds. currentAllianceShootActive = m_leds.blueActiveFirst;
+      m_leds.currentAllianceShootActive = m_leds.blueActiveFirst;
     }
 
     if (matchTime >= firstShiftStartTime) {

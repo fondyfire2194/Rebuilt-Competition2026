@@ -91,8 +91,7 @@ public class AllianceUtil {
       else
         bumpRotation2d = Rotation2d.fromDegrees(135);
 
-    SmartDashboard.putNumber("AAAAAAAAAAAANGLE", bumpRotation2d.getDegrees());
-  }
+     }
 
   public static Pose2d getPassingTargetPose(Pose2d robotPose) {
 if(isBlueAlliance())

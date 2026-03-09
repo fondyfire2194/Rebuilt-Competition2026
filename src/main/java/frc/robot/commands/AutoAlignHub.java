@@ -26,6 +26,7 @@ public class AutoAlignHub extends Command {
 
   private final CommandSwerveDrivetrain m_swerve;
   private final TripleShooterSubsystem m_shooter;
+  private final HoodSubsystem m_hood;
   private final double m_toleranceDegrees;
   private SwerveRequest.FieldCentric drive;
   public Pose2d targetPose = new Pose2d();
@@ -38,10 +39,11 @@ public class AutoAlignHub extends Command {
   private double tempI;
 
   public AutoAlignHub(
-      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, double toleranceDegrees) {
+      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter,HoodSubsystem hood, double toleranceDegrees) {
 
     m_swerve = swerve;
     m_shooter = shooter;
+    m_hood=hood;
     m_toleranceDegrees = toleranceDegrees;
     addRequirements(m_swerve);
   }
@@ -73,7 +75,7 @@ public class AutoAlignHub extends Command {
 
     m_shooter.setAutoSetTargetRPM(ShootingData.shooterSpeedMap.get(distanceToTarget));
 
-    HoodSubsystem.setAutoTargetAngle(ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
+    m_hood.setAutoTargetAngle(ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
 
     targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
