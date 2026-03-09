@@ -334,4 +334,45 @@ public class LimelightVision extends SubsystemBase {
     // initSendable(builder, 2);
 
   }
+
+  /**
+   * 
+   *  // Basic filtering thresholds
+  public static final double MAX_AMBIGUITY = 0.3;
+  public static final double MAX_Z_ERROR = 0.75;
+
+  // Standard deviation baselines, for 1 meter distance and 1 tag
+  // (Adjusted automatically based on distance and # of tags)
+  public static final double LINEAR_STDDEV_BASELINE = 0.02; // Meters
+  public static final double ANGULAR_STDDEV_BASELINE = 0.06; // Radians
+
+  // Standard deviation multipliers for each camera
+  // (Adjust to trust some cameras more than others)
+  public static final double[] CAMERA_STDDEV_FACTORS =
+      new double[] {
+        1.0, // left
+        1.0, // back-left
+        1.0, // back-right
+        1.0 // right
+      };
+   * double stdDevFactor =
+            Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+
+        double linearStdDev = LINEAR_STDDEV_BASELINE * stdDevFactor;
+
+        double angularStdDev = ANGULAR_STDDEV_BASELINE * stdDevFactor;
+        
+        if (cameraIndex < CAMERA_STDDEV_FACTORS.length) {
+          linearStdDev *= CAMERA_STDDEV_FACTORS[cameraIndex];
+          angularStdDev *= CAMERA_STDDEV_FACTORS[cameraIndex];
+        }
+
+        // Send vision observation
+        consumer.accept(
+            observation.pose().toPose2d(),
+            observation.timestamp(),
+            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+     
+   * 
+   */
 }

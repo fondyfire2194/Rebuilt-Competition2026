@@ -90,7 +90,6 @@ public class RobotContainer {
 
         private final Telemetry logger = new Telemetry(RobotConstants.MaxSpeed, drivetrain);
 
-
         /* Path follower */
         private SendableChooser<Command> autoChooser;
 
@@ -240,10 +239,10 @@ public class RobotContainer {
                                                 m_shooter.setShootUsingDistanceCommand(true),
                                                 m_hood.setHoodUsingDistanceCommand(true),
                                                 m_shooter.runAllVelocityVoltageCommand()))
-                                .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
-                                                driver));
-                // .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
-                // driver, 1));
+                                // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
+                                // driver));
+                                .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
+                                                driver, 1));
 
                 driver.rightBumper().onTrue(
                                 Commands.parallel(
@@ -650,7 +649,6 @@ public class RobotContainer {
                                 () -> RobotBase.isSimulation());
         }
 
-        
         //
         // //Breakover Angle (B°) = 2 × tan-1(2 × Ground Clearance (GC) / Wheelbase
         // (WB)).
