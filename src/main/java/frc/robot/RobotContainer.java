@@ -288,7 +288,7 @@ public class RobotContainer {
 
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
-                codriver.rightBumper().onTrue(Commands.none());
+                codriver.rightBumper().whileTrue(m_intakeArm.jogIntakeArmCommand(()->codriver.getLeftY()));
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
                 codriver.rightTrigger().and(codriver.povDown()).onTrue(
@@ -310,10 +310,7 @@ public class RobotContainer {
 
                 codriver.rightTrigger().and(codriver.povRight()).whileTrue(m_hood.jogHoodDownCommand());
 
-                codriver.leftTrigger().and(codriver.povRight())
-                                .whileTrue(Commands.defer(
-                                                () -> m_intakeArm.jogIntakeArmCommand(codriver.getLeftX()), Set.of()));
-
+               
                 codriver.leftTrigger().and(codriver.povLeft())
                                 .onTrue(m_hood.setHoodZeroCommand().ignoringDisable(true));
 

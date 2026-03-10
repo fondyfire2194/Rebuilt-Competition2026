@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.InchesPerSecond;
 import static edu.wpi.first.units.Units.Millimeters;
 
+import java.util.function.DoubleSupplier;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -196,15 +197,15 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
     return stallDebouncer.calculate(stalled);
   }
 
-  public Command jogIntakeArmCommand(double jogRate) {
+  public Command jogIntakeArmCommand(DoubleSupplier jogRate) {
     return new FunctionalCommand(
         () -> {
         }, // init
         () -> {
-          if (getIntakeSlidePosition().lt(maxDistance) && jogRate > 0)
-            intakeArmSlideMotor.setVoltage(jogRate * RobotController.getBatteryVoltage());
-          else if (getIntakeSlidePosition().gte(minDistance) && jogRate < 0)
-            intakeArmSlideMotor.setVoltage(jogRate * RobotController.getBatteryVoltage());
+          if (getIntakeSlidePosition().lt(maxDistance) && jogRate.getAsDouble() > 0)
+            intakeArmSlideMotor.setVoltage(jogRate.getAsDouble() * RobotController.getBatteryVoltage());
+          else if (getIntakeSlidePosition().gte(minDistance) && jogRate.getAsDouble() < 0)
+            intakeArmSlideMotor.setVoltage(jogRate.getAsDouble() * RobotController.getBatteryVoltage());
           else
             intakeArmSlideMotor.set(0);
         }, // execute
