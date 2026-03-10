@@ -49,12 +49,14 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void initSendable(SendableBuilder builder) {
     builder.setSmartDashboardType("Intake");
+
+     builder.addDoubleProperty("SimPower", () -> intakePowerSim, null);   
     builder.addDoubleProperty("Amps", () -> intakeMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("RPM", () -> intakeMotor.getEncoder().getVelocity(), null);
     builder.addDoubleProperty("Volts Out", () -> intakeMotor.getAppliedOutput() * 12., null);
-    builder.addBooleanProperty("Running", () ->intakeRunning(), null);
+    builder.addBooleanProperty("Running", () -> intakeRunning(), null);
     builder.addBooleanProperty("Fault", () -> intakeMotor.hasActiveFault(), null);
-    
+
   }
 
   /** Set the intake motor power in the range of [-1, 1]. */

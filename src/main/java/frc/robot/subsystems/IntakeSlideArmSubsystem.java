@@ -134,6 +134,7 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
 
     builder.setSmartDashboardType("IntakeArm");
+    
     builder.addDoubleProperty("Motor Volts", () -> intakeArmSlideMotor.getAppliedOutput() * 12, null);
     builder.addDoubleProperty("Motor Amps", () -> intakeArmSlideMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("ActualPosition", () -> getIntakeSlidePosition().in(Inches), null);

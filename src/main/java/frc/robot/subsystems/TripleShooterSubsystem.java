@@ -85,7 +85,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     this.autoSetTargetRPM = autoSetTargetRPM;
     finalSetTargetRPM = autoSetTargetRPM;
     shooterLinearVelocity = angularToLinearVelocity(RPM.of(finalSetTargetRPM), shooterRollerDiameter);
-   
+
   }
 
   public double finalSetTargetRPM;
@@ -94,8 +94,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   private int tst = 0;
 
-  public boolean endShooterCommand;
-
   public boolean hubIsActive;
 
   private boolean shootUsingDistance;
@@ -103,6 +101,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public boolean bypassShootInterlocks = true;
 
   public boolean isShootOnTheMove;
+
+  public boolean shooterIsRunning;
 
   public boolean isShootUsingDistance() {
     return shootUsingDistance;
@@ -165,6 +165,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
   }
 
   public void runAllVelocityVoltage() {
+    shooterIsRunning = true;
     if (leftMotorActive)
       runVelocityVoltage(leftMotor);
 
@@ -188,11 +189,11 @@ public class TripleShooterSubsystem extends SubsystemBase {
   }
 
   public void stopAllShooters() {
+    shooterIsRunning = false;
     setPercentOutput(leftMotor, 0.0);
     setPercentOutput(middleMotor, 0.0);
     setPercentOutput(rightMotor, 0.0);
     disableAllShooters();
-    endShooterCommand = true;
   }
 
   public Command stopAllShootersCommand() {
@@ -250,12 +251,13 @@ public class TripleShooterSubsystem extends SubsystemBase {
     final boolean isInVelocityVoltageMode = motor.getAppliedControl().equals(velocityVoltage);
     final AngularVelocity currentVelocity = motor.getVelocity().getValue();
     final AngularVelocity targetVelocity = velocityVoltage.getVelocityMeasure();
-    return isInVelocityVoltageMode && currentVelocity.isNear(targetVelocity, kVelocityTolerance);
+    return isInVelocityVoltageMode && targetVelocity.in(RPM) != 0
+        && currentVelocity.isNear(targetVelocity, kVelocityTolerance);
   }
 
   public boolean allVelocityInTolerance() {
-    return RobotBase.isSimulation() ||
-        (isVelocityWithinTolerance(leftMotor) || !leftMotorActive)
+    return RobotBase.isSimulation() && shooterIsRunning
+        || (isVelocityWithinTolerance(leftMotor) || !leftMotorActive)
             && (isVelocityWithinTolerance(middleMotor) || !middleMotorActive)
             && (isVelocityWithinTolerance(rightMotor) || !rightMotorActive);
   }
@@ -266,6 +268,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     builder.addDoubleProperty(name + " Supply Current", () -> motor.getSupplyCurrent().getValue().in(Amps), null);
     builder.addDoubleProperty(name + " Supply Volts", () -> motor.getMotorVoltage().getValueAsDouble(), null);
     builder.addBooleanProperty(name + " At Speed", () -> isVelocityWithinTolerance(motor), null);
+
   }
 
   @Override
@@ -279,6 +282,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
         null);
     builder.addBooleanProperty("Use Distance For RPM", () -> isShootUsingDistance(), null);
+    builder.addBooleanProperty("Is Running", () -> shooterIsRunning, null);
 
     builder.addDoubleProperty("Voltage Target RPM", () -> velocityVoltage.getVelocityMeasure().in(RPM), null);
     builder.addDoubleProperty("Manual Target RPM", () -> manualSetTargetRPM, null);

@@ -5,6 +5,7 @@
 package frc.robot.commands;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -42,6 +43,9 @@ public class AlignTargetOdometry extends Command {
   private boolean passing;
 
   private final double m_toleranceDegrees;
+  private double lastTargetDegrees;
+  private int delayCount;
+  private int delayLimit = 10;//10*20ms
 
   public AlignTargetOdometry(
       CommandSwerveDrivetrain swerve,
@@ -65,11 +69,16 @@ public class AlignTargetOdometry extends Command {
   public void initialize() {
     m_swerve.isAligning = true;
     m_swerve.m_alignTargetPID.reset();
+    delayCount = 0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    // allow time for conditions to settle
+    //rotation is not applied before this
+    if (delayCount <= delayLimit)
+      delayCount++;
 
     passing = AllianceFlipUtil
         .applyX(m_swerve.getState().Pose.getX()) > FieldConstants.LinesVertical.hubCenter;
@@ -89,6 +98,11 @@ public class AlignTargetOdometry extends Command {
 
     targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
+    if (targetDegrees != lastTargetDegrees) {
+      m_swerve.m_alignTargetPID.setSetpoint(targetDegrees);
+      lastTargetDegrees = targetDegrees;
+    }
+
     if (m_swerve.alignedToTarget || Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
       m_swerve.m_alignTargetPID.setIntegratorRange(0, 0);
     } else
@@ -97,8 +111,12 @@ public class AlignTargetOdometry extends Command {
     rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(),
         targetDegrees);
 
+    if (delayCount < delayLimit)
+      rotationVal = 0;
+
     m_swerve.setControl(
-        drive.withVelocityX(-m_controller.getLeftY() * RobotConstants.MaxSpeed)
+        drive.withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
+            .withVelocityX(-m_controller.getLeftY() * RobotConstants.MaxSpeed)
             .withVelocityY(-m_controller.getLeftX() * RobotConstants.MaxSpeed)
             // // negative X (left)
             .withRotationalRate(rotationVal * RobotConstants.MaxAngularRate));
@@ -123,6 +141,7 @@ public class AlignTargetOdometry extends Command {
   public void end(boolean interrupted) {
     m_swerve.isAligning = false;
     m_swerve.m_alignTargetPID.reset();
+    delayCount=0;
   }
 
   // Returns true when the command should end.

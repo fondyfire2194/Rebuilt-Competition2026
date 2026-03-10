@@ -34,6 +34,7 @@ public class AutoAlignHub extends Command {
   private Timer elapsedTime;
   private double distanceToTarget;
   private double targetDegrees;
+  private double lastTargetDegrees;
 
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
@@ -79,6 +80,11 @@ public class AutoAlignHub extends Command {
 
     targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
+    if (targetDegrees != lastTargetDegrees) {
+      m_swerve.m_alignTargetPID.setSetpoint(targetDegrees);
+      lastTargetDegrees = targetDegrees;
+    }
+    
     if (m_swerve.alignedToTarget || Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
       m_swerve.m_alignTargetPID.setIntegratorRange(0, 0);
     } else

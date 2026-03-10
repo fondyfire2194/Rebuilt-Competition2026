@@ -75,29 +75,44 @@ public class AllianceUtil {
     boolean inNeutralZone = AllianceFlipUtil
         .applyX(robotPose
             .getX()) > FieldConstants.LinesVertical.hubCenter;
-    SmartDashboard.putBoolean("AAAAINNEUT", inNeutralZone);
-    SmartDashboard.putBoolean("AAAARED", isRedAlliance());
-    SmartDashboard.putBoolean("AAAABLUE", isBlueAlliance());
 
-    if (isBlueAlliance())
-      if (!inNeutralZone)
+    boolean aboveYCenter = AllianceFlipUtil.applyY(robotPose
+        .getY()) > FieldConstants.LinesHorizontal.center;
+
+    if (isBlueAlliance()) {
+
+      if (!inNeutralZone && aboveYCenter)
+        bumpRotation2d = Rotation2d.fromDegrees(135);
+      if (!inNeutralZone && !aboveYCenter)
+        bumpRotation2d = Rotation2d.fromDegrees(-135);
+
+      if (inNeutralZone && aboveYCenter)
         bumpRotation2d = Rotation2d.fromDegrees(-45);
-      else
-        bumpRotation2d = Rotation2d.fromDegrees(135);
-
-    if (isRedAlliance())
-      if (!inNeutralZone)
+      if (inNeutralZone && !aboveYCenter)
         bumpRotation2d = Rotation2d.fromDegrees(45);
-      else
-        bumpRotation2d = Rotation2d.fromDegrees(135);
 
-     }
+    }
+
+    if (isRedAlliance()) {
+
+      if (!inNeutralZone && aboveYCenter)
+        bumpRotation2d = Rotation2d.fromDegrees(135);
+      if (!inNeutralZone && !aboveYCenter)
+        bumpRotation2d = Rotation2d.fromDegrees(-135);
+
+      if (inNeutralZone && aboveYCenter)
+        bumpRotation2d = Rotation2d.fromDegrees(-45);
+      if (inNeutralZone && !aboveYCenter)
+        bumpRotation2d = Rotation2d.fromDegrees(45);
+
+    }
+  }
 
   public static Pose2d getPassingTargetPose(Pose2d robotPose) {
-if(isBlueAlliance())
-   return robotPose.getY() < FieldConstants.fieldWidth / 2 ? getOutpostPassingPose() : getDepotPassingPose();
-else
-   return robotPose.getY() >= FieldConstants.fieldWidth / 2 ? getOutpostPassingPose() : getDepotPassingPose();
+    if (isBlueAlliance())
+      return robotPose.getY() < FieldConstants.fieldWidth / 2 ? getOutpostPassingPose() : getDepotPassingPose();
+    else
+      return robotPose.getY() >= FieldConstants.fieldWidth / 2 ? getOutpostPassingPose() : getDepotPassingPose();
 
   }
 

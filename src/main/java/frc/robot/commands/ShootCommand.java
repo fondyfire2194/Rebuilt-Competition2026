@@ -8,11 +8,11 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FeederSetpoints;
 import frc.robot.Robot;
-import frc.robot.RobotContainer;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
+import frc.robot.utils.Logger;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ShootCommand extends Command {
@@ -51,13 +51,19 @@ public class ShootCommand extends Command {
 
       m_feeder.runFeederRollerAtVelocity();
 
-      if (Math.abs(
+      if (RobotBase.isSimulation() || Math.abs(
           m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt)
         m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
     }
 
     if (RobotBase.isSimulation())
       Robot.fuelRobotSim.launchFuel();
+
+    Logger.log("SHOOTConditions/Bypass", m_bypassInterlocks);
+    Logger.log("SHOOTConditions/AtSpeed", m_shooter.allVelocityInTolerance());
+    Logger.log("SHOOTConditions/HoodAtTarget", m_hood.isPositionWithinTolerance());
+    Logger.log("SHOOTConditions/SwerveAligned", m_swerve.alignedToTarget);
+
   }
 
   // Called once the command ends or is interrupted.

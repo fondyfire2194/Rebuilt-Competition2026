@@ -30,10 +30,10 @@ public class SimRobotFuelSim {
     LinearVelocity launchVelocity = MetersPerSecond.of(3);
     CommandSwerveDrivetrain drivetrain;
     HoodSubsystem hood;
-    TripleShooterSubsystem shooter;    
+    TripleShooterSubsystem shooter;
 
-
-    public double angle = 50;
+    double redAngle = 125;
+    double blueAngle = 50;
 
     public SimRobotFuelSim(FuelSim fuelSim, CommandSwerveDrivetrain drivetrain, HoodSubsystem hood,
             TripleShooterSubsystem shooter) {
@@ -41,6 +41,7 @@ public class SimRobotFuelSim {
         this.drivetrain = drivetrain;
         this.hood = hood;
         this.shooter = shooter;
+         SmartDashboard.putNumber("FUELTOTAL", fuelStored);
     }
 
     public boolean canIntake() {
@@ -56,14 +57,15 @@ public class SimRobotFuelSim {
         if (fuelStored == 0)
             return;
         fuelStored--;
-     
+        SmartDashboard.putNumber("FUELTOTAL", fuelStored);
         LinearVelocity initialVelocity = MetersPerSecond.of(6.75);
-       
+        double angle = AllianceUtil.isRedAlliance()?redAngle:blueAngle;
+
         fuelSim.launchFuel(
                 initialVelocity,
-                Degrees.of(125),
+                Degrees.of(angle),
                 // Degrees.of(angle).minus(Degrees.of(HoodSubsystem.getFinalTargetAngle())),
-                Degrees.of(drivetrain.getState().Pose.getRotation().getDegrees()+15),
+                Degrees.of(drivetrain.getState().Pose.getRotation().getDegrees() + 15),
                 LauncherConstants.robotToShooterFuelSim.getMeasureZ());
     }
 
@@ -73,10 +75,6 @@ public class SimRobotFuelSim {
 
     public static LinearVelocity angularToLinearVelocity(AngularVelocity vel, Distance radius) {
         return MetersPerSecond.of(vel.in(RadiansPerSecond) * radius.in(Meters) * 0.54);
-    }
-
-    public Command incAngle() {
-        return Commands.runOnce(() -> angle += 10);
     }
 
 }

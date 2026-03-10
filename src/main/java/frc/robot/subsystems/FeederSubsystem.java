@@ -31,10 +31,9 @@ public class FeederSubsystem extends SubsystemBase {
   public SparkMax feederBeltMotor;
 
   public SparkMax feederRollerMotor;
-  
-    private SparkClosedLoopController closedLoopController;
-    private RelativeEncoder encoder;
 
+  private SparkClosedLoopController closedLoopController;
+  private RelativeEncoder encoder;
 
   private double feederRollerPowerSim;
   private double feederBeltPowerSim;
@@ -59,7 +58,6 @@ public class FeederSubsystem extends SubsystemBase {
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
-        
     closedLoopController = feederRollerMotor.getClosedLoopController();
 
     feederBeltMotor.configure(
@@ -77,6 +75,7 @@ public class FeederSubsystem extends SubsystemBase {
     builder.setSmartDashboardType("Feeder");
     builder.addDoubleProperty("Belt Motor RPM", () -> feederBeltMotor.getEncoder().getVelocity(), null);
     builder.addDoubleProperty("Belt Motor Amps", () -> feederBeltMotor.getOutputCurrent(), null);
+    builder.addDoubleProperty("Belt Motor Sim", () -> feederBeltPowerSim, null);
     builder.addBooleanProperty("Belt Motor Fault", () -> feederBeltMotor.hasActiveFault(), null);
 
     builder.addDoubleProperty("Roller Motor RPM", () -> feederRollerMotor.getEncoder().getVelocity(), null);
@@ -88,9 +87,12 @@ public class FeederSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     Logger.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
+    Logger.log("Feeder/RollerTargetRPM", closedLoopController.getSetpoint());
     Logger.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
     Logger.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+
     Logger.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
+
     Logger.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
     Logger.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
 
@@ -101,13 +103,12 @@ public class FeederSubsystem extends SubsystemBase {
     feederRollerPowerSim = power;
   }
 
-  public void runFeederRollerAtVelocity(){
-      
-      closedLoopController.setSetpoint(FeederSetpoints.kRollerShootRPM, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
-  
+  public void runFeederRollerAtVelocity() {
+    closedLoopController.setSetpoint(FeederSetpoints.kRollerShootRPM, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
   }
 
   public void stopFeederRollerMotor() {
+    closedLoopController.setSetpoint(0, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
     feederRollerMotor.set(0);
     feederRollerPowerSim = 0;
   }

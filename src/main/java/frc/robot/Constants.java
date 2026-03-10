@@ -316,8 +316,8 @@ public final class Constants {
       public static final double oppAllianceZone = aprilTagFieldLayout.getTagPose(10).get().getX();
     }
 
-    public static final double xPassFromFieldEdge = 2;
-    public static final double yPassFromFieldEdge = 2;
+    public static final double xPassFromFieldEdge = 1;
+    public static final double yPassFromFieldEdge = 1;
 
     public static final Pose2d outpostPassingTargetPose = new Pose2d(xPassFromFieldEdge, yPassFromFieldEdge,
         new Rotation2d());

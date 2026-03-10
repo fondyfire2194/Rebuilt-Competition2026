@@ -73,7 +73,7 @@ public class RobotContainer {
                         .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage); // Use open-loop control
                                                                                               // for drive motors
 
-        private final CommandXboxController driver = new CommandXboxController(0);
+        public final CommandXboxController driver = new CommandXboxController(0);
         public final CommandXboxController codriver = new CommandXboxController(1);
         public final CommandXboxController presetdriver = new CommandXboxController(2);
         public final CommandXboxController bumpdriver = new CommandXboxController(3);
@@ -101,10 +101,10 @@ public class RobotContainer {
 
         // public final PowerDistribution pdh;
 
-        private boolean showShooterData = false;
+        private boolean showShooterData = true;
         private boolean showHoodData = false;
-        private boolean showFeederData = false;
-        private boolean showIntakeData = false;
+        private boolean showFeederData = true;
+        private boolean showIntakeData = true;
         private boolean showIntakeArmData = true;
         private boolean showLLData = false;
 
@@ -213,7 +213,7 @@ public class RobotContainer {
 
                 driver.leftTrigger().whileTrue(
                                 Commands.defer(
-                                                () -> shootCommand(true),
+                                                () -> shootCommand(driver.back().getAsBoolean()),
                                                 Set.of()));
 
                 driver.rightTrigger().whileTrue(
@@ -597,13 +597,6 @@ public class RobotContainer {
                                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false))
                                                 .andThen(m_shooter.stopAllShootersCommand()));
 
-                NamedCommands.registerCommand("SHOOT_COMMAND",
-                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false));
-                NamedCommands.registerCommand("END_SHOOT_COMMAND", m_shooter.stopAllShootersCommand());
-
-                NamedCommands.registerCommand("START_SHOOTERS", m_shooter.runAllVelocityVoltageCommand());
-                NamedCommands.registerCommand("STOP_SHOOTERS", m_shooter.stopAllShootersCommand());
-
         }
 
         private void registerEventTriggers() {
@@ -613,6 +606,7 @@ public class RobotContainer {
                                 Commands.sequence(
                                                 m_intake.startIntakeCommand(),
                                                 m_intakeArm.intakeArmSlideToIntakePositionCommand()));
+
                 EventTrigger endIntake = new EventTrigger("END_INTAKE");
                 endIntake.onTrue(
                                 Commands.sequence(
@@ -634,7 +628,8 @@ public class RobotContainer {
                                                 .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
                                                 .withVelocityX(-driver.getLeftY() * RobotConstants.MaxSpeed)
                                                 .withVelocityY(-driver.getLeftX() * RobotConstants.MaxSpeed)
-                                                .withTargetDirection(AllianceUtil.bumpRotation2d)));
+                                                .withTargetDirection(AllianceUtil.bumpRotation2d))
+                                                .andThen(Commands.none()));
 
         }
 

@@ -129,7 +129,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public boolean alignedToTarget;
     public double shootTolerance = .5;
 
-    public PIDController m_alignTargetPID = new PIDController(.05, .05, 0);
+    public PIDController m_alignTargetPID = new PIDController(.05, .025, 0);
     public double alignIzone = 3;
     private DoubleSubscriber alignkp = DogLog.tunable("Align/PGain", .0, newKp -> m_alignTargetPID.setP(newKp));
     private DoubleSubscriber alignki = DogLog.tunable("Align/IGain", .0, newKi -> m_alignTargetPID.setI(newKi));
