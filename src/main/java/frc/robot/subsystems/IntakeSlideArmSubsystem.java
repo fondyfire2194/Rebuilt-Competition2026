@@ -22,6 +22,8 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -88,6 +90,10 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
   public boolean showData;
 
+  private final Alert intakeArmAlert = new Alert(
+      "Intake Arm Fault",
+      AlertType.kError);
+
   public IntakeSlideArmSubsystem(boolean showData) {
 
     intakeArmSlideMotor
@@ -129,13 +135,16 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
     if (showData)
       SmartDashboard.putData(this);
+
+    intakeArmAlert.set(intakeArmSlideMotor.hasActiveFault() || intakeArmSlideMotor.hasStickyFault()
+        || intakeArmSlideMotorFollower.hasActiveFault() || intakeArmSlideMotorFollower.hasStickyFault());
   }
 
   @Override
   public void initSendable(SendableBuilder builder) {
 
     builder.setSmartDashboardType("IntakeArm");
-    
+
     builder.addDoubleProperty("Motor Volts", () -> intakeArmSlideMotor.getAppliedOutput() * 12, null);
     builder.addDoubleProperty("Motor Amps", () -> intakeArmSlideMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("ActualPosition", () -> getIntakeSlidePosition().in(Inches), null);
@@ -195,6 +204,12 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
   public boolean stalledAtEndTravel() {
     boolean stalled = getMotorCurrent().gt(stallCurrent);
     return stallDebouncer.calculate(stalled);
+  }
+
+  public Command clearIntakeArmStickyFaultsCommand() {
+    return Commands.sequence(
+        Commands.runOnce(() -> intakeArmSlideMotor.clearFaults()),
+        Commands.runOnce(() -> intakeArmSlideMotorFollower.clearFaults()));
   }
 
   public Command jogIntakeArmCommand(DoubleSupplier jogRate) {

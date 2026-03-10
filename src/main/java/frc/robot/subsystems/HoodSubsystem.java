@@ -14,6 +14,8 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -44,6 +46,10 @@ public class HoodSubsystem extends SubsystemBase {
     public static double getFinalTargetAngle() {
         return finalTargetAngle;
     }
+
+    private final Alert hoodAlert = new Alert(
+            "Hood Fault",
+            AlertType.kError);
 
     private final SparkMax hoodMotor;
 
@@ -114,6 +120,8 @@ public class HoodSubsystem extends SubsystemBase {
         this.showData = showData;
         if (showData)
             SmartDashboard.putData(this);
+
+        hoodAlert.set(hoodMotor.hasActiveFault() || hoodMotor.hasStickyFault());
     }
 
     public Command setHoodZeroCommand() {
@@ -203,6 +211,10 @@ public class HoodSubsystem extends SubsystemBase {
 
     public boolean getReverseSoftLimit(SparkMax motor) {
         return motor.getReverseSoftLimit().isReached();
+    }
+
+    public Command clearHoodStickyFaultsCommand() {
+        return Commands.runOnce(() -> hoodMotor.clearFaults());
     }
 
     @Override

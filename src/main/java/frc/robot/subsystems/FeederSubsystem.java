@@ -14,6 +14,8 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -39,6 +41,10 @@ public class FeederSubsystem extends SubsystemBase {
   private double feederBeltPowerSim;
 
   private boolean showData;
+
+  private final Alert feederAlert = new Alert(
+      "Feeder Fault",
+      AlertType.kError);
 
   public FeederSubsystem(boolean showData) {
     feederBeltMotor = new SparkMax(Constants.CANIDConstants.feederBeltID, MotorType.kBrushless);
@@ -68,6 +74,9 @@ public class FeederSubsystem extends SubsystemBase {
     this.showData = showData;
     if (showData)
       SmartDashboard.putData(this);
+
+    feederAlert.set(feederBeltMotor.hasActiveFault() || feederBeltMotor.hasStickyFault()
+        || feederRollerMotor.hasActiveFault() || feederRollerMotor.hasStickyFault());
   }
 
   @Override
@@ -80,7 +89,8 @@ public class FeederSubsystem extends SubsystemBase {
 
     builder.addDoubleProperty("Roller Motor RPM", () -> feederRollerMotor.getEncoder().getVelocity(), null);
     builder.addDoubleProperty("Roller Motor Amps", () -> feederRollerMotor.getOutputCurrent(), null);
-    builder.addBooleanProperty("Rolle Motor Fault", () -> feederRollerMotor.hasActiveFault(), null);
+    builder.addBooleanProperty("Roller Motor Fault", () -> feederRollerMotor.hasActiveFault(), null);
+
   }
 
   @Override
@@ -233,6 +243,12 @@ public class FeederSubsystem extends SubsystemBase {
 
   public boolean feederBeltRunning() {
     return Math.abs(getFeederBeltAppliedOutput()) > .1;
+  }
+
+  public Command clearFeederStickyFaultsCommand() {
+    return Commands.sequence(
+        Commands.runOnce(() -> feederRollerMotor.clearFaults()),
+        Commands.runOnce(() -> feederBeltMotor.clearFaults()));
   }
 
 }

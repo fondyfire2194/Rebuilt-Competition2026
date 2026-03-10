@@ -139,6 +139,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public Rotation2d projectedOnTheMoveShootAngle = new Rotation2d();
     public Rotation2d bumpr2d;
     public boolean isAligning;
+    public boolean jerkLimitExceeded;
     
 
     /**

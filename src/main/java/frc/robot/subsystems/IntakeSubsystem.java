@@ -10,6 +10,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,6 +26,10 @@ public class IntakeSubsystem extends SubsystemBase {
   private SparkMax intakeMotor = new SparkMax(Constants.CANIDConstants.intakeID, MotorType.kBrushless);
   private double intakePowerSim;
   public boolean showData;
+
+  private final Alert intakeAlert = new Alert(
+      "Intake Fault",
+      AlertType.kError);
 
   /** Creates a new IntakeSubsystem. */
   public IntakeSubsystem(boolean showData) {
@@ -44,13 +50,19 @@ public class IntakeSubsystem extends SubsystemBase {
     this.showData = showData;
     if (showData)
       SmartDashboard.putData(this);
+
+    intakeAlert.set(intakeMotor.hasActiveFault() || intakeMotor.hasStickyFault());
+  }
+
+  public Command clearIntakeStickyFaultsCommand() {
+    return Commands.runOnce(() -> intakeMotor.clearFaults());
   }
 
   @Override
   public void initSendable(SendableBuilder builder) {
     builder.setSmartDashboardType("Intake");
 
-     builder.addDoubleProperty("SimPower", () -> intakePowerSim, null);   
+    builder.addDoubleProperty("SimPower", () -> intakePowerSim, null);
     builder.addDoubleProperty("Amps", () -> intakeMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("RPM", () -> intakeMotor.getEncoder().getVelocity(), null);
     builder.addDoubleProperty("Volts Out", () -> intakeMotor.getAppliedOutput() * 12., null);

@@ -11,9 +11,6 @@ import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.HootAutoReplay;
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -32,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.FieldConstants;
-import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.AllianceUtil;
@@ -68,6 +64,7 @@ public class Robot extends TimedRobot {
         private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
                         .withTimestampReplay()
                         .withJoystickReplay();
+
         public Robot() {
                 hubPoseRed.set(FieldConstants.redHubPose);
                 hubPoseBlue.set(FieldConstants.blueHubPose);
@@ -139,7 +136,8 @@ public class Robot extends TimedRobot {
                                                 m_robotContainer.drivetrain),
                                 new LimelightTagsMT2Update(m_robotContainer.m_llv, m_robotContainer.m_llv.frontCam,
                                                 m_robotContainer.drivetrain),
-                                new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds));
+                                new ShiftDetectionCommand(m_robotContainer.m_shooter, m_robotContainer.m_leds),
+                                new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
                 if (RobotBase.isSimulation())
                         configureFuelSim();
@@ -156,11 +154,11 @@ public class Robot extends TimedRobot {
 
         @Override
         public void teleopInit() {
-              
-                Logger.log("DEPOTPASSINGPOSE", AllianceUtil.getDepotPassingPose());
-                Logger.log("OUTPOSTPASSINGPOSE", AllianceUtil.getOutpostPassingPose());
-                Logger.log("ALLIANCEBLUE", AllianceUtil.isBlueAlliance());
-                Logger.log("ALLIANCERED", AllianceUtil.isRedAlliance());
+
+                // Logger.log("DEPOTPASSINGPOSE", AllianceUtil.getDepotPassingPose());
+                // Logger.log("OUTPOSTPASSINGPOSE", AllianceUtil.getOutpostPassingPose());
+                // Logger.log("ALLIANCEBLUE", AllianceUtil.isBlueAlliance());
+                // Logger.log("ALLIANCERED", AllianceUtil.isRedAlliance());
 
                 if (RobotBase.isSimulation() && AllianceUtil.isBlueAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
@@ -203,7 +201,8 @@ public class Robot extends TimedRobot {
                 // m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
                 CommandScheduler.getInstance()
                                 .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
-                                                m_robotContainer.m_leds));
+                                                m_robotContainer.m_leds),
+                                                new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
         }
 

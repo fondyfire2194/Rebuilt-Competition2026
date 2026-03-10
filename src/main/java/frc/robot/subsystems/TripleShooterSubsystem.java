@@ -28,6 +28,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -57,6 +59,10 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public boolean rightMotorActive;
 
   private boolean showData;
+
+  private final Alert shooterAlert = new Alert(
+      "Shooter Fault",
+      AlertType.kError);
 
   private final VoltageOut voltageRequest = new VoltageOut(0);
 
@@ -144,6 +150,10 @@ public class TripleShooterSubsystem extends SubsystemBase {
     if (!statusR.isOK()) {
       DogLog.log("Right Shooter", "Could not apply configs, error code: " + statusL.toString());
     }
+
+    shooterAlert.set(leftMotor.getFaultField().asSupplier().get() != 0
+        || middleMotor.getFaultField().asSupplier().get() != 0
+        || rightMotor.getFaultField().asSupplier().get() != 0);
 
   }
 
@@ -260,6 +270,13 @@ public class TripleShooterSubsystem extends SubsystemBase {
         || (isVelocityWithinTolerance(leftMotor) || !leftMotorActive)
             && (isVelocityWithinTolerance(middleMotor) || !middleMotorActive)
             && (isVelocityWithinTolerance(rightMotor) || !rightMotorActive);
+  }
+
+  public Command clearShooterStickyFaultsCommand() {
+    return Commands.sequence(
+        Commands.runOnce(() -> leftMotor.clearStickyFaults()),
+        Commands.runOnce(() -> middleMotor.clearStickyFaults()),
+        Commands.runOnce(() -> rightMotor.clearStickyFaults()));
   }
 
   private void initSendable(SendableBuilder builder, TalonFX motor, String name) {

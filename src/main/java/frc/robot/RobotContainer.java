@@ -113,6 +113,7 @@ public class RobotContainer {
         private Trigger endGameWarningTrigger;
 
         private Trigger autoShootTrigger;
+        private Trigger collisionTrigger;
 
         // Presets
         public static final double hubPresetDistance = 0.96;
@@ -221,8 +222,7 @@ public class RobotContainer {
                                                 m_intakeArm.intakeArmSlideToIntakePositionCommand(),
                                                 m_intake.startIntakeCommand()))
                                 .onFalse(
-                                                Commands.sequence(
-                                                                Commands.waitSeconds(5),
+                                                Commands.parallel(
                                                                 m_intakeArm.intakeArmSlideToClearPositionCommand(),
                                                                 m_intake.stopIntakeCommand()));
 
@@ -288,7 +288,7 @@ public class RobotContainer {
 
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
-                codriver.rightBumper().whileTrue(m_intakeArm.jogIntakeArmCommand(()->codriver.getLeftY()));
+                codriver.rightBumper().whileTrue(m_intakeArm.jogIntakeArmCommand(() -> codriver.getLeftY()));
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
                 codriver.rightTrigger().and(codriver.povDown()).onTrue(
@@ -310,7 +310,6 @@ public class RobotContainer {
 
                 codriver.rightTrigger().and(codriver.povRight()).whileTrue(m_hood.jogHoodDownCommand());
 
-               
                 codriver.leftTrigger().and(codriver.povLeft())
                                 .onTrue(m_hood.setHoodZeroCommand().ignoringDisable(true));
 
@@ -462,8 +461,12 @@ public class RobotContainer {
                                                 && m_hood.isPositionWithinTolerance()
                                                 && m_shooter.allVelocityInTolerance());
 
-                autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder,
-                                drivetrain, false));
+                // autoShootTrigger.onTrue(new ShootCommand(m_shooter, m_hood, m_feeder,
+                // drivetrain, false));
+
+                collisionTrigger = new Trigger(() -> drivetrain.jerkLimitExceeded);
+
+                collisionTrigger.onTrue(m_intakeArm.intakeArmSlideToClearPositionCommand());
 
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 
@@ -637,6 +640,13 @@ public class RobotContainer {
                                 () -> RobotBase.isSimulation());
         }
 
+        public Command clearRevStickyFaultsCommand() {
+                return Commands.sequence(
+                                m_feeder.clearFeederStickyFaultsCommand(),
+                                m_hood.clearHoodStickyFaultsCommand(),
+                                m_intake.clearIntakeStickyFaultsCommand(),
+                                m_intakeArm.clearIntakeArmStickyFaultsCommand());
+        }
         //
         // //Breakover Angle (B°) = 2 × tan-1(2 × Ground Clearance (GC) / Wheelbase
         // (WB)).
