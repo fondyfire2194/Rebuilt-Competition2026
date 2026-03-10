@@ -9,6 +9,10 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -35,11 +39,17 @@ public class LimelightVision extends SubsystemBase {
 
   public String rightName;
 
+  public boolean frontConnected;
+  public boolean leftConnected;
+  public boolean rightConnected;
+
+  public double lastFrontHeartbeat;
+  public double lastLeftHeartbeat;
+  public double lastRightHeartbeat;
+
   public int numberOfAprilTagCameras = 4;
 
   public int numberTagsAllowed = 5;
-
-  public boolean[] limelightExists = new boolean[numberOfAprilTagCameras];
 
   public boolean[] inhibitVision = new boolean[numberTagsAllowed];
 
@@ -90,17 +100,18 @@ public class LimelightVision extends SubsystemBase {
   private boolean showData;
 
   double[] vals = new double[8];
-  public double tagID;
 
-  /**
-   * Checks if the specified limelight is connected
-   *
-   * @param limelight A limelight (FRONT, LEFT, RIGHT).
-   * @return True if the limelight network table contains the key "tv"
-   */
-  public boolean isLimelightConnected(String camname) {
-    return LimelightHelpers.getLimelightNTTable(camname).containsKey("tv");
-  }
+  double[] lastHeartbeat = new double[numberOfAprilTagCameras];
+
+  public double tagID;
+  private boolean alternate;
+
+  Alert frontCameraDisconnected = new Alert("Front Camera Disconnected",
+      AlertType.kError);
+  Alert leftCameraDisconnected = new Alert("Left Camera Disconnected",
+      AlertType.kError);
+  Alert rightCameraDisconnected = new Alert("Right Camera Disconnected",
+      AlertType.kError);
 
   public enum ImuMode {
     /**
@@ -134,15 +145,15 @@ public class LimelightVision extends SubsystemBase {
 
   public LimelightVision(boolean showData) {
     this.showData = showData;
+
     cameras[0] = CameraConstants.frontCamera;
     cameras[1] = CameraConstants.leftCamera;
     cameras[2] = CameraConstants.rightCamera;
 
     frontName = cameras[frontCam].camname;
-
     leftName = cameras[leftCam].camname;
-
     rightName = cameras[rightCam].camname;
+
     setCamToRobotOffset(cameras[frontCam]);
     setCamToRobotOffset(cameras[leftCam]);
     setCamToRobotOffset(cameras[rightCam]);
@@ -150,6 +161,14 @@ public class LimelightVision extends SubsystemBase {
     if (showData)
       SmartDashboard.putData(this);
 
+    frontCameraDisconnected.set(!frontConnected);
+    leftCameraDisconnected.set(!leftConnected);
+    rightCameraDisconnected.set(!rightConnected);
+
+  }
+
+  public double getCameraHeartbeat(String camName) {
+    return LimelightHelpers.getHeartbeat(camName);
   }
 
   public Command startMT2UpdatesCommand() {
@@ -158,24 +177,49 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    mt1FrontPosePublisher.set(mt1Pose[frontCam]);
-    mt1LeftPosePublisher.set(mt1Pose[leftCam]);
-    mt1RightPosePublisher.set(mt1Pose[rightCam]);
-
-    Logger.log("FrontCamMT2Pose", mt2Pose[frontCam]);
-    Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
-    Logger.log("RightCamMT2Pose", mt2Pose[rightCam]);
-    Logger.log("FrontCamTagsSeen", mt2TagIDsSeen[frontCam]);
-    Logger.log("LeftCamTagsSeen", mt2TagIDsSeen[leftCam]);
-    Logger.log("RightCamTagsSeen", mt2TagIDsSeen[rightCam]);
-
-    Logger.log("FrontCamPipeline", LimelightHelpers.getCurrentPipelineType(frontName));
-
-    mt2FrontPosePublisher.set(mt2Pose[frontCam]);
-    mt2LeftPosePublisher.set(mt2Pose[leftCam]);
-    mt2RightPosePublisher.set(mt2Pose[rightCam]);
 
     if (showData) {
+      mt1FrontPosePublisher.set(mt1Pose[frontCam]);
+      mt1LeftPosePublisher.set(mt1Pose[leftCam]);
+      mt1RightPosePublisher.set(mt1Pose[rightCam]);
+
+      mt2FrontPosePublisher.set(mt2Pose[frontCam]);
+      mt2LeftPosePublisher.set(mt2Pose[leftCam]);
+      mt2RightPosePublisher.set(mt2Pose[rightCam]);
+    }
+    if (RobotBase.isReal()) {
+      if (alternate) {
+        Logger.log("FrontCamMT2Pose", mt2Pose[frontCam]);
+        Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
+        Logger.log("RightCamMT2Pose", mt2Pose[rightCam]);
+        Logger.log("FrontCamTagsSeen", mt2TagIDsSeen[frontCam]);
+        Logger.log("LeftCamTagsSeen", mt2TagIDsSeen[leftCam]);
+        Logger.log("RightCamTagsSeen", mt2TagIDsSeen[rightCam]);
+        Logger.log("FrontCamPipeline", LimelightHelpers.getCurrentPipelineType(frontName));
+      } else {
+        double frontHeartbeat = getCameraHeartbeat(frontName);
+        double leftHeartbeat = getCameraHeartbeat(leftName);
+        double rightHeartbeat = getCameraHeartbeat(rightName);
+
+        frontConnected = frontHeartbeat != lastFrontHeartbeat;
+        lastFrontHeartbeat = frontHeartbeat;
+        leftConnected = leftHeartbeat != lastLeftHeartbeat;
+        lastLeftHeartbeat = leftHeartbeat;
+        rightConnected = rightHeartbeat != lastRightHeartbeat;
+        lastRightHeartbeat = rightHeartbeat;
+
+        if (frontConnected && frontCameraDisconnected.get())
+          frontCameraDisconnected.close();
+        if (leftConnected && leftCameraDisconnected.get())
+          leftCameraDisconnected.close();
+        if (rightConnected && rightCameraDisconnected.get())
+          rightCameraDisconnected.close();
+
+      }
+      alternate = !alternate;
+    }
+    if (showData) {
+
       if (getLLHW(CameraConstants.frontCamera.camname).length > 0)
         vals = getLLHW(CameraConstants.frontCamera.camname);
     }
@@ -328,51 +372,51 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder builder) {
-     initSendableLL4(builder, frontName, 0);
-   //  initSendable(builder, 0);
+    initSendableLL4(builder, frontName, 0);
+    // initSendable(builder, 0);
     initSendable(builder, 1);
-     initSendable(builder, 2);
+    initSendable(builder, 2);
 
   }
 
   /**
    * 
-   *  // Basic filtering thresholds
-  public static final double MAX_AMBIGUITY = 0.3;
-  public static final double MAX_Z_ERROR = 0.75;
-
-  // Standard deviation baselines, for 1 meter distance and 1 tag
-  // (Adjusted automatically based on distance and # of tags)
-  public static final double LINEAR_STDDEV_BASELINE = 0.02; // Meters
-  public static final double ANGULAR_STDDEV_BASELINE = 0.06; // Radians
-
-  // Standard deviation multipliers for each camera
-  // (Adjust to trust some cameras more than others)
-  public static final double[] CAMERA_STDDEV_FACTORS =
-      new double[] {
-        1.0, // left
-        1.0, // back-left
-        1.0, // back-right
-        1.0 // right
-      };
+   * // Basic filtering thresholds
+   * public static final double MAX_AMBIGUITY = 0.3;
+   * public static final double MAX_Z_ERROR = 0.75;
+   * 
+   * // Standard deviation baselines, for 1 meter distance and 1 tag
+   * // (Adjusted automatically based on distance and # of tags)
+   * public static final double LINEAR_STDDEV_BASELINE = 0.02; // Meters
+   * public static final double ANGULAR_STDDEV_BASELINE = 0.06; // Radians
+   * 
+   * // Standard deviation multipliers for each camera
+   * // (Adjust to trust some cameras more than others)
+   * public static final double[] CAMERA_STDDEV_FACTORS =
+   * new double[] {
+   * 1.0, // left
+   * 1.0, // back-left
+   * 1.0, // back-right
+   * 1.0 // right
+   * };
    * double stdDevFactor =
-            Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-
-        double linearStdDev = LINEAR_STDDEV_BASELINE * stdDevFactor;
-
-        double angularStdDev = ANGULAR_STDDEV_BASELINE * stdDevFactor;
-        
-        if (cameraIndex < CAMERA_STDDEV_FACTORS.length) {
-          linearStdDev *= CAMERA_STDDEV_FACTORS[cameraIndex];
-          angularStdDev *= CAMERA_STDDEV_FACTORS[cameraIndex];
-        }
-
-        // Send vision observation
-        consumer.accept(
-            observation.pose().toPose2d(),
-            observation.timestamp(),
-            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
-     
+   * Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+   * 
+   * double linearStdDev = LINEAR_STDDEV_BASELINE * stdDevFactor;
+   * 
+   * double angularStdDev = ANGULAR_STDDEV_BASELINE * stdDevFactor;
+   * 
+   * if (cameraIndex < CAMERA_STDDEV_FACTORS.length) {
+   * linearStdDev *= CAMERA_STDDEV_FACTORS[cameraIndex];
+   * angularStdDev *= CAMERA_STDDEV_FACTORS[cameraIndex];
+   * }
+   * 
+   * // Send vision observation
+   * consumer.accept(
+   * observation.pose().toPose2d(),
+   * observation.timestamp(),
+   * VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+   * 
    * 
    */
 }

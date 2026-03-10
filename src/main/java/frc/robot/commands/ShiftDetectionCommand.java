@@ -58,7 +58,7 @@ public class ShiftDetectionCommand extends Command {
   public void execute() {
 
     matchTime = teleopTime - shiftTimer.get();
-
+    double timeLeftInShift = getTimeLeftInShift();
     m_leds.gameData = DriverStation.getGameSpecificMessage();// letter is high auto score alliance
 
     m_shooter.hubIsActive = isHubActive();
@@ -71,13 +71,11 @@ public class ShiftDetectionCommand extends Command {
     m_leds.inEndGame = getInEndGame();
     m_leds.endOfMatch = endOfMatch();
 
-
-    Logger.log("SHDET/HubActive",m_shooter.hubIsActive);
+    Logger.log("SHDET/HubActive", m_shooter.hubIsActive);
     Logger.log("SHDET/MatchTime", matchTime);
     Logger.log("SHDET/ShiftNum", shiftNumber);
     Logger.log("SHDET/BLUEFIRST", blueActiveFirst);
-    Logger.log("SHDET/ShiftTimeLeft", getTimeLeftInShift());
-
+    Logger.log("SHDET/TimeLeftInShift", timeLeftInShift);
     Logger.log("EndOfMatch", endOfMatch());
   }
 
@@ -111,17 +109,19 @@ public class ShiftDetectionCommand extends Command {
 
     // If we have no game data, we cannot compute, assume hub is active, as its
     // likely early in teleop.
-    if (m_leds.gameData.isEmpty()) {
-      return RobotBase.isReal();
+    if (RobotBase.isReal() && m_leds.gameData.isEmpty()) {
+      return false;
     }
     blueActiveFirst = false;
-    // game data gives auto high score alliance - they shoot shifts 2 and 4
-    switch (m_leds.gameData.charAt(0)) {
-      case 'R' -> blueActiveFirst = true;
-      case 'B' -> blueActiveFirst = false;
-      default -> {
-        // If we have invalid game data, assume hub is active.
-        return true;
+    if (RobotBase.isReal()) {
+      // game data gives auto high score alliance - they shoot shifts 2 and 4
+      switch (m_leds.gameData.charAt(0)) {
+        case 'R' -> blueActiveFirst = true;
+        case 'B' -> blueActiveFirst = false;
+        default -> {
+          // If we have invalid game data, assume hub is active.
+          return true;
+        }
       }
     }
 

@@ -46,6 +46,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
+import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.ShootingData;
 
 public class RobotContainer {
@@ -114,6 +115,8 @@ public class RobotContainer {
 
         private Trigger autoShootTrigger;
         private Trigger collisionTrigger;
+        private Trigger setViewFinderPipelineTrigger;
+        private Trigger setAprilTagPipelineTrigger;
 
         // Presets
         public static final double hubPresetDistance = 0.96;
@@ -467,6 +470,18 @@ public class RobotContainer {
                 collisionTrigger = new Trigger(() -> drivetrain.jerkLimitExceeded);
 
                 collisionTrigger.onTrue(m_intakeArm.intakeArmSlideToClearPositionCommand());
+
+                // setAprilTagPipelineTrigger = new Trigger();
+
+                // setAprilTagPipelineTrigger.onTrue(Commands.runOnce(
+                //                 () -> LimelightHelpers.setPipelineIndex(Constants.CameraConstants.frontCamera.camname,
+                //                                 Constants.CameraConstants.apriltagPipeline)));
+
+                // setViewFinderPipelineTrigger = new Trigger(autoShootTrigger);
+
+                // setViewFinderPipelineTrigger.onTrue(Commands.runOnce(
+                //                 () -> LimelightHelpers.setPipelineIndex(Constants.CameraConstants.frontCamera.camname,
+                //                                 Constants.CameraConstants.viewFinderPipeline)));
 
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 

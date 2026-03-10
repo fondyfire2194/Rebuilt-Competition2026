@@ -31,7 +31,7 @@ public class AddressableLEDSubsystem extends SubsystemBase {
   public boolean endGameWarning;
   public boolean inEndGame;
   public boolean endOfMatch;
-  public String gameData = "";
+  public String gameData = "placeholder";
   private final AddressableLED m_led;
   private final AddressableLEDBuffer m_ledBuffer;
 
