@@ -116,6 +116,10 @@ public class HoodSubsystem extends SubsystemBase {
             SmartDashboard.putData(this);
     }
 
+    public Command setHoodZeroCommand() {
+        return Commands.runOnce(() -> encoder.setPosition(0));
+    }
+
     public boolean isPositionWithinTolerance() {
         return RobotBase.isSimulation() || MathUtil.isNear(finalTargetAngle, getHoodAngle(), kPositionTolerance);
     }

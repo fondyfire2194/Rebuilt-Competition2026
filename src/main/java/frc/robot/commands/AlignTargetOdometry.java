@@ -64,6 +64,7 @@ public class AlignTargetOdometry extends Command {
   @Override
   public void initialize() {
     m_swerve.isAligning = true;
+    m_swerve.m_alignTargetPID.reset();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -88,11 +89,10 @@ public class AlignTargetOdometry extends Command {
 
     targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
-    if (Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
-      m_swerve.m_alignTargetPID.setIntegratorRange(0,0);
+    if (m_swerve.alignedToTarget || Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
+      m_swerve.m_alignTargetPID.setIntegratorRange(0, 0);
     } else
-        m_swerve.m_alignTargetPID.setIntegratorRange(-.1,.1);
-  
+      m_swerve.m_alignTargetPID.setIntegratorRange(-.1, .1);
 
     rotationVal = m_swerve.m_alignTargetPID.calculate(m_swerve.getState().Pose.getRotation().getDegrees(),
         targetDegrees);

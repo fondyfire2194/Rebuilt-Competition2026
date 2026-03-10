@@ -327,8 +327,8 @@ public final class Constants {
 
   public static final class IntakeSetpoints {
     public static final double kJogIntake = 0.25;
-    public static final double kIntake = 0.6;
-    public static final double kExtake = -0.6;
+    public static final double kIntake = 0.4;
+    public static final double kExtake = -0.4;
   }
 
   public static final class FeederSetpoints {
@@ -363,6 +363,8 @@ public final class Constants {
 
     public static final int intakeID = 10;
     public static final int intakeArmID = 11;
+    
+    public static final int intakeArmFollowerID = 16;
 
     public static final int feederBeltID = 13;
     public static final int feederRollerID = 12;
@@ -443,7 +445,7 @@ public final class Constants {
     public static Cameras frontCamera = new Cameras(
         "limelight-front",
         "10.21.94.15",
-        false,
+        true,
         frontCamPose,
         63.3,
         49.7,

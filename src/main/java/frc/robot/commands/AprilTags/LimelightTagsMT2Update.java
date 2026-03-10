@@ -96,8 +96,8 @@ public class LimelightTagsMT2Update extends Command {
     }
 
     private boolean inFieldCheck(Pose2d pose) {
-        boolean inLength = pose.getX() > 0 && pose.getX() < FieldConstants.fieldLength;
-        boolean inWidth = pose.getY() > 0 && pose.getX() < FieldConstants.fieldWidth;
+        boolean inLength = pose.getX() >= 0 && pose.getX() <= FieldConstants.fieldLength;
+        boolean inWidth = pose.getY() >= 0 && pose.getX() <= FieldConstants.fieldWidth;
         return inLength && inWidth;
     }
 }

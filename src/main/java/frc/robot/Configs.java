@@ -46,7 +46,7 @@ public final class Configs {
     static {
       // Configure basic settings of the intake motor
       intakeConfig
-          .inverted(false)
+          .inverted(true)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(0.5)
           .smartCurrentLimit(40);
@@ -55,41 +55,59 @@ public final class Configs {
 
   public static final class IntakeSlideArm {
 
-    public static final SparkMaxConfig intakeSlideArmConfig = new SparkMaxConfig();
+    public static final SparkMaxConfig configLeader = new SparkMaxConfig();
+
+    public static final SparkMaxConfig configFollower = new SparkMaxConfig();
 
     static {
       // Configure basic settings of the intake motor
-      intakeSlideArmConfig
+      configLeader
           .inverted(true)
           .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(5)
-          .smartCurrentLimit(40);
-      intakeSlideArmConfig
-          .inverted(false)
-          .idleMode(IdleMode.kBrake)
+          .openLoopRampRate(.25)
           .smartCurrentLimit(60);
 
-      intakeSlideArmConfig.encoder
+      configLeader.encoder
           .positionConversionFactor(IntakeSlideArmSubsystem.positionConversionFactor)
           .velocityConversionFactor(IntakeSlideArmSubsystem.velocityConversionFactor);
 
-      intakeSlideArmConfig.closedLoop
+      configLeader.closedLoop
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
           // Set PID values for position control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
           .p(0.05)
           .i(0)
           .d(0)
-          .outputRange(-.25, .25);
+          .outputRange(-1, 1);
 
-      intakeSlideArmConfig.softLimit.forwardSoftLimit(IntakeSlideArmSubsystem.minDistance.in(Inches))
+      configLeader.softLimit.forwardSoftLimit(IntakeSlideArmSubsystem.maxDistance.in(Inches))
           .reverseSoftLimit(IntakeSlideArmSubsystem.minDistance.in(Inches))
-          .forwardSoftLimitEnabled(true)
-          .reverseSoftLimitEnabled(true);
+          .forwardSoftLimitEnabled(false)
+          .reverseSoftLimitEnabled(false);
 
-      intakeSlideArmConfig.signals.primaryEncoderPositionPeriodMs(10);
+      configLeader.signals.primaryEncoderPositionPeriodMs(10);
 
     }
+
+        static {
+      // Configure basic settings of the intake motor
+      configFollower
+          .inverted(true)
+          .idleMode(IdleMode.kCoast)
+          .openLoopRampRate(.25)
+          .smartCurrentLimit(60);
+
+      configFollower.encoder
+          .positionConversionFactor(IntakeSlideArmSubsystem.positionConversionFactor)
+          .velocityConversionFactor(IntakeSlideArmSubsystem.velocityConversionFactor);
+
+     
+      configFollower.signals.primaryEncoderPositionPeriodMs(10);
+
+    }
+
+
+
   }
 
   public static final class Hood {
@@ -125,6 +143,8 @@ public final class Configs {
       hoodConfig.signals.primaryEncoderPositionPeriodMs(10);
 
     }
+
+    
 
   }
 

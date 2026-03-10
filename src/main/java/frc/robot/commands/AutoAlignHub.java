@@ -36,14 +36,13 @@ public class AutoAlignHub extends Command {
   private double targetDegrees;
 
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
-  private double tempI;
 
   public AutoAlignHub(
-      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter,HoodSubsystem hood, double toleranceDegrees) {
+      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, HoodSubsystem hood, double toleranceDegrees) {
 
     m_swerve = swerve;
     m_shooter = shooter;
-    m_hood=hood;
+    m_hood = hood;
     m_toleranceDegrees = toleranceDegrees;
     addRequirements(m_swerve);
   }
@@ -51,6 +50,7 @@ public class AutoAlignHub extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    m_swerve.m_alignTargetPID.reset();
     drive = new SwerveRequest.FieldCentric()
         .withDeadband(RobotConstants.MaxSpeed * 0.1)
         .withRotationalDeadband(RobotConstants.MaxAngularRate * 0.1) // Add a 10% deadband
@@ -61,7 +61,7 @@ public class AutoAlignHub extends Command {
     elapsedTime = new Timer();
     elapsedTime.reset();
     elapsedTime.start();
-    tempI = m_swerve.m_alignTargetPID.getI();
+
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -79,7 +79,7 @@ public class AutoAlignHub extends Command {
 
     targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 
-    if (Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
+    if (m_swerve.alignedToTarget || Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
       m_swerve.m_alignTargetPID.setIntegratorRange(0, 0);
     } else
       m_swerve.m_alignTargetPID.setIntegratorRange(-.1, .1);

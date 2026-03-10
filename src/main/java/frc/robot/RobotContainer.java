@@ -5,12 +5,9 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -25,7 +22,6 @@ import com.pathplanner.lib.events.EventTrigger;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -36,11 +32,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
-import frc.robot.commands.DriveWithShootOnTheMove;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.AddressableLEDSubsystem;
@@ -52,9 +46,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.FuelSim;
 import frc.robot.utils.ShootingData;
-import frc.robot.utils.SimRobotFuelSim;
 
 public class RobotContainer {
 
@@ -110,10 +102,10 @@ public class RobotContainer {
         // public final PowerDistribution pdh;
 
         private boolean showShooterData = false;
-        private boolean showHoodData = true;
+        private boolean showHoodData = false;
         private boolean showFeederData = false;
-        private boolean showIntakeData = true;
-        private boolean showIntakeArmData = false;
+        private boolean showIntakeData = false;
+        private boolean showIntakeArmData = true;
         private boolean showLLData = false;
 
         private Trigger driverFiveSecondWarningEndShootTrigger;
@@ -199,7 +191,7 @@ public class RobotContainer {
                                                 .withRotationalRate(
                                                                 -driver.getRightX() * RobotConstants.MaxAngularRate)));
 
-                m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmSlideCommand());
+                // m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmSlideCommand());
 
                 m_hood.setDefaultCommand(m_hood.positionHoodCommand());
         }
@@ -221,7 +213,7 @@ public class RobotContainer {
 
                 driver.leftTrigger().whileTrue(
                                 Commands.defer(
-                                                () -> shootCommand(driver.a().getAsBoolean()),
+                                                () -> shootCommand(true),
                                                 Set.of()));
 
                 driver.rightTrigger().whileTrue(
@@ -302,28 +294,32 @@ public class RobotContainer {
                 codriver.rightTrigger().and(codriver.povDown()).onTrue(
                                 m_feeder.runBeltsAndRollersCommand());
 
-                codriver.rightTrigger().and(codriver.y().whileTrue(
+                codriver.rightTrigger().and(codriver.y()).whileTrue(
                                 m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .5))
-                                .onFalse(m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .0)));
+                                .onFalse(m_shooter.setDutyCycleCommand(m_shooter.middleMotor, .0));
 
-                codriver.rightTrigger().and(codriver.a().whileTrue(
+                codriver.rightTrigger().and(codriver.a()).whileTrue(
                                 m_shooter.setDutyCycleCommand(m_shooter.leftMotor, .5))
-                                .onFalse(m_shooter.setDutyCycleCommand(m_shooter.leftMotor, .0)));
+                                .onFalse(m_shooter.setDutyCycleCommand(m_shooter.leftMotor, .0));
 
-                codriver.rightTrigger().and(codriver.x().whileTrue(
+                codriver.rightTrigger().and(codriver.x()).whileTrue(
                                 m_shooter.setDutyCycleCommand(m_shooter.rightMotor, .5))
-                                .onFalse(m_shooter.setDutyCycleCommand(m_shooter.rightMotor, .0)));
+                                .onFalse(m_shooter.setDutyCycleCommand(m_shooter.rightMotor, .0));
 
-                codriver.rightTrigger().and(codriver.povLeft().whileTrue(m_hood.jogHoodUpCommand()));
+                codriver.rightTrigger().and(codriver.povLeft()).whileTrue(m_hood.jogHoodUpCommand());
 
-                codriver.rightTrigger().and(codriver.povRight().whileTrue(m_hood.jogHoodDownCommand()));
+                codriver.rightTrigger().and(codriver.povRight()).whileTrue(m_hood.jogHoodDownCommand());
 
-                codriver.leftTrigger().and(codriver.povUp()
-                                .whileTrue(m_intakeArm.jogIntakeArmCommand()));
+                codriver.leftTrigger().and(codriver.povRight())
+                                .whileTrue(Commands.defer(
+                                                () -> m_intakeArm.jogIntakeArmCommand(codriver.getLeftX()), Set.of()));
 
-                codriver.leftTrigger().and(codriver.povRight().whileTrue(m_intake.jogExtakeCommand()));
+                codriver.leftTrigger().and(codriver.povLeft())
+                                .onTrue(m_hood.setHoodZeroCommand().ignoringDisable(true));
 
-                codriver.leftTrigger().and(codriver.povLeft().whileTrue(m_intake.jogIntakeCommand()));
+                codriver.leftTrigger().and(codriver.povUp()).whileTrue(m_intake.jogExtakeCommand());
+
+                codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
 
         }
 

@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.InchesPerSecond;
 import static edu.wpi.first.units.Units.Millimeters;
 
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -33,6 +34,8 @@ import frc.robot.utils.Logger;
 public class IntakeSlideArmSubsystem extends SubsystemBase {
 
   private final SparkMax intakeArmSlideMotor = new SparkMax(CANIDConstants.intakeArmID, MotorType.kBrushless);
+  private final SparkMax intakeArmSlideMotorFollower = new SparkMax(CANIDConstants.intakeArmFollowerID,
+      MotorType.kBrushless);
 
   SimpleMotorFeedforward slideFeedforward;
 
@@ -84,16 +87,21 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
   public boolean showData;
 
-  private double jogInSpeed = -.15;
-
-  private double jogOutSpeed = .15;
-
   public IntakeSlideArmSubsystem(boolean showData) {
 
-    intakeArmSlideMotor.configure(
-        Configs.IntakeSlideArm.intakeSlideArmConfig,
-        ResetMode.kResetSafeParameters,
-        PersistMode.kPersistParameters);
+    intakeArmSlideMotor
+        .configure(
+            Configs.IntakeSlideArm.configLeader,
+            ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters);
+
+    intakeArmSlideMotorFollower
+        .configure(
+            Configs.IntakeSlideArm.configFollower,
+            ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters);
+
+    Configs.IntakeSlideArm.configFollower.follow(CANIDConstants.intakeArmID);
     /*
      * Apply the configuration to the SPARK MAX.
      *
@@ -104,11 +112,6 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
      * the SPARK MAX loses power. This is useful for power cycles that may occur
      * mid-operation.
      */
-
-    intakeArmSlideMotor.configure(
-        Configs.IntakeSlideArm.intakeSlideArmConfig,
-        ResetMode.kResetSafeParameters,
-        PersistMode.kPersistParameters);
 
     this.showData = showData;
 
@@ -132,16 +135,17 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
 
     builder.setSmartDashboardType("IntakeArm");
     builder.addDoubleProperty("Motor Volts", () -> intakeArmSlideMotor.getAppliedOutput() * 12, null);
+    builder.addDoubleProperty("Motor Amps", () -> intakeArmSlideMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("ActualPosition", () -> getIntakeSlidePosition().in(Inches), null);
     builder.addDoubleProperty("GoalPosition", () -> m_controller.getGoal().position, null);
     builder.addDoubleProperty("Velocity", () -> getIntakeSlideVelocity().in(InchesPerSecond), null);
     builder.addBooleanProperty("AtSetpoint", m_controller::atSetpoint, null);
+
   }
 
   public void periodic() {
     Logger.log("IntakeSlideArm/Position", getIntakeSlidePosition());
     Logger.log("IntakeSlideArm/Velocity", getIntakeSlideVelocity());
-
     Logger.log("IntakeSlideArm/Volts", intakeArmSlideMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
     Logger.log("IntakeSlideArm/Amps", intakeArmSlideMotor.getOutputCurrent());
     Logger.log("IntakeSlideArm/Goal", m_controller.getGoal().position);
@@ -191,15 +195,15 @@ public class IntakeSlideArmSubsystem extends SubsystemBase {
     return stallDebouncer.calculate(stalled);
   }
 
-  public Command jogIntakeArmCommand() {
+  public Command jogIntakeArmCommand(double jogRate) {
     return new FunctionalCommand(
         () -> {
         }, // init
         () -> {
-          if (getIntakeSlidePosition().lt(maxDistance) && jogOutSpeed > 0)
-            intakeArmSlideMotor.setVoltage(jogOutSpeed * RobotController.getBatteryVoltage());
-          else if (getIntakeSlidePosition().gte(minDistance) && jogInSpeed < 0)
-            intakeArmSlideMotor.setVoltage(jogInSpeed * RobotController.getBatteryVoltage());
+          if (getIntakeSlidePosition().lt(maxDistance) && jogRate > 0)
+            intakeArmSlideMotor.setVoltage(jogRate * RobotController.getBatteryVoltage());
+          else if (getIntakeSlidePosition().gte(minDistance) && jogRate < 0)
+            intakeArmSlideMotor.setVoltage(jogRate * RobotController.getBatteryVoltage());
           else
             intakeArmSlideMotor.set(0);
         }, // execute
