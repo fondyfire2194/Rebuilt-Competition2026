@@ -45,7 +45,8 @@ public class AlignTargetOdometry extends Command {
   private final double m_toleranceDegrees;
   private double lastTargetDegrees;
   private int delayCount;
-  private int delayLimit = 10;//10*20ms
+  private int delayLimit = 10;// 10*20ms
+  private final double deadband = .02;
 
   public AlignTargetOdometry(
       CommandSwerveDrivetrain swerve,
@@ -76,7 +77,7 @@ public class AlignTargetOdometry extends Command {
   @Override
   public void execute() {
     // allow time for conditions to settle
-    //rotation is not applied before this
+    // rotation is not applied before this
     if (delayCount <= delayLimit)
       delayCount++;
 
@@ -114,10 +115,17 @@ public class AlignTargetOdometry extends Command {
     if (delayCount < delayLimit)
       rotationVal = 0;
 
+    double translation = m_controller.getLeftY();
+    double strafe = m_controller.getLeftX();
+    if (Math.abs(translation) < deadband)
+      translation = 0;
+    if (Math.abs(strafe) < deadband)
+      strafe = 0;
+
     m_swerve.setControl(
         drive.withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
-            .withVelocityX(-m_controller.getLeftY() * RobotConstants.MaxSpeed)
-            .withVelocityY(-m_controller.getLeftX() * RobotConstants.MaxSpeed)
+            .withVelocityX(-translation * RobotConstants.MaxSpeed)
+            .withVelocityY(-strafe * RobotConstants.MaxSpeed)
             // // negative X (left)
             .withRotationalRate(rotationVal * RobotConstants.MaxAngularRate));
 
@@ -141,7 +149,7 @@ public class AlignTargetOdometry extends Command {
   public void end(boolean interrupted) {
     m_swerve.isAligning = false;
     m_swerve.m_alignTargetPID.reset();
-    delayCount=0;
+    delayCount = 0;
   }
 
   // Returns true when the command should end.

@@ -73,13 +73,13 @@ public class ShootingData {
         timeOfFlightMap.put(1.88, .88);
         timeOfFlightMap.put(1.38, 0.90);
 
-        passingHoodAngleMap.put(5.46, Rotation2d.fromDegrees(0.0));
-        passingHoodAngleMap.put(6.62, Rotation2d.fromDegrees(3.0));
-        passingHoodAngleMap.put(7.80, Rotation2d.fromDegrees(8.0));
+        passingHoodAngleMap.put(5.0, Rotation2d.fromDegrees(8.0));
+        passingHoodAngleMap.put(6.62, Rotation2d.fromDegrees(8.0));
+        passingHoodAngleMap.put(8.0, Rotation2d.fromDegrees(8.0));
 
-        passingShooterSpeedMap.put(5.46, 160.0);
-        passingShooterSpeedMap.put(6.62, 180.0);
-        passingShooterSpeedMap.put(7.80, 200.0);
+        passingShooterSpeedMap.put(5.00, 3500.);
+        passingShooterSpeedMap.put(6.62, 3800.0);
+        passingShooterSpeedMap.put(8.0, 3900.0);
 
         passingTimeOfFlightMap.put(passingMinDistance, 1.);
         passingTimeOfFlightMap.put(passingMaxDistance, 1.5);

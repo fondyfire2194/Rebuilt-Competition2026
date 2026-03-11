@@ -5,6 +5,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FeederSetpoints;
 import frc.robot.Robot;
@@ -22,6 +23,8 @@ public class ShootCommand extends Command {
   private final FeederSubsystem m_feeder;
   private final CommandSwerveDrivetrain m_swerve;
   private boolean m_bypassInterlocks;
+  private Timer beltTimer = new Timer();
+  private boolean okToShoot;
 
   public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
       CommandSwerveDrivetrain swerve, boolean bypassInterlocks) {
@@ -36,7 +39,7 @@ public class ShootCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-
+okToShoot=false;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -48,12 +51,18 @@ public class ShootCommand extends Command {
 
     if (m_shooter.bypassShootInterlocks
         || m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance() && m_swerve.alignedToTarget) {
+      okToShoot = true;
+    }
 
+    if (okToShoot) {
       m_feeder.runFeederRollerAtVelocity();
 
-      if (RobotBase.isSimulation() || Math.abs(
-          m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt)
+      if (RobotBase.isSimulation() ||
+          Math.abs(m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt)
+
+      {
         m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
+      }
     }
 
     if (RobotBase.isSimulation())
@@ -71,6 +80,7 @@ public class ShootCommand extends Command {
   public void end(boolean interrupted) {
     m_feeder.stopFeederBeltMotor();
     m_feeder.stopFeederRollerMotor();
+    okToShoot=false;
   }
 
   // Returns true when the command should end.

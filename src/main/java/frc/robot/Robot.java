@@ -14,6 +14,7 @@ import com.ctre.phoenix6.SignalLogger;
 
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.commands.CollisionDetectionCommand;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.AllianceUtil;
@@ -91,6 +93,8 @@ public class Robot extends TimedRobot {
                                 m_robotContainer.m_shooter);
                 configureFuelSimRobot(() -> m_robotContainer.m_intake.intakeRunning(), () -> fuelRobotSim.intakeFuel());
 
+                Constants.CameraConstants.arrayPublisher.accept(Constants.CameraConstants.camPoses);
+
         }
 
         @Override
@@ -101,10 +105,6 @@ public class Robot extends TimedRobot {
                 m_timeAndJoystickReplay.update();
 
                 CommandScheduler.getInstance().run();
-
-                double distanceToHub = AllianceUtil.getHubPose().getTranslation()
-                                .getDistance(m_robotContainer.drivetrain.getState().Pose.getTranslation());
-                SmartDashboard.putNumber("DIST2Hub", distanceToHub);
 
         }
 

@@ -272,7 +272,7 @@ public class RobotContainer {
 
                 driver.povRight().onTrue(Commands.runOnce(() -> drivetrain.resetRotation(new Rotation2d()))
                                 .ignoringDisable(true));
-                driver.back().onTrue(Commands.runOnce(() -> drivetrain.resetRotation(new Rotation2d())));
+                driver.back().onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()));
                 // Reset the field-centric heading
                 driver.start().onTrue(
                                 drivetrain.runOnce(drivetrain::seedFieldCentric));
