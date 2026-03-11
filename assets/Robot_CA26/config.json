@@ -19,7 +19,6 @@
     0.0,
     0.0
   ],
-  
   "cameras": [
     {
       "name": "Front",
@@ -30,21 +29,21 @@
       ],
       "position": [
         0.3,
-        0.127,
-        0.16256
+        0.0,
+        0.5
       ],
       "rotations": [
-        {
-          "axis": "y",
-          "degrees": -33
-        },
         {
           "axis": "x",
           "degrees": 0
         },
         {
+          "axis": "y",
+          "degrees": -16
+        },
+        {
           "axis": "z",
-          "degrees": -4.7
+          "degrees": 0
         }
       ]
     },
@@ -56,22 +55,22 @@
         1200
       ],
       "position": [
-        0,
         0.254,
-        0.16256
+        0.254,
+        0.254
       ],
       "rotations": [
-        {
-          "axis": "y",
-          "degrees": -25
-        },
         {
           "axis": "x",
           "degrees": 0
         },
         {
+          "axis": "y",
+          "degrees": -15
+        },
+        {
           "axis": "z",
-          "degrees": 120
+          "degrees": 130
         }
       ]
     },
@@ -83,27 +82,26 @@
         1200
       ],
       "position": [
-        0,
+        0.254,
         -0.254,
-        0.16256
+        0.54
       ],
       "rotations": [
-        {
-          "axis": "y",
-          "degrees": -25
-        },
         {
           "axis": "x",
           "degrees": 0
         },
         {
+          "axis": "y",
+          "degrees": -25
+        },
+        {
           "axis": "z",
-          "degrees": -120
+          "degrees": -70
         }
       ]
     }
   ],
- 
   "components": [
     {
       "zeroedRotations": [

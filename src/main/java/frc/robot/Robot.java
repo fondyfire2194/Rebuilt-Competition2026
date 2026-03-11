@@ -51,7 +51,7 @@ public class Robot extends TimedRobot {
                         .publish();
         private final StructPublisher<Pose2d> hubPoseBlue = hubPoseTable.getStructTopic("HubPoseBlue", Pose2d.struct)
                         .publish();
-
+   
         private final RobotContainer m_robotContainer;
         private LoopEvents loopEvents;
         private boolean autoHasRun;
@@ -92,8 +92,6 @@ public class Robot extends TimedRobot {
                                 fuelSim, m_robotContainer.drivetrain, m_robotContainer.m_hood,
                                 m_robotContainer.m_shooter);
                 configureFuelSimRobot(() -> m_robotContainer.m_intake.intakeRunning(), () -> fuelRobotSim.intakeFuel());
-
-                Constants.CameraConstants.arrayPublisher.accept(Constants.CameraConstants.camPoses);
 
         }
 
@@ -166,6 +164,7 @@ public class Robot extends TimedRobot {
                         m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
 
                 loopTimer.start();
+                
 
                 if (RobotBase.isReal()) {
                         LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,

@@ -72,20 +72,6 @@ public final class Configs {
                 .positionConversionFactor(ArmSubsystem.positionConversionFactor)
                 .velocityConversionFactor(ArmSubsystem.velocityConversionFactor);
 
-        armConfig.closedLoop
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                // Set PID values for position control
-                .p(.01)
-                .outputRange(-1, 1)
-
-                // Set PID values for velocity control in slot 1
-                .p(0.0001, ClosedLoopSlot.kSlot1)
-                .i(0, ClosedLoopSlot.kSlot1)
-                .d(0, ClosedLoopSlot.kSlot1)
-
-                .outputRange(-1, 1, ClosedLoopSlot.kSlot1);
-
-
         armConfig.softLimit.forwardSoftLimit(ArmSubsystem.maxAngle.in(Radians))
                 .reverseSoftLimit(ArmSubsystem.minAngle.in(Radians))
                 .forwardSoftLimitEnabled(true)

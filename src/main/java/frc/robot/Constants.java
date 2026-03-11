@@ -439,7 +439,7 @@ public final class Constants {
         Units.inchesToMeters(19.), // high
         new Rotation3d(
             Units.degreesToRadians(0), // no roll
-            Units.degreesToRadians(23), // angled up
+            Units.degreesToRadians(-23), // angled up
             Units.degreesToRadians(0)));// facing forward
 
     public static Cameras frontCamera = new Cameras(
@@ -454,9 +454,9 @@ public final class Constants {
         true);
 
     static Pose3d leftCamPose = new Pose3d(
-        Units.inchesToMeters(100.),
-        Units.inchesToMeters(100),
-        Units.inchesToMeters(0.),
+        Units.inchesToMeters(10.),
+        Units.inchesToMeters(10),
+        Units.inchesToMeters(10.),
         new Rotation3d(
             Units.degreesToRadians(0),
             Units.degreesToRadians(-15),

@@ -34,6 +34,18 @@ public class CaptureMT1Values extends Command {
     @Override
     public void execute() {
 
+         if (LimelightHelpers.getTV(m_llv.frontName)) {
+            mt1Front = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_llv.frontName);
+            m_llv.mt1Pose[m_llv.frontCam] = mt1Front.pose;
+            m_llv.mt1TagCount[m_llv.frontCam] = mt1Front.tagCount;
+            m_llv.mt1TimeStampSeconds[m_llv.frontCam] = mt1Front.timestampSeconds;
+            if (mt1Front.rawFiducials.length > 0) {
+                m_llv.mt1Ambiguity[m_llv.frontCam] = mt1Front.rawFiducials[0].ambiguity;
+                m_llv.mt1DistToCamera[m_llv.frontCam] = mt1Front.rawFiducials[0].distToCamera;
+                m_llv.getMT1TagIDsSeen(0, mt1Front.rawFiducials);
+            }
+     
+
         if (LimelightHelpers.getTV(m_llv.leftName)) {
             mt1Left = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_llv.leftName);
             m_llv.mt1Pose[m_llv.leftCam] = mt1Left.pose;
@@ -42,7 +54,7 @@ public class CaptureMT1Values extends Command {
                 m_llv.mt1Ambiguity[m_llv.leftCam] = mt1Left.rawFiducials[0].ambiguity;
                 m_llv.mt1DistToCamera[m_llv.leftCam] = mt1Left.rawFiducials[0].distToCamera;
                 m_llv.mt1TimeStampSeconds[m_llv.leftCam] = mt1Left.timestampSeconds;
-                m_llv.getMT1TagIDsSeen(numberScans, null);
+                m_llv.getMT1TagIDsSeen(1, mt1Left.rawFiducials);
             }
         }
         if (LimelightHelpers.getTV(m_llv.rightName)) {
@@ -53,21 +65,11 @@ public class CaptureMT1Values extends Command {
             if (mt1Right.rawFiducials.length > 0) {
                 m_llv.mt1Ambiguity[m_llv.rightCam] = mt1Right.rawFiducials[0].ambiguity;
                 m_llv.mt1DistToCamera[m_llv.rightCam] = mt1Right.rawFiducials[0].distToCamera;
-                m_llv.getMT1TagIDsSeen(2, mt1Left.rawFiducials);
+                m_llv.getMT1TagIDsSeen(2, mt1Right.rawFiducials);
             }
         }
 
-        if (LimelightHelpers.getTV(m_llv.frontName)) {
-            mt1Front = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_llv.frontName);
-            m_llv.mt1Pose[m_llv.frontCam] = mt1Front.pose;
-            m_llv.mt1TagCount[m_llv.frontCam] = mt1Front.tagCount;
-            m_llv.mt1TimeStampSeconds[m_llv.frontCam] = mt1Front.timestampSeconds;
-            if (mt1Front.rawFiducials.length > 0) {
-                m_llv.mt1Ambiguity[m_llv.frontCam] = mt1Front.rawFiducials[0].ambiguity;
-                m_llv.mt1DistToCamera[m_llv.frontCam] = mt1Front.rawFiducials[0].distToCamera;
-                m_llv.getMT1TagIDsSeen(0, mt1Left.rawFiducials);
-            }
-        }
+          }
 
         numberScans++;
 
