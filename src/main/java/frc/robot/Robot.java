@@ -178,7 +178,8 @@ public class Robot extends TimedRobot {
                                         CameraConstants.fuelDetectorPipeline);
 
                 }
-                SignalLogger.setPath("media/sda1/logs");
+                // SignalLogger.setPath("media/sda1/logs");
+                SignalLogger.setPath("/U/SigLogs/logs");
                 if (m_autonomousCommand != null) {
                         CommandScheduler.getInstance().cancel(m_autonomousCommand);
                 }

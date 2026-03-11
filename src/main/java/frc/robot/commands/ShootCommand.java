@@ -39,7 +39,7 @@ public class ShootCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-okToShoot=false;
+    okToShoot = false;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -61,7 +61,9 @@ okToShoot=false;
           Math.abs(m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt)
 
       {
-        m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
+        double beltSpeed = FeederSetpoints.kFeedBeltSetpoint;
+        beltSpeed = .75;
+        m_feeder.runFeederBeltMotor(beltSpeed);
       }
     }
 
@@ -80,7 +82,7 @@ okToShoot=false;
   public void end(boolean interrupted) {
     m_feeder.stopFeederBeltMotor();
     m_feeder.stopFeederRollerMotor();
-    okToShoot=false;
+    okToShoot = false;
   }
 
   // Returns true when the command should end.

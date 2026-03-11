@@ -38,10 +38,10 @@ import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.AddressableLEDSubsystem;
+import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
-import frc.robot.subsystems.IntakeSlideArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
@@ -94,7 +94,7 @@ public class RobotContainer {
 
         final IntakeSubsystem m_intake;
 
-        private final IntakeSlideArmSubsystem m_intakeArm;
+        private final ArmSubsystem m_intakeArm;
 
         public final LimelightVision m_llv;
 
@@ -156,7 +156,7 @@ public class RobotContainer {
                 m_hood = new HoodSubsystem(showHoodData);
                 m_feeder = new FeederSubsystem(showFeederData);
                 m_intake = new IntakeSubsystem(showIntakeData);
-                m_intakeArm = new IntakeSlideArmSubsystem(showIntakeArmData);
+                m_intakeArm = new ArmSubsystem(showIntakeArmData);
                 m_llv = new LimelightVision(showLLData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
@@ -222,11 +222,11 @@ public class RobotContainer {
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
-                                                m_intakeArm.intakeArmSlideToIntakePositionCommand(),
+                                                m_intakeArm.intakeArmDownCommand(),
                                                 m_intake.startIntakeCommand()))
                                 .onFalse(
                                                 Commands.parallel(
-                                                                m_intakeArm.intakeArmSlideToClearPositionCommand(),
+                                                                m_intakeArm.intakeArmUpCommand(),
                                                                 m_intake.stopIntakeCommand()));
 
                 driver.leftBumper().onTrue(
@@ -469,7 +469,7 @@ public class RobotContainer {
 
                 collisionTrigger = new Trigger(() -> drivetrain.jerkLimitExceeded);
 
-                collisionTrigger.onTrue(m_intakeArm.intakeArmSlideToClearPositionCommand());
+                collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
 
                 // setAprilTagPipelineTrigger = new Trigger();
 
@@ -620,13 +620,13 @@ public class RobotContainer {
                 runIntake.onTrue(
                                 Commands.sequence(
                                                 m_intake.startIntakeCommand(),
-                                                m_intakeArm.intakeArmSlideToIntakePositionCommand()));
+                                                m_intakeArm.intakeArmDownCommand()));
 
                 EventTrigger endIntake = new EventTrigger("END_INTAKE");
                 endIntake.onTrue(
                                 Commands.sequence(
                                                 m_intake.stopIntakeCommand(),
-                                                m_intakeArm.intakeArmSlideToClearPositionCommand()));
+                                                m_intakeArm.intakeArmUpCommand()));
 
         }
 
@@ -660,7 +660,7 @@ public class RobotContainer {
                                 m_feeder.clearFeederStickyFaultsCommand(),
                                 m_hood.clearHoodStickyFaultsCommand(),
                                 m_intake.clearIntakeStickyFaultsCommand(),
-                                m_intakeArm.clearIntakeArmStickyFaultsCommand());
+                                m_intakeArm.clearStickyFaultsCommand());
         }
         //
         // //Breakover Angle (B°) = 2 × tan-1(2 × Ground Clearance (GC) / Wheelbase

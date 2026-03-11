@@ -455,12 +455,12 @@ public final class Constants {
 
     static Pose3d leftCamPose = new Pose3d(
         Units.inchesToMeters(100.),
-        Units.inchesToMeters(170.5),
-        Units.inchesToMeters(10.),
+        Units.inchesToMeters(100),
+        Units.inchesToMeters(0.),
         new Rotation3d(
             Units.degreesToRadians(0),
-            Units.degreesToRadians(-40),
-            Units.degreesToRadians(150)));
+            Units.degreesToRadians(-15),
+            Units.degreesToRadians(130)));
 
     public static Cameras leftCamera = new Cameras(
         "limelight-left",
