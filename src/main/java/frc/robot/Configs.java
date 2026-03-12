@@ -23,6 +23,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
+import frc.robot.subsystems.IntakeSlideArmSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 
 /**
@@ -55,35 +56,67 @@ public final class Configs {
     }
   }
 
+  public static final class IntakeSlideArm {
+
+    public static final SparkMaxConfig configLeader = new SparkMaxConfig();
+
+   // public static final SparkMaxConfig configFollower = new SparkMaxConfig();
+
+    static {
+      // Configure basic settings of the intake motor
+      configLeader
+          .inverted(true)
+          .idleMode(IdleMode.kCoast)
+          .openLoopRampRate(.25)
+          .smartCurrentLimit(60);
+
+      configLeader.encoder
+          .positionConversionFactor(IntakeSlideArmSubsystem.positionConversionFactor)
+          .velocityConversionFactor(IntakeSlideArmSubsystem.velocityConversionFactor);
+
+      configLeader.closedLoop
+          .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+          // Set PID values for position control. We don't need to pass a closed loop
+          // slot, as it will default to slot 0.
+          .p(0.05)
+          .i(0)
+          .d(0)
+          .outputRange(-1, 1);
+
+      configLeader.softLimit.forwardSoftLimit(IntakeSlideArmSubsystem.maxDistance.in(Inches))
+          .reverseSoftLimit(IntakeSlideArmSubsystem.minDistance.in(Inches))
+          .forwardSoftLimitEnabled(false)
+          .reverseSoftLimitEnabled(false);
+
+      configLeader.signals.primaryEncoderPositionPeriodMs(10);
+
+    }
+  }
+
   public static final class IntakeArm {
 
     public static final SparkMaxConfig armConfig = new SparkMaxConfig();
 
     static {
       // Configure basic settings of the arm motor
-  
 
-        armConfig
-                .inverted(false)
-                .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(60);
+      armConfig
+          .inverted(false)
+          .idleMode(IdleMode.kBrake)
+          .smartCurrentLimit(60);
 
-        armConfig.encoder
-                .positionConversionFactor(ArmSubsystem.positionConversionFactor)
-                .velocityConversionFactor(ArmSubsystem.velocityConversionFactor);
+      armConfig.encoder
+          .positionConversionFactor(ArmSubsystem.positionConversionFactor)
+          .velocityConversionFactor(ArmSubsystem.velocityConversionFactor);
 
-        armConfig.softLimit.forwardSoftLimit(ArmSubsystem.maxAngle.in(Radians))
-                .reverseSoftLimit(ArmSubsystem.minAngle.in(Radians))
-                .forwardSoftLimitEnabled(true)
-                .reverseSoftLimitEnabled(true);
+      armConfig.softLimit.forwardSoftLimit(ArmSubsystem.maxAngle.in(Radians))
+          .reverseSoftLimit(ArmSubsystem.minAngle.in(Radians))
+          .forwardSoftLimitEnabled(true)
+          .reverseSoftLimitEnabled(true);
 
-        armConfig.signals.primaryEncoderPositionPeriodMs(10);
-
+      armConfig.signals.primaryEncoderPositionPeriodMs(10);
 
     }
-
-
-
 
   }
 
@@ -120,8 +153,6 @@ public final class Configs {
       hoodConfig.signals.primaryEncoderPositionPeriodMs(10);
 
     }
-
-    
 
   }
 

@@ -62,7 +62,7 @@ public class ShootCommand extends Command {
 
       {
         double beltSpeed = FeederSetpoints.kFeedBeltSetpoint;
-        beltSpeed = .75;
+       // beltSpeed = .75;
         m_feeder.runFeederBeltMotor(beltSpeed);
       }
     }

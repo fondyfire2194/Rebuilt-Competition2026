@@ -14,7 +14,6 @@ import com.ctre.phoenix6.SignalLogger;
 
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
@@ -162,7 +161,9 @@ public class Robot extends TimedRobot {
                         m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
                 if (RobotBase.isSimulation() && AllianceUtil.isRedAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
-
+          // m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2, Rotation2d.fromDegrees(45)));
+           m_robotContainer.drivetrain.resetPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
+            
                 loopTimer.start();
                 
 
@@ -198,11 +199,11 @@ public class Robot extends TimedRobot {
                         m_robotContainer.m_llv.useMT2 = true;
                 }
 
-                // m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
-                CommandScheduler.getInstance()
-                                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
-                                                m_robotContainer.m_leds),
-                                                new CollisionDetectionCommand(m_robotContainer.drivetrain));
+                 m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
+                // CommandScheduler.getInstance()
+                //                 .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
+                //                                 m_robotContainer.m_leds),
+                //                                 new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
         }
 

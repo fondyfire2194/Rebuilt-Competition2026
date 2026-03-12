@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -42,6 +43,7 @@ import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
+import frc.robot.subsystems.IntakeSlideArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
@@ -94,8 +96,8 @@ public class RobotContainer {
 
         final IntakeSubsystem m_intake;
 
-        private final ArmSubsystem m_intakeArm;
-
+        // private final ArmSubsystem m_intakeArm;
+        private final IntakeSlideArmSubsystem m_intakeSlideArm;
         public final LimelightVision m_llv;
 
         public final AddressableLEDSubsystem m_leds;
@@ -156,7 +158,8 @@ public class RobotContainer {
                 m_hood = new HoodSubsystem(showHoodData);
                 m_feeder = new FeederSubsystem(showFeederData);
                 m_intake = new IntakeSubsystem(showIntakeData);
-                m_intakeArm = new ArmSubsystem(showIntakeArmData);
+                // m_intakeArm = new ArmSubsystem(showIntakeArmData);
+                m_intakeSlideArm = new IntakeSlideArmSubsystem(showIntakeData);
                 m_llv = new LimelightVision(showLLData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
@@ -220,14 +223,14 @@ public class RobotContainer {
                                                 () -> shootCommand(driver.back().getAsBoolean()),
                                                 Set.of()));
 
-                driver.rightTrigger().whileTrue(
-                                Commands.parallel(
-                                                m_intakeArm.intakeArmDownCommand(),
-                                                m_intake.startIntakeCommand()))
-                                .onFalse(
-                                                Commands.parallel(
-                                                                m_intakeArm.intakeArmUpCommand(),
-                                                                m_intake.stopIntakeCommand()));
+                // driver.rightTrigger().whileTrue(
+                // Commands.parallel(
+                // m_intakeArm.intakeArmDownCommand(),
+                // m_intake.startIntakeCommand()))
+                // .onFalse(
+                // Commands.parallel(
+                // m_intakeArm.intakeArmUpCommand(),
+                // m_intake.stopIntakeCommand()));
 
                 driver.leftBumper().onTrue(
                                 Commands.sequence(
@@ -291,7 +294,10 @@ public class RobotContainer {
 
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
-                codriver.rightBumper().whileTrue(m_intakeArm.jogIntakeArmCommand(() -> codriver.getLeftY()));
+                // codriver.rightBumper().whileTrue(m_intakeArm.jogIntakeArmCommand(() ->
+                // codriver.getLeftY()));
+                codriver.rightBumper().whileTrue(m_intakeSlideArm.jogIntakeArmCommand(() -> codriver.getLeftY()));
+
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
                 codriver.rightTrigger().and(codriver.povDown()).onTrue(
@@ -316,7 +322,9 @@ public class RobotContainer {
                 codriver.leftTrigger().and(codriver.povLeft())
                                 .onTrue(m_hood.setHoodZeroCommand().ignoringDisable(true));
 
-                codriver.leftTrigger().and(codriver.povUp()).whileTrue(m_intake.jogExtakeCommand());
+                codriver.leftTrigger().and(codriver.povUp())
+                                .onTrue(Commands.runOnce(() -> m_llv.useMT2 = false))
+                                .onFalse(Commands.runOnce(() -> m_llv.useMT2 = true));
 
                 codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
 
@@ -469,19 +477,21 @@ public class RobotContainer {
 
                 collisionTrigger = new Trigger(() -> drivetrain.jerkLimitExceeded);
 
-                collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
+             //   collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
 
                 // setAprilTagPipelineTrigger = new Trigger();
 
                 // setAprilTagPipelineTrigger.onTrue(Commands.runOnce(
-                //                 () -> LimelightHelpers.setPipelineIndex(Constants.CameraConstants.frontCamera.camname,
-                //                                 Constants.CameraConstants.apriltagPipeline)));
+                // () ->
+                // LimelightHelpers.setPipelineIndex(Constants.CameraConstants.frontCamera.camname,
+                // Constants.CameraConstants.apriltagPipeline)));
 
                 // setViewFinderPipelineTrigger = new Trigger(autoShootTrigger);
 
                 // setViewFinderPipelineTrigger.onTrue(Commands.runOnce(
-                //                 () -> LimelightHelpers.setPipelineIndex(Constants.CameraConstants.frontCamera.camname,
-                //                                 Constants.CameraConstants.viewFinderPipeline)));
+                // () ->
+                // LimelightHelpers.setPipelineIndex(Constants.CameraConstants.frontCamera.camname,
+                // Constants.CameraConstants.viewFinderPipeline)));
 
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 
@@ -616,17 +626,20 @@ public class RobotContainer {
 
         private void registerEventTriggers() {
 
-                EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
-                runIntake.onTrue(
-                                Commands.sequence(
-                                                m_intake.startIntakeCommand(),
-                                                m_intakeArm.intakeArmDownCommand()));
+                EventTrigger startShooters = new EventTrigger("START_SHOOTERS");
+                // startShooters.onTrue(m_shooter.runAllVelocityVoltageCommand());
+                startShooters.onTrue(Commands.none());
+                // EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
+                // runIntake.onTrue(
+                //                 Commands.sequence(
+                //                                 m_intake.startIntakeCommand(),
+                //                                 m_intakeArm.intakeArmDownCommand()));
 
-                EventTrigger endIntake = new EventTrigger("END_INTAKE");
-                endIntake.onTrue(
-                                Commands.sequence(
-                                                m_intake.stopIntakeCommand(),
-                                                m_intakeArm.intakeArmUpCommand()));
+                // EventTrigger endIntake = new EventTrigger("END_INTAKE");
+                // endIntake.onTrue(
+                //                 Commands.sequence(
+                //                                 m_intake.stopIntakeCommand(),
+                //                                 m_intakeArm.intakeArmUpCommand()));
 
         }
 
@@ -659,8 +672,8 @@ public class RobotContainer {
                 return Commands.sequence(
                                 m_feeder.clearFeederStickyFaultsCommand(),
                                 m_hood.clearHoodStickyFaultsCommand(),
-                                m_intake.clearIntakeStickyFaultsCommand(),
-                                m_intakeArm.clearStickyFaultsCommand());
+                                m_intake.clearIntakeStickyFaultsCommand());
+                               // m_intakeSideArm.clearStickyFaultsCommand());
         }
         //
         // //Breakover Angle (B°) = 2 × tan-1(2 × Ground Clearance (GC) / Wheelbase

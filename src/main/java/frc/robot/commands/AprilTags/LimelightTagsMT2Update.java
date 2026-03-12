@@ -6,6 +6,7 @@ package frc.robot.commands.AprilTags;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -18,6 +19,7 @@ public class LimelightTagsMT2Update extends Command {
 
     private final CommandSwerveDrivetrain m_swerve;
     private final LimelightVision m_llv;
+    boolean rejectMT1Update;
     boolean rejectMT2Update;
     private final double AMBIGUITY_CUTOFF = 0.7;
     private final double DISTANCE_CUTOFF = 4.0;
@@ -74,6 +76,26 @@ public class LimelightTagsMT2Update extends Command {
                 m_swerve.addVisionMeasurement(
                         mt2.pose,
                         mt2.timestampSeconds);
+            }
+
+        } else {
+
+            LimelightHelpers.PoseEstimate mt1 = LimelightHelpers
+                    .getBotPoseEstimate_wpiBlue(m_llv.cameras[m_cameraIndex].camname);
+
+            rejectMT1Update = mt1.tagCount == 0
+                    || mt1.tagCount == 1 && mt1.rawFiducials.length == 1 &&
+                            mt1.rawFiducials[0].ambiguity > .7
+                            && mt1.rawFiducials[0].distToCamera > 5;
+            // mt1PosePublisher.set(mt1.pose);
+           
+            if (!rejectMT1Update) {
+                m_swerve.setVisionMeasurementStdDevs(
+                        VecBuilder.fill(.7,
+                            .7, 1));
+                m_swerve.addVisionMeasurement(
+                        mt1.pose,
+                        mt1.timestampSeconds);
             }
         }
     }

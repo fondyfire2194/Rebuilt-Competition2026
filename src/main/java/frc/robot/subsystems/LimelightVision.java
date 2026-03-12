@@ -176,6 +176,7 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
+    SmartDashboard.putBoolean("AAAAAAAAAAMT2", useMT2);
 
     if (showData) {
       mt1FrontPosePublisher.set(mt1Pose[frontCam]);
