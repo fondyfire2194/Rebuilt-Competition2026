@@ -50,7 +50,7 @@ public class Robot extends TimedRobot {
                         .publish();
         private final StructPublisher<Pose2d> hubPoseBlue = hubPoseTable.getStructTopic("HubPoseBlue", Pose2d.struct)
                         .publish();
-   
+
         private final RobotContainer m_robotContainer;
         private LoopEvents loopEvents;
         private boolean autoHasRun;
@@ -161,11 +161,11 @@ public class Robot extends TimedRobot {
                         m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
                 if (RobotBase.isSimulation() && AllianceUtil.isRedAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
-          // m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2, Rotation2d.fromDegrees(45)));
-           m_robotContainer.drivetrain.resetPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
-            
+                // m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2,
+                // Rotation2d.fromDegrees(45)));
+                m_robotContainer.drivetrain.resetPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
+
                 loopTimer.start();
-                
 
                 if (RobotBase.isReal()) {
                         LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
@@ -196,14 +196,14 @@ public class Robot extends TimedRobot {
                                                         m_robotContainer.m_llv.rightCam,
                                                         m_robotContainer.drivetrain));
 
-                        m_robotContainer.m_llv.useMT2 = true;
+                      //  m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.frontCam] = true;
                 }
 
-                 m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
+                m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
                 // CommandScheduler.getInstance()
-                //                 .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
-                //                                 m_robotContainer.m_leds),
-                //                                 new CollisionDetectionCommand(m_robotContainer.drivetrain));
+                // .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
+                // m_robotContainer.m_leds),
+                // new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
         }
 

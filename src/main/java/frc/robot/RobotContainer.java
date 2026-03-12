@@ -322,9 +322,9 @@ public class RobotContainer {
                 codriver.leftTrigger().and(codriver.povLeft())
                                 .onTrue(m_hood.setHoodZeroCommand().ignoringDisable(true));
 
-                codriver.leftTrigger().and(codriver.povUp())
-                                .onTrue(Commands.runOnce(() -> m_llv.useMT2 = false))
-                                .onFalse(Commands.runOnce(() -> m_llv.useMT2 = true));
+                // codriver.leftTrigger().and(codriver.povUp())
+                //                 .onTrue(Commands.runOnce(() -> m_llv.useMT2 = false))
+                //                 .onFalse(Commands.runOnce(() -> m_llv.useMT2 = true));
 
                 codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
 

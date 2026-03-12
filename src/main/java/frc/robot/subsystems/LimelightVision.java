@@ -69,18 +69,24 @@ public class LimelightVision extends SubsystemBase {
   NetworkTableInstance ll = NetworkTableInstance.getDefault();
   private final NetworkTable llTable = ll.getTable("LimelightPoses");
 
-  private final StructPublisher<Pose2d> mt1FrontPosePublisher = llTable.getStructTopic("MT1FrontPose", Pose2d.struct)
-      .publish();
-  private final StructPublisher<Pose2d> mt1LeftPosePublisher = llTable.getStructTopic("MT1LeftPose", Pose2d.struct)
-      .publish();
-  private final StructPublisher<Pose2d> mt1RightPosePublisher = llTable.getStructTopic("MT1RightPose", Pose2d.struct)
-      .publish();
-  private final StructPublisher<Pose2d> mt2FrontPosePublisher = llTable.getStructTopic("MT2FrontPose", Pose2d.struct)
-      .publish();
-  private final StructPublisher<Pose2d> mt2LeftPosePublisher = llTable.getStructTopic("MT2LeftPose", Pose2d.struct)
-      .publish();
-  private final StructPublisher<Pose2d> mt2RightPosePublisher = llTable.getStructTopic("MT2RightPose", Pose2d.struct)
-      .publish();
+  // private final StructPublisher<Pose2d> mt1FrontPosePublisher =
+  // llTable.getStructTopic("MT1FrontPose", Pose2d.struct)
+  // .publish();
+  // private final StructPublisher<Pose2d> mt1LeftPosePublisher =
+  // llTable.getStructTopic("MT1LeftPose", Pose2d.struct)
+  // .publish();
+  // private final StructPublisher<Pose2d> mt1RightPosePublisher =
+  // llTable.getStructTopic("MT1RightPose", Pose2d.struct)
+  // .publish();
+  // private final StructPublisher<Pose2d> mt2FrontPosePublisher =
+  // llTable.getStructTopic("MT2FrontPose", Pose2d.struct)
+  // .publish();
+  // private final StructPublisher<Pose2d> mt2LeftPosePublisher =
+  // llTable.getStructTopic("MT2LeftPose", Pose2d.struct)
+  // .publish();
+  // private final StructPublisher<Pose2d> mt2RightPosePublisher =
+  // llTable.getStructTopic("MT2RightPose", Pose2d.struct)
+  // .publish();
 
   public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
 
@@ -90,11 +96,19 @@ public class LimelightVision extends SubsystemBase {
 
   public double[] numberMT2TagsSeen = new double[numberOfAprilTagCameras];
 
+  public double[] mt1ambiguity = new double[numberOfAprilTagCameras];
+
+  public double[] mt1distToCamera = new double[numberOfAprilTagCameras];
+
+  public double[] numberMT1TagsSeen = new double[numberOfAprilTagCameras];
+
   public Pose2d[] acceptedPose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
 
   public boolean mt1PoseSet;
 
-  public boolean useMT2;
+  public boolean[] useMT2 = new boolean[numberOfAprilTagCameras];
+
+  public boolean[] useMT1 = new boolean[numberOfAprilTagCameras];
 
   private boolean showData;
 
@@ -170,22 +184,24 @@ public class LimelightVision extends SubsystemBase {
     return LimelightHelpers.getHeartbeat(camName);
   }
 
-  public Command startMT2UpdatesCommand() {
-    return Commands.runOnce(() -> useMT2 = true);
-  }
-
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("AAAAAAAAAAMT2", useMT2);
+    SmartDashboard.putBoolean("", useMT2[frontCam]);
+    SmartDashboard.putBoolean("", useMT2[leftCam]);
+    SmartDashboard.putBoolean("", useMT2[rightCam]);
 
     if (showData) {
-      mt1FrontPosePublisher.set(mt1Pose[frontCam]);
-      mt1LeftPosePublisher.set(mt1Pose[leftCam]);
-      mt1RightPosePublisher.set(mt1Pose[rightCam]);
+      // mt1FrontPosePublisher.set(mt1Pose[frontCam]);
+      // mt1LeftPosePublisher.set(mt1Pose[leftCam]);
+      // mt1RightPosePublisher.set(mt1Pose[rightCam]);
 
-      mt2FrontPosePublisher.set(mt2Pose[frontCam]);
-      mt2LeftPosePublisher.set(mt2Pose[leftCam]);
-      mt2RightPosePublisher.set(mt2Pose[rightCam]);
+      // mt2FrontPosePublisher.set(mt2Pose[frontCam]);
+      // mt2LeftPosePublisher.set(mt2Pose[leftCam]);
+      // mt2RightPosePublisher.set(mt2Pose[rightCam]);
+
+      Logger.log("FrontCamMT1Pose", mt1Pose[frontCam]);
+      Logger.log("LeftCamMT1Pose", mt1Pose[leftCam]);
+      Logger.log("RightCamMT1Pose", mt1Pose[rightCam]);
     }
     if (RobotBase.isReal()) {
       if (alternate) {

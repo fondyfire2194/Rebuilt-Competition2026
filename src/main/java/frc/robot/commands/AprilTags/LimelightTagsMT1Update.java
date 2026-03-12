@@ -14,7 +14,7 @@ import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
 
 /** Add your docs here. */
-public class LimelightTagsMT2Update extends Command {
+public class LimelightTagsMT1Update extends Command {
 
     private final CommandSwerveDrivetrain m_swerve;
     private final LimelightVision m_llv;
@@ -25,11 +25,11 @@ public class LimelightTagsMT2Update extends Command {
     private final double DISTANCE_STDDEVS_SCALAR = 2;
     private final double ROTATION_RATE_CUTOFF = 720;
 
-    LimelightHelpers.PoseEstimate mt2 = new PoseEstimate();
+    LimelightHelpers.PoseEstimate mt1 = new PoseEstimate();
 
     private int m_cameraIndex;
 
-    public LimelightTagsMT2Update(LimelightVision llv, int cameraIndex, CommandSwerveDrivetrain swerve) {
+    public LimelightTagsMT1Update(LimelightVision llv, int cameraIndex, CommandSwerveDrivetrain swerve) {
         m_swerve = swerve;
         m_llv = llv;
         m_cameraIndex = cameraIndex;
@@ -43,40 +43,34 @@ public class LimelightTagsMT2Update extends Command {
     @Override
     public void execute() {
 
-        LimelightHelpers.SetRobotOrientation(m_llv.cameras[m_cameraIndex].camname,
-                m_swerve.getState().Pose.getRotation().getDegrees(),
-                m_swerve.getPigeon2().getAngularVelocityXDevice().getValueAsDouble(), 0, 0, 0,
-                0);
-        mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(m_llv.cameras[m_cameraIndex].camname);
+        mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(m_llv.cameras[m_cameraIndex].camname);
+        m_llv.mt1Pose[m_cameraIndex] = mt1.pose;
 
-        m_llv.mt2Pose[m_cameraIndex] = mt2.pose;
-
-        m_llv.numberMT2TagsSeen[m_cameraIndex] = 0;
+        m_llv.numberMT1TagsSeen[m_cameraIndex] = 0;
         for (int i = 0; i < m_llv.mt2TagIDsSeen.length - 1; i++) {
-            m_llv.mt2TagIDsSeen[m_cameraIndex][i] = 0;
+            m_llv.mt1TagIDsSeen[m_cameraIndex][i] = 0;
         }
-        if (mt2.rawFiducials.length > 0) {
-            m_llv.mt2ambiguity[m_cameraIndex] = mt2.rawFiducials[0].ambiguity;
-            m_llv.mt2distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
-            m_llv.numberMT2TagsSeen[m_cameraIndex] = mt2.tagCount;
-            m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
+        if (mt1.rawFiducials.length > 0) {
+            m_llv.mt1ambiguity[m_cameraIndex] = mt1.rawFiducials[0].ambiguity;
+            m_llv.mt1distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
+            m_llv.numberMT1TagsSeen[m_cameraIndex] = mt1.tagCount;
+            m_swerve.distanceLimelightToEstimator = mt1.rawFiducials[0].distToCamera;
             m_llv.getMT2TagIDsSeen(m_cameraIndex, null);
         }
-        if (m_llv.useMT2[m_cameraIndex]) {
-            rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
-                    || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
-                            .getValueAsDouble()) > ROTATION_RATE_CUTOFF
-                    || (mt2.tagCount == 1 && mt2.rawFiducials[0].ambiguity > AMBIGUITY_CUTOFF)
-                    || mt2.rawFiducials[0].distToCamera > DISTANCE_CUTOFF;
+        if (!m_llv.useMT2[m_cameraIndex]) {
 
-            if (!rejectMT2Update) {
-                double standard_devs = mt2.rawFiducials[0].distToCamera / DISTANCE_STDDEVS_SCALAR;
+            rejectMT1Update = mt1.tagCount == 0
+                    || mt1.tagCount == 1 && mt1.rawFiducials.length == 1 &&
+                            mt1.rawFiducials[0].ambiguity > .7
+                            && mt1.rawFiducials[0].distToCamera > 5;
+            // mt1PosePublisher.set(mt1.pose);
+
+            if (!rejectMT1Update) {
                 m_swerve.setVisionMeasurementStdDevs(
-                        VecBuilder.fill(standard_devs,
-                                standard_devs, 9999999));
+                        VecBuilder.fill(.7, .7, 1));
                 m_swerve.addVisionMeasurement(
-                        mt2.pose,
-                        mt2.timestampSeconds);
+                        mt1.pose,
+                        mt1.timestampSeconds);
             }
         }
     }
