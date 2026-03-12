@@ -18,7 +18,6 @@ public class LimelightTagsMT2Update extends Command {
 
     private final CommandSwerveDrivetrain m_swerve;
     private final LimelightVision m_llv;
-    boolean rejectMT1Update;
     boolean rejectMT2Update;
     private final double AMBIGUITY_CUTOFF = 0.7;
     private final double DISTANCE_CUTOFF = 4.0;
@@ -57,10 +56,9 @@ public class LimelightTagsMT2Update extends Command {
         }
         if (mt2.rawFiducials.length > 0) {
             m_llv.mt2ambiguity[m_cameraIndex] = mt2.rawFiducials[0].ambiguity;
-            m_llv.mt2distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
             m_llv.numberMT2TagsSeen[m_cameraIndex] = mt2.tagCount;
-            m_swerve.distanceLimelightToEstimator = mt2.rawFiducials[0].distToCamera;
-            m_llv.getMT2TagIDsSeen(m_cameraIndex, null);
+             m_llv.mt2distToCamera[m_cameraIndex]  = mt2.rawFiducials[0].distToCamera;
+            m_llv.getMT2TagIDsSeen(m_cameraIndex, mt2.rawFiducials);
         }
         if (m_llv.useMT2[m_cameraIndex]) {
             rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])

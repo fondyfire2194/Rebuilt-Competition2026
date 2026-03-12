@@ -20,6 +20,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
 
 import dev.doglog.DogLog;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -236,7 +237,8 @@ public class RobotContainer {
                                 Commands.sequence(
                                                 m_shooter.setShootUsingDistanceCommand(true),
                                                 m_hood.setHoodUsingDistanceCommand(true),
-                                                m_shooter.runAllVelocityVoltageCommand()))
+                                                // m_shooter.runAllVelocityVoltageCommand()))
+                                                m_shooter.runAllShootersCommand(1)))
                                 // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
                                 // driver));
                                 .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
@@ -323,8 +325,8 @@ public class RobotContainer {
                                 .onTrue(m_hood.setHoodZeroCommand().ignoringDisable(true));
 
                 // codriver.leftTrigger().and(codriver.povUp())
-                //                 .onTrue(Commands.runOnce(() -> m_llv.useMT2 = false))
-                //                 .onFalse(Commands.runOnce(() -> m_llv.useMT2 = true));
+                // .onTrue(Commands.runOnce(() -> m_llv.useMT2 = false))
+                // .onFalse(Commands.runOnce(() -> m_llv.useMT2 = true));
 
                 codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
 
@@ -400,46 +402,55 @@ public class RobotContainer {
 
         public void configureBumpControllerBindings() {
 
-                // bumpdriver.leftBumper().whileTrue(drivetrain.applyRequest(() ->
-                // forwardStraightVelocity
-                // .withVelocityX(1.5).withVelocityY(0.)));
+                double crossAngle = -115;
 
-                bumpdriver.leftTrigger().whileTrue(drivetrain.applyRequest(() -> forwardStraightVelocity
-                                .withVelocityX(2.).withVelocityY(0)));
+                bumpdriver.leftBumper().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(1.8)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(crossAngle))));
 
-                // bumpdriver.rightBumper().whileTrue(drivetrain.applyRequest(() ->
-                // forwardStraightVelocity
-                // .withVelocityX(2.5).withVelocityY(0)));
+                bumpdriver.leftTrigger().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(1.9)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(crossAngle))));
+
+                bumpdriver.rightBumper().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(2.0)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(crossAngle))));
 
                 bumpdriver.rightTrigger().whileTrue(
                                 drivetrain.applyRequest(() -> driveFacingAngle
-                                                .withVelocityX(2.25)
+                                                .withVelocityX(2.1)
                                                 .withVelocityY(0)
-                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
+                                                .withTargetDirection(Rotation2d.fromDegrees(crossAngle))));
+
+                bumpdriver.a().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(2.2)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(crossAngle))));
+
+                bumpdriver.b().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(2.3)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(crossAngle))));
+
+                bumpdriver.x().whileTrue(
+                                drivetrain.applyRequest(() -> driveFacingAngle
+                                                .withVelocityX(2.4)
+                                                .withVelocityY(0)
+                                                .withTargetDirection(Rotation2d.fromDegrees(crossAngle))));
 
                 bumpdriver.a().whileTrue(
                                 drivetrain.applyRequest(() -> driveFacingAngle
                                                 .withVelocityX(2.5)
                                                 .withVelocityY(0)
-                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
-
-                bumpdriver.b().whileTrue(
-                                drivetrain.applyRequest(() -> driveFacingAngle
-                                                .withVelocityX(2.75)
-                                                .withVelocityY(0)
-                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
-
-                bumpdriver.x().whileTrue(
-                                drivetrain.applyRequest(() -> driveFacingAngle
-                                                .withVelocityX(3.)
-                                                .withVelocityY(0)
-                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
-
-                bumpdriver.a().whileTrue(
-                                drivetrain.applyRequest(() -> driveFacingAngle
-                                                .withVelocityX(3.25)
-                                                .withVelocityY(0)
-                                                .withTargetDirection(Rotation2d.fromDegrees(45))));
+                                                .withTargetDirection(Rotation2d.fromDegrees(crossAngle))));
 
                 bumpdriver.y().onTrue(
                                 drivetrain.applyRequest(() -> forwardStraight
@@ -453,8 +464,8 @@ public class RobotContainer {
                                                 .withVelocityY(-bumpdriver.getLeftX() * RobotConstants.MaxSpeed)
                                                 .withTargetDirection(Rotation2d.fromDegrees(45))));
 
-                bumpdriver.povUp().onTrue(drivetrain
-                                .applyRequest(() -> point.withModuleDirection(new Rotation2d(Math.PI / 2))));
+                bumpdriver.povUp().onTrue(Commands.runOnce(()->drivetrain.resetPose(
+                        new Pose2d(3.5, 2,Rotation2d.fromDegrees(-160)))));
                 bumpdriver.povRight().onTrue(drivetrain
                                 .applyRequest(() -> point.withModuleDirection(new Rotation2d(-Math.PI / 2))));
                 bumpdriver.povDown().onTrue(drivetrain
@@ -477,7 +488,7 @@ public class RobotContainer {
 
                 collisionTrigger = new Trigger(() -> drivetrain.jerkLimitExceeded);
 
-             //   collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
+                // collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
 
                 // setAprilTagPipelineTrigger = new Trigger();
 
@@ -618,6 +629,7 @@ public class RobotContainer {
                 NamedCommands.registerCommand("ALIGN_AND_SHOOT",
                                 Commands.deadline(
                                                 Commands.waitSeconds(5),
+                                                m_shooter.runAllShootersCommand(1),
                                                 new AutoAlignHub(drivetrain, m_shooter, m_hood, 1),
                                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false))
                                                 .andThen(m_shooter.stopAllShootersCommand()));
@@ -628,18 +640,18 @@ public class RobotContainer {
 
                 EventTrigger startShooters = new EventTrigger("START_SHOOTERS");
                 // startShooters.onTrue(m_shooter.runAllVelocityVoltageCommand());
-                startShooters.onTrue(Commands.none());
+                startShooters.onTrue(m_shooter.runAllShootersCommand(1));
                 // EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
                 // runIntake.onTrue(
-                //                 Commands.sequence(
-                //                                 m_intake.startIntakeCommand(),
-                //                                 m_intakeArm.intakeArmDownCommand()));
+                // Commands.sequence(
+                // m_intake.startIntakeCommand(),
+                // m_intakeArm.intakeArmDownCommand()));
 
                 // EventTrigger endIntake = new EventTrigger("END_INTAKE");
                 // endIntake.onTrue(
-                //                 Commands.sequence(
-                //                                 m_intake.stopIntakeCommand(),
-                //                                 m_intakeArm.intakeArmUpCommand()));
+                // Commands.sequence(
+                // m_intake.stopIntakeCommand(),
+                // m_intakeArm.intakeArmUpCommand()));
 
         }
 
@@ -673,7 +685,7 @@ public class RobotContainer {
                                 m_feeder.clearFeederStickyFaultsCommand(),
                                 m_hood.clearHoodStickyFaultsCommand(),
                                 m_intake.clearIntakeStickyFaultsCommand());
-                               // m_intakeSideArm.clearStickyFaultsCommand());
+                // m_intakeSideArm.clearStickyFaultsCommand());
         }
         //
         // //Breakover Angle (B°) = 2 × tan-1(2 × Ground Clearance (GC) / Wheelbase

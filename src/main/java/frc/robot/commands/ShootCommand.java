@@ -46,7 +46,7 @@ public class ShootCommand extends Command {
   @Override
   public void execute() {
 
-    m_shooter.runAllVelocityVoltage();
+  //  m_shooter.runAllVelocityVoltage();
     m_shooter.bypassShootInterlocks = m_bypassInterlocks;
 
     if (m_shooter.bypassShootInterlocks

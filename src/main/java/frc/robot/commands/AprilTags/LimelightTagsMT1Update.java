@@ -19,7 +19,7 @@ public class LimelightTagsMT1Update extends Command {
     private final CommandSwerveDrivetrain m_swerve;
     private final LimelightVision m_llv;
     boolean rejectMT1Update;
-    boolean rejectMT2Update;
+
     private final double AMBIGUITY_CUTOFF = 0.7;
     private final double DISTANCE_CUTOFF = 4.0;
     private final double DISTANCE_STDDEVS_SCALAR = 2;
@@ -47,7 +47,7 @@ public class LimelightTagsMT1Update extends Command {
         m_llv.mt1Pose[m_cameraIndex] = mt1.pose;
 
         m_llv.numberMT1TagsSeen[m_cameraIndex] = 0;
-        for (int i = 0; i < m_llv.mt2TagIDsSeen.length - 1; i++) {
+        for (int i = 0; i < m_llv.mt1TagIDsSeen.length - 1; i++) {
             m_llv.mt1TagIDsSeen[m_cameraIndex][i] = 0;
         }
         if (mt1.rawFiducials.length > 0) {
@@ -55,15 +55,15 @@ public class LimelightTagsMT1Update extends Command {
             m_llv.mt1distToCamera[m_cameraIndex] = m_swerve.distanceLimelightToEstimator;
             m_llv.numberMT1TagsSeen[m_cameraIndex] = mt1.tagCount;
             m_swerve.distanceLimelightToEstimator = mt1.rawFiducials[0].distToCamera;
-            m_llv.getMT2TagIDsSeen(m_cameraIndex, null);
+            m_llv.getMT1TagIDsSeen(m_cameraIndex, mt1.rawFiducials);
         }
-        if (!m_llv.useMT2[m_cameraIndex]) {
+        if (m_llv.useMT1[m_cameraIndex]) {
 
             rejectMT1Update = mt1.tagCount == 0
                     || mt1.tagCount == 1 && mt1.rawFiducials.length == 1 &&
                             mt1.rawFiducials[0].ambiguity > .7
                             && mt1.rawFiducials[0].distToCamera > 5;
-            // mt1PosePublisher.set(mt1.pose);
+
 
             if (!rejectMT1Update) {
                 m_swerve.setVisionMeasurementStdDevs(

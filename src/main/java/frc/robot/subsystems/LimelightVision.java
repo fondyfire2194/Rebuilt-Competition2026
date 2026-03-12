@@ -208,11 +208,26 @@ public class LimelightVision extends SubsystemBase {
         Logger.log("FrontCamMT2Pose", mt2Pose[frontCam]);
         Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
         Logger.log("RightCamMT2Pose", mt2Pose[rightCam]);
-        Logger.log("FrontCamTagsSeen", mt2TagIDsSeen[frontCam]);
-        Logger.log("LeftCamTagsSeen", mt2TagIDsSeen[leftCam]);
-        Logger.log("RightCamTagsSeen", mt2TagIDsSeen[rightCam]);
+        Logger.log("FrontCamMT2TagsSeen", mt2TagIDsSeen[frontCam]);
+        Logger.log("LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
+        Logger.log("RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
+        Logger.log("FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
+        Logger.log("LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
+        Logger.log("RightCam # MT1TagsSeen", numberMT2TagsSeen[rightCam]);
+
         Logger.log("FrontCamPipeline", LimelightHelpers.getCurrentPipelineType(frontName));
       } else {
+
+        Logger.log("FrontCamMT1Pose", mt1Pose[frontCam]);
+        Logger.log("LeftCamMT1Pose", mt1Pose[leftCam]);
+        Logger.log("RightCamMT1Pose", mt1Pose[rightCam]);
+        Logger.log("FrontCamMT1TagsSeen", mt1TagIDsSeen[frontCam]);
+        Logger.log("LeftCamMT!TagsSeen", mt1TagIDsSeen[leftCam]);
+        Logger.log("RightCamMT1TagsSeen", mt1TagIDsSeen[rightCam]);
+        Logger.log("FrontCam # MT!TagsSeen", numberMT1TagsSeen[frontCam]);
+        Logger.log("LeftCam # MT1TagsSeen", numberMT1TagsSeen[leftCam]);
+        Logger.log("RightCam # MT1TagsSeen", numberMT1TagsSeen[rightCam]);
+
         double frontHeartbeat = getCameraHeartbeat(frontName);
         double leftHeartbeat = getCameraHeartbeat(leftName);
         double rightHeartbeat = getCameraHeartbeat(rightName);

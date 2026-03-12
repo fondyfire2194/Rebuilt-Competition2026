@@ -31,6 +31,7 @@ import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.CollisionDetectionCommand;
 import frc.robot.commands.ShiftDetectionCommand;
+import frc.robot.commands.AprilTags.LimelightTagsMT1Update;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.FuelSim;
@@ -121,6 +122,10 @@ public class Robot extends TimedRobot {
 
         @Override
         public void autonomousInit() {
+
+                m_robotContainer.m_shooter.setShootUsingDistance(true);
+                m_robotContainer.m_hood.setHoodUsingDistance(true);
+
                 m_autonomousCommand = m_robotContainer.getAutonomousCommand();
                 SmartDashboard.putString("AutoName", m_autonomousCommand.getName());
                 if (m_autonomousCommand != null) {
@@ -152,18 +157,14 @@ public class Robot extends TimedRobot {
         @Override
         public void teleopInit() {
 
-                // Logger.log("DEPOTPASSINGPOSE", AllianceUtil.getDepotPassingPose());
-                // Logger.log("OUTPOSTPASSINGPOSE", AllianceUtil.getOutpostPassingPose());
-                // Logger.log("ALLIANCEBLUE", AllianceUtil.isBlueAlliance());
-                // Logger.log("ALLIANCERED", AllianceUtil.isRedAlliance());
-
                 if (RobotBase.isSimulation() && AllianceUtil.isBlueAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
                 if (RobotBase.isSimulation() && AllianceUtil.isRedAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
-                // m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2,
-                // Rotation2d.fromDegrees(45)));
-                m_robotContainer.drivetrain.resetPose(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
+                m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2,
+                                Rotation2d.fromDegrees(-115)));
+                // m_robotContainer.drivetrain.resetPose(new Pose2d(0, 0,
+                // Rotation2d.fromDegrees(0)));
 
                 loopTimer.start();
 
@@ -194,9 +195,25 @@ public class Robot extends TimedRobot {
                                                         m_robotContainer.drivetrain),
                                         new LimelightTagsMT2Update(m_robotContainer.m_llv,
                                                         m_robotContainer.m_llv.rightCam,
+                                                        m_robotContainer.drivetrain),
+                                        new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                                        m_robotContainer.m_llv.frontCam,
+                                                        m_robotContainer.drivetrain),
+                                        new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                                        m_robotContainer.m_llv.leftCam,
+                                                        m_robotContainer.drivetrain),
+                                        new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                                        m_robotContainer.m_llv.rightCam,
                                                         m_robotContainer.drivetrain));
 
-                      //  m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.frontCam] = true;
+                        m_robotContainer.m_llv.useMT1[m_robotContainer.m_llv.frontCam] = true;
+                        m_robotContainer.m_llv.useMT1[m_robotContainer.m_llv.leftCam] = true;
+                        m_robotContainer.m_llv.useMT1[m_robotContainer.m_llv.rightCam] = true;
+
+                        // m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.frontCam] = true;
+                        // m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.leftCam] = true;
+                        // m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.rightCam] = true;
+
                 }
 
                 m_robotContainer.m_shooter.hubIsActive = !autoHasRun;

@@ -34,7 +34,9 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.CanbusConstants;
@@ -174,11 +176,20 @@ public class TripleShooterSubsystem extends SubsystemBase {
     return run(() -> runAllVelocityVoltage());
   }
 
+  public Command runAllShootersCommand(double delay) {
+    return new SequentialCommandGroup(
+        runVelocityVoltageCommand(leftMotor),
+        new WaitCommand(delay),
+        runVelocityVoltageCommand(middleMotor),
+        new WaitCommand(delay),
+        runVelocityVoltageCommand(rightMotor));
+  }
+
   public void runAllVelocityVoltage() {
     shooterIsRunning = true;
     if (leftMotorActive)
       runVelocityVoltage(leftMotor);
-
+   
     if (middleMotorActive)
       runVelocityVoltage(middleMotor);
 
