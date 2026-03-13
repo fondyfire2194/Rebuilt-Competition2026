@@ -19,6 +19,12 @@
         {
           "type": "named",
           "data": {
+            "name": "START_SHOOTERS"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "ALIGN_AND_SHOOT"
           }
         }

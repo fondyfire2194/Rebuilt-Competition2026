@@ -15,13 +15,14 @@ import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.motorcontrol.Koors40;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.utils.Logger;
 
 public class AddressableLEDSubsystem extends SubsystemBase {
   /** Creates a new AddressableLEDSubsystem. */
@@ -104,7 +105,14 @@ public class AddressableLEDSubsystem extends SubsystemBase {
     // Note: Other default patterns could be used instead!
 
     setDefaultCommand(
-        runPattern(m_scrollingRainbow).ignoringDisable(true));
+        runPattern(kOff).ignoringDisable(true));
+
+    CommandScheduler.getInstance().schedule(
+        Commands.sequence(
+            runPattern(m_scrollingRainbow),
+            Commands.waitSeconds(10),
+            runPattern(kOff))
+            .ignoringDisable(true));
 
     setGreen = new Trigger(
         () -> (DriverStation.isAutonomousEnabled() || DriverStation.isTeleopEnabled()) && hubIsActive);
@@ -151,11 +159,11 @@ public class AddressableLEDSubsystem extends SubsystemBase {
      * 
      */
 
-    Logger.log("LEDS/WarningShoot", fiveSecondWarningEndOfShoot);
-    Logger.log("LEDS/WarningPickup", fiveSecondWarningEndOfPickup);
-    Logger.log("LEDS/WarningEndGame", endGameWarning);
-    Logger.log("LEDS/AllianceShootActive", currentAllianceShootActive);
-    Logger.log("LEDS/HiAuto-GameData", gameData);
+    // Logger.log("LEDS/WarningShoot", fiveSecondWarningEndOfShoot);
+    // Logger.log("LEDS/WarningPickup", fiveSecondWarningEndOfPickup);
+    // Logger.log("LEDS/WarningEndGame", endGameWarning);
+    // Logger.log("LEDS/AllianceShootActive", currentAllianceShootActive);
+    // Logger.log("LEDS/HiAuto-GameData", gameData);
     m_led.setData(m_buffer);
   }
 

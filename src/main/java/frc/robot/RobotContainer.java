@@ -29,7 +29,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -229,7 +228,7 @@ public class RobotContainer {
 
                 driver.b().onTrue(presetShoot(trenchPresetDistance));
 
-                driver.x().onTrue( presetShoot(towerPresetDistance));
+                driver.x().onTrue(presetShoot(towerPresetDistance));
 
                 driver.a().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
 
@@ -301,7 +300,6 @@ public class RobotContainer {
                 codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
 
         }
-
 
         public void configureBumpControllerBindings() {
 
@@ -545,6 +543,7 @@ public class RobotContainer {
         public Command presetShoot(double distance) {
                 return Commands.sequence(
                                 m_shooter.setShootUsingDistanceCommand(false),
+                                Commands.runOnce(() -> m_shooter.presetShoot = true),
                                 m_hood.setHoodUsingDistanceCommand(false),
                                 m_shooter.setManualTargetVelocityCommand(
                                                 RPM.of(ShootingData.shooterSpeedMap.get(distance))),

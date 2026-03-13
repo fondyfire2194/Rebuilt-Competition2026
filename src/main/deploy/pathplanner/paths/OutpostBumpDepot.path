@@ -158,12 +158,6 @@
       "waypointRelativePos": 3.4315545243619385,
       "endWaypointRelativePos": null,
       "command": null
-    },
-    {
-      "name": "START_SHOOTERS",
-      "waypointRelativePos": 5.21629213483145,
-      "endWaypointRelativePos": null,
-      "command": null
     }
   ],
   "globalConstraints": {

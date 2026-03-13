@@ -205,9 +205,9 @@ public class Robot extends TimedRobot {
                 }
 
                 m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
-                // CommandScheduler.getInstance()
-                // .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
-                // m_robotContainer.m_leds),
+                CommandScheduler.getInstance()
+                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
+                m_robotContainer.m_leds));
                 // new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
         }

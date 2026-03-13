@@ -112,6 +112,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public boolean shooterIsRunning;
 
+  public boolean presetShoot;
+
   public boolean isShootUsingDistance() {
     return shootUsingDistance;
   }
@@ -237,6 +239,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public void setManualTargetVelocity(double RPM) {
     manualSetTargetRPM = RPM;
+    finalSetTargetRPM=RPM;
   }
 
   public Command setManualTargetVelocityCommand(AngularVelocity vel) {
