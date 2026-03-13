@@ -122,36 +122,10 @@ public class RobotContainer {
         private Trigger setAprilTagPipelineTrigger;
 
         // Presets
-        public static final double hubPresetDistance = 0.96;
-        public static final double towerPresetDistance = 2.5;
-        public static final double trenchPresetDistance = 3.03;
-        public static final double outpostPresetDistance = 4.84;
-
-        static DoubleSupplier hdminhminA;
-        static DoubleSupplier hdminshspd;
-        static DoubleSupplier hdmaxmaxA;
-        static DoubleSupplier hdmaxshspd;
-
-        static DoubleSupplier hubhminA;
-        static DoubleSupplier hubshspd;
-        static DoubleSupplier twrminA;
-        static DoubleSupplier twrshspd;
-        static DoubleSupplier trenchminA;
-        static DoubleSupplier trenchshspd;
-        static DoubleSupplier outpostminA;
-        static DoubleSupplier outpostshspd;
-
-        public static record LaunchPreset(
-                        DoubleSupplier hoodAngleDeg, DoubleSupplier flywheelSpeed) {
-        }
-
-        public static LaunchPreset hoodMinPreset;
-        public static LaunchPreset hoodMaxPreset;
-
-        public static LaunchPreset outpostPreset;
-        public static LaunchPreset hubPreset;
-        public static LaunchPreset towerPreset;
-        public static LaunchPreset trenchPreset;
+        // public static final double hubPresetDistance = 0.96;
+        public static final double towerPresetDistance = 4.41;
+        public static final double trenchPresetDistance = 3.3;
+        // public static final double outpostPresetDistance = 4.84;
 
         public RobotContainer() {
 
@@ -173,10 +147,8 @@ public class RobotContainer {
                 m_shooter.rightMotorActive = true;
 
                 setDefaultCommands();
-                configurePresets();
                 configureDriverBindings();
                 configureCodriverBindings();
-                configurePresetControllerBindings();
                 configureBumpControllerBindings();
 
                 configureTriggers();
@@ -253,15 +225,13 @@ public class RobotContainer {
                                                 m_intake.stopIntakeCommand()))
                                 .whileTrue(Commands.defer(this::driveAtBumpAngle, Set.of(drivetrain)));
 
-                driver.b().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
+                driver.y().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
-                driver.y().onTrue(
-                                new DeferredCommand(() -> m_hood.incrementHoodCommand(.5), Set.of()));
+                driver.b().onTrue(presetShoot(trenchPresetDistance));
 
-                driver.a().onTrue(
-                                new DeferredCommand(() -> m_hood.incrementHoodCommand(-.5), Set.of()));
+                driver.x().onTrue( presetShoot(towerPresetDistance));
 
-                driver.x().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
+                driver.a().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
 
                 driver.povUp().onTrue(m_shooter.changeFinalTargetVelocityCommand(100));
 
@@ -275,8 +245,7 @@ public class RobotContainer {
                                                                 m_hood.setHoodUsingDistanceCommand(false)),
                                                 () -> m_shooter.isShootUsingDistance()), Set.of()));
 
-                driver.povRight().onTrue(Commands.runOnce(() -> drivetrain.resetRotation(new Rotation2d()))
-                                .ignoringDisable(true));
+                driver.povRight().onTrue(Commands.none());
                 driver.back().onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()));
                 // Reset the field-centric heading
                 driver.start().onTrue(
@@ -324,81 +293,15 @@ public class RobotContainer {
                 codriver.leftTrigger().and(codriver.povLeft())
                                 .onTrue(m_hood.setHoodZeroCommand().ignoringDisable(true));
 
-                // codriver.leftTrigger().and(codriver.povUp())
-                // .onTrue(Commands.runOnce(() -> m_llv.useMT2 = false))
-                // .onFalse(Commands.runOnce(() -> m_llv.useMT2 = true));
+                codriver.leftTrigger().and(codriver.povUp())
+                                .onTrue(Commands.sequence(
+                                                Commands.runOnce(() -> m_llv.useMT1 = true),
+                                                (Commands.runOnce(() -> m_llv.useMT2 = false))));
 
                 codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
 
         }
 
-        public void configurePresetControllerBindings() {
-
-                presetdriver.leftBumper().onTrue(
-                                Commands.parallel(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_hood.setHoodUsingDistanceCommand(false),
-                                                m_shooter.setManualTargetVelocityCommand(
-                                                                RPM.of(hdminshspd.getAsDouble())),
-                                                m_hood.setManualTargetCommand(hdminhminA.getAsDouble())));
-
-                presetdriver.leftTrigger().onTrue(
-                                Commands.parallel(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_hood.setHoodUsingDistanceCommand(false),
-                                                m_shooter.setManualTargetVelocityCommand(
-                                                                RPM.of(hdmaxshspd.getAsDouble())),
-                                                m_hood.setManualTargetCommand(hdmaxmaxA.getAsDouble())));
-
-                presetdriver.a().onTrue(
-                                Commands.parallel(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_hood.setHoodUsingDistanceCommand(false),
-                                                m_shooter.setManualTargetVelocityCommand(
-                                                                RPM.of(twrshspd.getAsDouble())),
-                                                m_hood.setManualTargetCommand(twrminA.getAsDouble())));
-
-                presetdriver.b().onTrue(
-                                Commands.parallel(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_hood.setHoodUsingDistanceCommand(false),
-                                                m_shooter.setManualTargetVelocityCommand(
-                                                                RPM.of(trenchshspd.getAsDouble())),
-                                                m_hood.setManualTargetCommand(trenchminA.getAsDouble())));
-
-                presetdriver.x().onTrue(
-                                Commands.parallel(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_hood.setHoodUsingDistanceCommand(false),
-                                                m_shooter.setManualTargetVelocityCommand(
-                                                                RPM.of(outpostshspd.getAsDouble())),
-                                                m_hood.setManualTargetCommand(outpostminA.getAsDouble())));
-
-                presetdriver.a().onTrue(
-                                Commands.parallel(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_hood.setHoodUsingDistanceCommand(false),
-                                                m_shooter.setManualTargetVelocityCommand(
-                                                                RPM.of(twrshspd.getAsDouble())),
-                                                m_hood.setManualTargetCommand(twrminA.getAsDouble())));
-
-                presetdriver.y().onTrue(
-                                Commands.parallel(
-                                                m_shooter.setShootUsingDistanceCommand(false),
-                                                m_hood.setHoodUsingDistanceCommand(false),
-                                                m_shooter.setManualTargetVelocityCommand(
-                                                                RPM.of(hubshspd.getAsDouble())),
-                                                m_hood.setManualTargetCommand(hubhminA.getAsDouble())));
-
-                presetdriver.povLeft().onTrue(
-                                new DeferredCommand(() -> Commands.either(
-                                                Commands.parallel(m_shooter.setShootUsingDistanceCommand(false),
-                                                                m_hood.setHoodUsingDistanceCommand(false)),
-                                                Commands.parallel(m_shooter.setShootUsingDistanceCommand(true),
-                                                                m_hood.setHoodUsingDistanceCommand(true)),
-                                                () -> m_shooter.isShootUsingDistance()), Set.of()));
-
-        }
 
         public void configureBumpControllerBindings() {
 
@@ -464,8 +367,8 @@ public class RobotContainer {
                                                 .withVelocityY(-bumpdriver.getLeftX() * RobotConstants.MaxSpeed)
                                                 .withTargetDirection(Rotation2d.fromDegrees(45))));
 
-                bumpdriver.povUp().onTrue(Commands.runOnce(()->drivetrain.resetPose(
-                        new Pose2d(3.5, 2,Rotation2d.fromDegrees(-160)))));
+                bumpdriver.povUp().onTrue(Commands.runOnce(() -> drivetrain.resetPose(
+                                new Pose2d(3.5, 2, Rotation2d.fromDegrees(-160)))));
                 bumpdriver.povRight().onTrue(drivetrain
                                 .applyRequest(() -> point.withModuleDirection(new Rotation2d(-Math.PI / 2))));
                 bumpdriver.povDown().onTrue(drivetrain
@@ -530,55 +433,6 @@ public class RobotContainer {
                                                                 Commands.waitSeconds(.75),
                                                                 Commands.runOnce(() -> driver.setRumble(
                                                                                 RumbleType.kBothRumble, 0))));
-
-        }
-
-        private void configurePresets() {
-                hoodMinPreset = new LaunchPreset(
-                                hdminhminA = DogLog.tunable(
-                                                "LaunchCalculator/Presets/HoodMin/HoodAngle",
-                                                HoodSubsystem.kMinPosition.in(Degrees)),
-                                hdminshspd = DogLog.tunable(
-                                                "LaunchCalculator/Presets/HoodMin/FlywheelSpeed", 50.));
-
-                hoodMaxPreset = new LaunchPreset(
-                                hdmaxmaxA = DogLog.tunable(
-                                                "LaunchCalculator/Presets/HoodMax/HoodAngle",
-                                                HoodSubsystem.kMaxPosition.in(Degrees)),
-                                hdmaxshspd = DogLog.tunable(
-                                                "LaunchCalculator/Presets/HoodMax/FlywheelSpeed", 50.));
-
-                hubPreset = new LaunchPreset(
-                                hubhminA = DogLog.tunable(
-                                                "LaunchCalculator/Presets/Hub/HoodAngle",
-                                                ShootingData.hoodAngleMap.get(hubPresetDistance).getDegrees()),
-                                hubshspd = DogLog.tunable(
-                                                "LaunchCalculator/Presets/Hub/FlywheelSpeed",
-                                                ShootingData.shooterSpeedMap.get(hubPresetDistance)));
-
-                towerPreset = new LaunchPreset(
-                                twrminA = DogLog.tunable(
-                                                "LaunchCalculator/Presets/Tower/HoodAngle",
-                                                ShootingData.hoodAngleMap.get(towerPresetDistance).getDegrees()),
-                                twrshspd = DogLog.tunable(
-                                                "LaunchCalculator/Presets/Tower/FlywheelSpeed",
-                                                ShootingData.shooterSpeedMap.get(towerPresetDistance)));
-
-                trenchPreset = new LaunchPreset(
-                                trenchminA = DogLog.tunable(
-                                                "LaunchCalculator/Presets/Trench/HoodAngle",
-                                                ShootingData.hoodAngleMap.get(trenchPresetDistance).getDegrees()),
-                                trenchshspd = DogLog.tunable(
-                                                "LaunchCalculator/Presets/Trench/FlywheelSpeed",
-                                                ShootingData.shooterSpeedMap.get(trenchPresetDistance)));
-
-                outpostPreset = new LaunchPreset(
-                                outpostminA = DogLog.tunable(
-                                                "LaunchCalculator/Presets/Outpost/HoodAngle",
-                                                ShootingData.hoodAngleMap.get(outpostPresetDistance).getDegrees()),
-                                outpostshspd = DogLog.tunable(
-                                                "LaunchCalculator/Presets/Outpost/FlywheelSpeed",
-                                                ShootingData.shooterSpeedMap.get(outpostPresetDistance)));
 
         }
 
@@ -687,6 +541,16 @@ public class RobotContainer {
                                 m_intake.clearIntakeStickyFaultsCommand());
                 // m_intakeSideArm.clearStickyFaultsCommand());
         }
+
+        public Command presetShoot(double distance) {
+                return Commands.sequence(
+                                m_shooter.setShootUsingDistanceCommand(false),
+                                m_hood.setHoodUsingDistanceCommand(false),
+                                m_shooter.setManualTargetVelocityCommand(
+                                                RPM.of(ShootingData.shooterSpeedMap.get(distance))),
+                                m_hood.setManualTargetCommand(ShootingData.hoodAngleMap.get(distance).getDegrees()));
+        }
+
         //
         // //Breakover Angle (B°) = 2 × tan-1(2 × Ground Clearance (GC) / Wheelbase
         // (WB)).

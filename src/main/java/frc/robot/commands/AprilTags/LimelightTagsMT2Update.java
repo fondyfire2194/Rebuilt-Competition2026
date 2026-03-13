@@ -60,7 +60,7 @@ public class LimelightTagsMT2Update extends Command {
              m_llv.mt2distToCamera[m_cameraIndex]  = mt2.rawFiducials[0].distToCamera;
             m_llv.getMT2TagIDsSeen(m_cameraIndex, mt2.rawFiducials);
         }
-        if (m_llv.useMT2[m_cameraIndex]) {
+        if (m_llv.useMT2) {
             rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
                     || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
                             .getValueAsDouble()) > ROTATION_RATE_CUTOFF

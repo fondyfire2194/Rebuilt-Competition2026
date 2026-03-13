@@ -46,6 +46,15 @@ public class FeederSubsystem extends SubsystemBase {
       "Feeder Fault",
       AlertType.kError);
 
+  public boolean pulse;
+
+  public double beltStartPulseTime = 2.;
+  public double beltPulseTime = .5;
+
+  public double beltStopPulseTime = beltStartPulseTime + beltPulseTime;
+
+  public double beltInitialShootTime = 5.;
+
   public FeederSubsystem(boolean showData) {
     feederBeltMotor = new SparkMax(Constants.CANIDConstants.feederBeltID, MotorType.kBrushless);
     feederRollerMotor = new SparkMax(Constants.CANIDConstants.feederRollerID, MotorType.kBrushless);
@@ -249,6 +258,10 @@ public class FeederSubsystem extends SubsystemBase {
     return Commands.sequence(
         Commands.runOnce(() -> feederRollerMotor.clearFaults()),
         Commands.runOnce(() -> feederBeltMotor.clearFaults()));
+  }
+
+  public void pulseBelt() {
+    runFeederBeltMotor(-.25);
   }
 
 }

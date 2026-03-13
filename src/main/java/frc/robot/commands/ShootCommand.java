@@ -25,6 +25,7 @@ public class ShootCommand extends Command {
   private boolean m_bypassInterlocks;
   private Timer beltTimer = new Timer();
   private boolean okToShoot;
+  private boolean lookForPulse;
 
   public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
       CommandSwerveDrivetrain swerve, boolean bypassInterlocks) {
@@ -40,13 +41,15 @@ public class ShootCommand extends Command {
   @Override
   public void initialize() {
     okToShoot = false;
+    beltTimer.start();
+    lookForPulse = false;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
 
-  //  m_shooter.runAllVelocityVoltage();
+    // m_shooter.runAllVelocityVoltage();
     m_shooter.bypassShootInterlocks = m_bypassInterlocks;
 
     if (m_shooter.bypassShootInterlocks
@@ -55,15 +58,32 @@ public class ShootCommand extends Command {
     }
 
     if (okToShoot) {
+
       m_feeder.runFeederRollerAtVelocity();
 
       if (RobotBase.isSimulation() ||
           Math.abs(m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt)
 
       {
-        double beltSpeed = FeederSetpoints.kFeedBeltSetpoint;
-       // beltSpeed = .75;
-        m_feeder.runFeederBeltMotor(beltSpeed);
+
+        if (!lookForPulse && beltTimer.get() > m_feeder.beltInitialShootTime) {
+          lookForPulse = true;
+          beltTimer.reset();
+        }
+
+        if (lookForPulse && beltTimer.get() > m_feeder.beltStartPulseTime)
+          m_feeder.pulse = true;
+
+        if (lookForPulse && beltTimer.get() > m_feeder.beltStopPulseTime) {
+          m_feeder.pulse = false;
+          beltTimer.reset();
+        }
+        m_feeder.pulse = false;//force no belt reverse pulse
+
+        if (!m_feeder.pulse)
+          m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
+        else
+          m_feeder.pulseBelt();
       }
     }
 

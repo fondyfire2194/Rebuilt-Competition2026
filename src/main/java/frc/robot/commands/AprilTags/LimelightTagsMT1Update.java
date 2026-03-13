@@ -20,11 +20,6 @@ public class LimelightTagsMT1Update extends Command {
     private final LimelightVision m_llv;
     boolean rejectMT1Update;
 
-    private final double AMBIGUITY_CUTOFF = 0.7;
-    private final double DISTANCE_CUTOFF = 4.0;
-    private final double DISTANCE_STDDEVS_SCALAR = 2;
-    private final double ROTATION_RATE_CUTOFF = 720;
-
     LimelightHelpers.PoseEstimate mt1 = new PoseEstimate();
 
     private int m_cameraIndex;
@@ -57,15 +52,22 @@ public class LimelightTagsMT1Update extends Command {
             m_swerve.distanceLimelightToEstimator = mt1.rawFiducials[0].distToCamera;
             m_llv.getMT1TagIDsSeen(m_cameraIndex, mt1.rawFiducials);
         }
-        if (m_llv.useMT1[m_cameraIndex]) {
+        if (m_llv.useMT1) {
 
             rejectMT1Update = mt1.tagCount == 0
                     || mt1.tagCount == 1 && mt1.rawFiducials.length == 1 &&
                             mt1.rawFiducials[0].ambiguity > .7
                             && mt1.rawFiducials[0].distToCamera > 5;
 
-
             if (!rejectMT1Update) {
+                m_llv.mt1PresetCount[m_cameraIndex]++;
+                if (!m_llv.useMT2 && m_llv.mt1PresetCount[m_cameraIndex] >= m_llv.presetLimit) {
+                    m_llv.useMT2 = true;
+                    m_llv.useMT1 = false;
+                }
+                if (m_llv.useMT2)
+                    m_llv.mt1PresetCount[m_cameraIndex] = 0;
+
                 m_swerve.setVisionMeasurementStdDevs(
                         VecBuilder.fill(.7, .7, 1));
                 m_swerve.addVisionMeasurement(

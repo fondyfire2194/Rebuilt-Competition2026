@@ -445,7 +445,7 @@ public final class Constants {
     public static Cameras frontCamera = new Cameras(
         "limelight-front",
         "10.21.94.15",
-        true,
+        false,
         frontCamPose,
         63.3,
         49.7,
@@ -465,7 +465,7 @@ public final class Constants {
     public static Cameras leftCamera = new Cameras(
         "limelight-left",
         "10.21.94.16",
-        false,
+        true,
         leftCamPose,
         63.3,
         49.7,
@@ -485,7 +485,7 @@ public final class Constants {
     public static Cameras rightCamera = new Cameras(
         "limelight-right",
         "10.21.94.17",
-        false,
+        true,
         rightCamPose,
         63.3,
         49.7,

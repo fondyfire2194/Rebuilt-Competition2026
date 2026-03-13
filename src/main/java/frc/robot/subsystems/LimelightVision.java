@@ -60,33 +60,14 @@ public class LimelightVision extends SubsystemBase {
 
   public double[][] mt2TagIDsSeen = new double[numberOfAprilTagCameras][numberTagsAllowed];
 
-  public double[] mt1Ambiguity = new double[numberOfAprilTagCameras];
-
   public double[] mt1DistToCamera = new double[numberTagsAllowed];
 
   public double[] mt1TimeStampSeconds = new double[numberTagsAllowed];
 
-  NetworkTableInstance ll = NetworkTableInstance.getDefault();
-  private final NetworkTable llTable = ll.getTable("LimelightPoses");
+   public int[] mt1PresetCount= new int[numberOfAprilTagCameras];
 
-  // private final StructPublisher<Pose2d> mt1FrontPosePublisher =
-  // llTable.getStructTopic("MT1FrontPose", Pose2d.struct)
-  // .publish();
-  // private final StructPublisher<Pose2d> mt1LeftPosePublisher =
-  // llTable.getStructTopic("MT1LeftPose", Pose2d.struct)
-  // .publish();
-  // private final StructPublisher<Pose2d> mt1RightPosePublisher =
-  // llTable.getStructTopic("MT1RightPose", Pose2d.struct)
-  // .publish();
-  // private final StructPublisher<Pose2d> mt2FrontPosePublisher =
-  // llTable.getStructTopic("MT2FrontPose", Pose2d.struct)
-  // .publish();
-  // private final StructPublisher<Pose2d> mt2LeftPosePublisher =
-  // llTable.getStructTopic("MT2LeftPose", Pose2d.struct)
-  // .publish();
-  // private final StructPublisher<Pose2d> mt2RightPosePublisher =
-  // llTable.getStructTopic("MT2RightPose", Pose2d.struct)
-  // .publish();
+   public int presetLimit;
+
 
   public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
 
@@ -106,9 +87,9 @@ public class LimelightVision extends SubsystemBase {
 
   public boolean mt1PoseSet;
 
-  public boolean[] useMT2 = new boolean[numberOfAprilTagCameras];
+  public boolean useMT2 = false;
 
-  public boolean[] useMT1 = new boolean[numberOfAprilTagCameras];
+  public boolean useMT1;
 
   private boolean showData;
 
@@ -125,6 +106,8 @@ public class LimelightVision extends SubsystemBase {
       AlertType.kError);
   Alert rightCameraDisconnected = new Alert("Right Camera Disconnected",
       AlertType.kError);
+  public double totalTagsSeen;
+ 
 
   public enum ImuMode {
     /**
@@ -186,18 +169,10 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("", useMT2[frontCam]);
-    SmartDashboard.putBoolean("", useMT2[leftCam]);
-    SmartDashboard.putBoolean("", useMT2[rightCam]);
-
+    SmartDashboard.putBoolean("", useMT2);
+   
     if (showData) {
-      // mt1FrontPosePublisher.set(mt1Pose[frontCam]);
-      // mt1LeftPosePublisher.set(mt1Pose[leftCam]);
-      // mt1RightPosePublisher.set(mt1Pose[rightCam]);
-
-      // mt2FrontPosePublisher.set(mt2Pose[frontCam]);
-      // mt2LeftPosePublisher.set(mt2Pose[leftCam]);
-      // mt2RightPosePublisher.set(mt2Pose[rightCam]);
+     totalTagsSeen = numberMT2TagsSeen[frontCam]+numberMT2TagsSeen[leftCam]+numberMT2TagsSeen[rightCam];
 
       Logger.log("FrontCamMT1Pose", mt1Pose[frontCam]);
       Logger.log("LeftCamMT1Pose", mt1Pose[leftCam]);
@@ -214,7 +189,9 @@ public class LimelightVision extends SubsystemBase {
         Logger.log("FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
         Logger.log("LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
         Logger.log("RightCam # MT1TagsSeen", numberMT2TagsSeen[rightCam]);
-
+        totalTagsSeen= numberMT2TagsSeen[frontCam]+numberMT2TagsSeen[leftCam]+numberMT2TagsSeen[rightCam];
+        Logger.log("Total #MT2TagsSeen", totalTagsSeen);
+    
         Logger.log("FrontCamPipeline", LimelightHelpers.getCurrentPipelineType(frontName));
       } else {
 
@@ -377,15 +354,19 @@ public class LimelightVision extends SubsystemBase {
 
   }
 
-  private void initSendableLL4(SendableBuilder builder, String name, int cameraIndex) {
-    builder.addDoubleProperty(name + " Pipeline", () -> LimelightHelpers.getCurrentPipelineIndex(name), null);
-    builder.addStringProperty(name + " Pipeline Type", () -> LimelightHelpers.getCurrentPipelineType(name), null);
-    builder.addBooleanProperty(name + " Tag Seen", () -> LimelightHelpers.getTV(name), null);
-    builder.addDoubleProperty(name + " IMU Yaw", () -> getIMUYaw(), null);
-    builder.addDoubleProperty(name + " IMU Robot Yaw", () -> getIMUDataRobotYaw(), null);
-    builder.addDoubleProperty(name + " IMU Pitch", () -> getIMUPitch(), null);
-    builder.addDoubleProperty(name + " IMU Roll", () -> getIMURoll(), null);
-    builder.addStringProperty(name + " IMU Mode", () -> getIMUModeName(name), null);
+  private void initSendableLL4(SendableBuilder builder, int cameraIndex) {
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " Pipeline",
+        () -> LimelightHelpers.getCurrentPipelineIndex(cameras[cameraIndex].camname), null);
+    builder.addStringProperty(cameras[cameraIndex].camname + " Pipeline Type",
+        () -> LimelightHelpers.getCurrentPipelineType(cameras[cameraIndex].camname), null);
+    builder.addBooleanProperty(cameras[cameraIndex].camname + " Tag Seen",
+        () -> LimelightHelpers.getTV(cameras[cameraIndex].camname), null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " IMU Yaw", () -> getIMUYaw(), null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " IMU Robot Yaw", () -> getIMUDataRobotYaw(), null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " IMU Pitch", () -> getIMUPitch(), null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " IMU Roll", () -> getIMURoll(), null);
+    builder.addStringProperty(cameras[cameraIndex].camname + " IMU Mode",
+        () -> getIMUModeName(cameras[cameraIndex].camname), null);
 
     builder.addDoubleProperty(cameras[cameraIndex].camname + " Number MT2 Tags Seen",
         () -> numberMT2TagsSeen[cameraIndex], null);
@@ -394,19 +375,18 @@ public class LimelightVision extends SubsystemBase {
     builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT2TagIDsSeen", () -> mt2TagIDsSeen[cameraIndex],
         null);
     builder.addDoubleProperty(cameras[cameraIndex].camname + " MT2TDistance", () -> mt2distToCamera[cameraIndex], null);
-    builder.addDoubleProperty(name + "  Temperature", () -> vals[0], null);
-    builder.addDoubleProperty(name + " CPU", () -> vals[1], null);
-    builder.addDoubleProperty(name + " Ram", () -> vals[2], null);
-    builder.addDoubleProperty(name + " FPS", () -> vals[2], null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + "  Temperature", () -> vals[0], null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " CPU", () -> vals[1], null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " Ram", () -> vals[2], null);
+    builder.addDoubleProperty(cameras[cameraIndex].camname + " FPS", () -> vals[2], null);
 
   }
 
   @Override
   public void initSendable(SendableBuilder builder) {
-    initSendableLL4(builder, frontName, 0);
-    // initSendable(builder, 0);
-    initSendable(builder, 1);
-    initSendable(builder, 2);
+    initSendable(builder, 0);
+    initSendableLL4(builder, 1);
+    initSendableLL4(builder, 2);
 
   }
 
