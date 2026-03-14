@@ -98,8 +98,7 @@ public class Robot extends TimedRobot {
         @Override
         public void robotPeriodic() {
 
-                SmartDashboard.putBoolean("AAAAAARRRPrset", m_robotContainer.m_shooter.presetShoot);
-                m_eventLoop.poll();
+                 m_eventLoop.poll();
 
                 m_timeAndJoystickReplay.update();
 
@@ -204,9 +203,9 @@ public class Robot extends TimedRobot {
 
                 m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
                 
-                CommandScheduler.getInstance()
-                                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
-                                                m_robotContainer.m_leds));
+                // CommandScheduler.getInstance()
+                //                 .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
+                //                                 m_robotContainer.m_leds));
                 // new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
         }
