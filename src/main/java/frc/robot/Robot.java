@@ -98,7 +98,7 @@ public class Robot extends TimedRobot {
         @Override
         public void robotPeriodic() {
 
-SmartDashboard.putBoolean("AAAAAARRRPrset",m_robotContainer. m_shooter.presetShoot);
+                SmartDashboard.putBoolean("AAAAAARRRPrset", m_robotContainer.m_shooter.presetShoot);
                 m_eventLoop.poll();
 
                 m_timeAndJoystickReplay.update();
@@ -126,8 +126,7 @@ SmartDashboard.putBoolean("AAAAAARRRPrset",m_robotContainer. m_shooter.presetSho
 
                 m_robotContainer.m_shooter.setShootUsingDistance(true);
                 m_robotContainer.m_hood.setHoodUsingDistance(true);
-                
-               
+
                 if (RobotBase.isReal()) {
                         LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
                                         CameraConstants.apriltagPipeline);
@@ -179,9 +178,7 @@ SmartDashboard.putBoolean("AAAAAARRRPrset",m_robotContainer. m_shooter.presetSho
                         m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
                 m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2,
                                 Rotation2d.fromDegrees(-115)));
-                // m_robotContainer.drivetrain.resetPose(new Pose2d(0, 0,
-                // Rotation2d.fromDegrees(0)));
-
+              
                 loopTimer.start();
 
                 if (RobotBase.isReal()) {
@@ -206,9 +203,10 @@ SmartDashboard.putBoolean("AAAAAARRRPrset",m_robotContainer. m_shooter.presetSho
                 }
 
                 m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
+                
                 CommandScheduler.getInstance()
-                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
-                m_robotContainer.m_leds));
+                                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
+                                                m_robotContainer.m_leds));
                 // new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
         }

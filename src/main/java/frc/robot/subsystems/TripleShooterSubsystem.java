@@ -114,6 +114,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public boolean presetShoot;
 
+  private boolean alternate;
+
   public boolean isPresetShoot() {
     return presetShoot;
   }
@@ -182,6 +184,16 @@ public class TripleShooterSubsystem extends SubsystemBase {
             .withEnableFOC(true));
   }
 
+  public void stopVelocityVoltage(TalonFX motor) {
+    motor.setControl(
+        velocityVoltage
+            .withVelocity(RPM.of(0))
+            .withAcceleration(targetAcceleration)
+            .withSlot(0)
+            .withEnableFOC(true));
+
+  }
+
   public Command runVelocityVoltageCommand(TalonFX motor) {
     return run(() -> runVelocityVoltage(motor));
   }
@@ -223,26 +235,34 @@ public class TripleShooterSubsystem extends SubsystemBase {
             .withOutput(Volts.of(percentOutput * 12.0)));
   }
 
-  public void stopAllShooters() {
+  public void stopAllVelocityVoltage() {
+    stopVelocityVoltage(leftMotor);
+    stopVelocityVoltage(middleMotor);
+    stopVelocityVoltage(rightMotor);
     shooterIsRunning = false;
-    setPercentOutput(leftMotor, 0.0);
-    setPercentOutput(middleMotor, 0.0);
-    setPercentOutput(rightMotor, 0.0);
     disableAllShooters();
   }
 
   public Command stopAllShootersCommand() {
-    return runOnce(this::stopAllShooters);
+    return run(this::stopAllVelocityVoltage);
   }
 
   public void disableShooter(TalonFX motor) {
     motor.setControl(m_brake);
   }
 
+  public boolean allShootersStopped() {
+    return leftMotor.getVelocity().getValue().lt(kVelocityTolerance)
+        && middleMotor.getVelocity().getValue().lt(kVelocityTolerance)
+        && rightMotor.getVelocity().getValue().lt(kVelocityTolerance);
+
+  }
+
   public void disableAllShooters() {
     leftMotor.setControl(m_brake);
     middleMotor.setControl(m_brake);
     rightMotor.setControl(m_brake);
+    shooterIsRunning = false;
   }
 
   public Command disableAllShootersCommand() {
@@ -337,25 +357,28 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
 
-    Logger.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
-    Logger.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
-    Logger.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
-    Logger.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
-    Logger.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
-    Logger.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
-    Logger.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
+    if (alternate) {
 
-    Logger.log("Shooter/UseDistForRPM", isShootUsingDistance());
-    Logger.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
-    Logger.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
-    Logger.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
-    Logger.log("Shooter/LeftAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
-    Logger.log("Shooter/MiddleAmps", middleMotor.getStatorCurrent().getValue().in(Amps));
-    Logger.log("Shooter/RightAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
-    Logger.log("Shooter/RightVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
-    Logger.log("Shooter/MilddleVolts", middleMotor.getMotorVoltage().getValue().in(Volts));
-    Logger.log("Shooter/RightVolts", rightMotor.getMotorVoltage().getValue().in(Volts));
-
+      Logger.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
+      Logger.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
+      Logger.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
+      Logger.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
+      Logger.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
+      Logger.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
+      Logger.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
+    } else {
+      Logger.log("Shooter/UseDistForRPM", isShootUsingDistance());
+      Logger.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
+      Logger.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
+      Logger.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
+      Logger.log("Shooter/LeftAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
+      Logger.log("Shooter/MiddleAmps", middleMotor.getStatorCurrent().getValue().in(Amps));
+      Logger.log("Shooter/RightAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
+      Logger.log("Shooter/RightVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
+      Logger.log("Shooter/MilddleVolts", middleMotor.getMotorVoltage().getValue().in(Volts));
+      Logger.log("Shooter/RightVolts", rightMotor.getMotorVoltage().getValue().in(Volts));
+    }
+    alternate = !alternate;
   }
 
   public void setDistanceToHub(double distance) {
