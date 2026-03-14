@@ -191,9 +191,7 @@ public class RobotContainer {
                 // new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
                 driver.leftTrigger().whileTrue(
-                                Commands.defer(
-                                                () -> shootCommand(driver.back().getAsBoolean()),
-                                                Set.of()));
+                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false));
 
                 // driver.rightTrigger().whileTrue(
                 // Commands.parallel(
@@ -208,8 +206,8 @@ public class RobotContainer {
                                 Commands.sequence(
                                                 m_shooter.setShootUsingDistanceCommand(true),
                                                 m_hood.setHoodUsingDistanceCommand(true),
-                                                // m_shooter.runAllVelocityVoltageCommand()))
-                                                m_shooter.runAllShootersCommand(1)))
+                                                m_shooter.runAllVelocityVoltageCommand()))
+                                // m_shooter.runAllShootersCommand(.1)))
                                 // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
                                 // driver));
                                 .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
@@ -226,10 +224,12 @@ public class RobotContainer {
 
                 driver.y().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
-                driver.b().onTrue(presetShoot(trenchPresetDistance));
+                driver.b().onTrue(m_shooter.setPresetShootCommand(true));
+                      //  presetShoot(trenchPresetDistance));
 
                 driver.x().onTrue(presetShoot(towerPresetDistance));
 
+           
                 driver.a().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
 
                 driver.povUp().onTrue(m_shooter.changeFinalTargetVelocityCommand(100));
@@ -543,7 +543,7 @@ public class RobotContainer {
         public Command presetShoot(double distance) {
                 return Commands.sequence(
                                 m_shooter.setShootUsingDistanceCommand(false),
-                                Commands.runOnce(() -> m_shooter.presetShoot = true),
+                                m_shooter.setPresetShootCommand(true),
                                 m_hood.setHoodUsingDistanceCommand(false),
                                 m_shooter.setManualTargetVelocityCommand(
                                                 RPM.of(ShootingData.shooterSpeedMap.get(distance))),

@@ -114,6 +114,18 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public boolean presetShoot;
 
+  public boolean isPresetShoot() {
+    return presetShoot;
+  }
+
+  public void setPresetShoot(boolean presetShoot) {
+    this.presetShoot = presetShoot;
+  }
+
+  public Command setPresetShootCommand(boolean on) {
+    return Commands.runOnce(() -> setPresetShoot(on));
+  }
+
   public boolean isShootUsingDistance() {
     return shootUsingDistance;
   }
@@ -191,7 +203,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
     shooterIsRunning = true;
     if (leftMotorActive)
       runVelocityVoltage(leftMotor);
-   
+
     if (middleMotorActive)
       runVelocityVoltage(middleMotor);
 
@@ -239,7 +251,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public void setManualTargetVelocity(double RPM) {
     manualSetTargetRPM = RPM;
-    finalSetTargetRPM=RPM;
+    finalSetTargetRPM = RPM;
   }
 
   public Command setManualTargetVelocityCommand(AngularVelocity vel) {

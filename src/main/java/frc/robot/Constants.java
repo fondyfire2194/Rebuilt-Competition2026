@@ -363,7 +363,7 @@ public final class Constants {
 
     public static final int intakeID = 10;
     public static final int intakeArmID = 11;
-    
+
     public static final int intakeArmFollowerID = 16;
 
     public static final int feederBeltID = 13;
@@ -454,12 +454,12 @@ public final class Constants {
         true);
 
     static Pose3d leftCamPose = new Pose3d(
-        Units.inchesToMeters(11.25),
-        Units.inchesToMeters(14.75),
-        Units.inchesToMeters(17.5),
+        Units.inchesToMeters(9.125),
+        Units.inchesToMeters(14.55),
+        Units.inchesToMeters(17.75),
         new Rotation3d(
-            Units.degreesToRadians(0),
-            Units.degreesToRadians(-20),
+            Units.degreesToRadians(-2.5),
+            Units.degreesToRadians(-28.7),
             Units.degreesToRadians(-90)));
 
     public static Cameras leftCamera = new Cameras(
@@ -474,13 +474,13 @@ public final class Constants {
         true);
 
     static Pose3d rightCamPose = new Pose3d(
-        0.08255,
-        0.127,
-        0.16256,
+        Units.inchesToMeters(9.125),
+        Units.inchesToMeters(-14.55),
+        Units.inchesToMeters(17.75),
         new Rotation3d(
-            .08255,
-            Units.degreesToRadians(20),
-            Units.degreesToRadians(-100)));
+            Units.degreesToRadians(-2.2),
+            Units.degreesToRadians(-28.9),
+            Units.degreesToRadians(90)));
 
     public static Cameras rightCamera = new Cameras(
         "limelight-right",

@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FeederSetpoints;
 import frc.robot.Robot;
@@ -27,7 +28,8 @@ public class ShootCommand extends Command {
   private boolean okToShoot;
   private boolean lookForPulse;
 
-  public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
+  public 
+  ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
       CommandSwerveDrivetrain swerve, boolean bypassInterlocks) {
     // Use addRequirements() here to declare subsystem dependencies.
     m_shooter = shooter;
@@ -48,7 +50,7 @@ public class ShootCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-
+SmartDashboard.putBoolean("AAAAAAAAAPrset", m_shooter.presetShoot);
     m_shooter.bypassShootInterlocks = m_bypassInterlocks;
 
     if (m_shooter.bypassShootInterlocks
@@ -79,7 +81,7 @@ public class ShootCommand extends Command {
           beltTimer.reset();
         }
 
-        m_feeder.pulse = false;// force no belt reverse pulse
+        //m_feeder.pulse = false;// force no belt reverse pulse
 
         if (!m_feeder.pulse)
           m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
@@ -99,6 +101,7 @@ public class ShootCommand extends Command {
     m_feeder.stopFeederBeltMotor();
     m_feeder.stopFeederRollerMotor();
     okToShoot = false;
+  
   }
 
   // Returns true when the command should end.

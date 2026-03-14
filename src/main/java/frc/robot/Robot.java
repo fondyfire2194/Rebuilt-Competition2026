@@ -98,6 +98,7 @@ public class Robot extends TimedRobot {
         @Override
         public void robotPeriodic() {
 
+SmartDashboard.putBoolean("AAAAAARRRPrset",m_robotContainer. m_shooter.presetShoot);
                 m_eventLoop.poll();
 
                 m_timeAndJoystickReplay.update();

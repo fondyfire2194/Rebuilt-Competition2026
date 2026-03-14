@@ -66,7 +66,7 @@ public class LimelightVision extends SubsystemBase {
 
    public int[] mt1PresetCount= new int[numberOfAprilTagCameras];
 
-   public int presetLimit;
+   public int presetLimit = 50;
 
 
   public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
@@ -169,7 +169,7 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("", useMT2);
+    SmartDashboard.putBoolean("MT2", useMT2);
    
     if (showData) {
      totalTagsSeen = numberMT2TagsSeen[frontCam]+numberMT2TagsSeen[leftCam]+numberMT2TagsSeen[rightCam];
