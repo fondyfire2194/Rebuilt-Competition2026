@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FeederSetpoints;
-import frc.robot.Robot;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
@@ -87,8 +86,7 @@ public class ShootCommand extends Command {
       }
     }
 
-    if (RobotBase.isSimulation())
-      Robot.fuelRobotSim.launchFuel();
+  
 
   }
 

@@ -35,11 +35,9 @@ import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.LimelightTagsMT1Update;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.FuelSim;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.Logger;
 import frc.robot.utils.LoopEvents;
-import frc.robot.utils.SimRobotFuelSim;
 
 public class Robot extends TimedRobot {
         private Command m_autonomousCommand;
@@ -58,11 +56,6 @@ public class Robot extends TimedRobot {
         private boolean autoHasRun;
 
         Timer loopTimer = new Timer();
-
-        public static FuelSim fuelSim;
-
-        public static SimRobotFuelSim fuelRobotSim;
-
         /* log and replay timestamp and joystick data */
         private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
                         .withTimestampReplay()
@@ -87,13 +80,7 @@ public class Robot extends TimedRobot {
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
                 autoHasRun = false;
-                fuelSim = new FuelSim("FuelSim");
-                configureFuelSim();
-                fuelRobotSim = new SimRobotFuelSim(
-                                fuelSim, m_robotContainer.drivetrain, m_robotContainer.m_hood,
-                                m_robotContainer.m_shooter);
-                configureFuelSimRobot(() -> m_robotContainer.m_intake.intakeRunning(), () -> fuelRobotSim.intakeFuel());
-
+             
         }
 
         @Override
@@ -157,8 +144,7 @@ public class Robot extends TimedRobot {
 
                                 new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
-                if (RobotBase.isSimulation())
-                        configureFuelSim();
+              
         }
 
         @Override
@@ -263,7 +249,7 @@ public class Robot extends TimedRobot {
 
         @Override
         public void simulationPeriodic() {
-                fuelSim.updateSim();
+              
         }
 
         public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
@@ -272,30 +258,9 @@ public class Robot extends TimedRobot {
                 return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
         }
 
-        void configureFuelSim() {
-                fuelSim.clearFuel();
-                fuelSim.spawnStartingFuel();
-                fuelSim.start();
-                fuelSim.enableAirResistance();
-        }
+       
 
-        public void configureFuelSimRobot(BooleanSupplier ableToIntake, Runnable intakeCallback) {
-                fuelSim.registerRobot(
-                                Dimensions.FULL_WIDTH.in(Meters),
-                                Dimensions.FULL_LENGTH.in(Meters),
-                                Dimensions.BUMPER_HEIGHT.in(Meters),
-                                () -> m_robotContainer.drivetrain.getState().Pose,
-                                () -> m_robotContainer.drivetrain.getState().Speeds);
-                fuelSim.registerIntake(
-                                -Dimensions.FULL_LENGTH.div(2).in(Meters),
-                                Dimensions.FULL_LENGTH.div(2).in(Meters),
-                                -Dimensions.FULL_WIDTH.div(2).plus(Inches.of(7)).in(Meters),
-                                -Dimensions.FULL_WIDTH.div(2).in(Meters),
-                                () -> m_robotContainer.m_intake.intakeRunning(),
-                                intakeCallback);
-
-        }
-
+       
         private void runTagUpdateCommands() {
                 CommandScheduler.getInstance().schedule(
                                 new LimelightTagsMT2Update(m_robotContainer.m_llv,
