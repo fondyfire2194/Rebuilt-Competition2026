@@ -6,7 +6,6 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FeederSetpoints;
 import frc.robot.Robot;
@@ -14,7 +13,6 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
-import frc.robot.utils.Logger;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ShootCommand extends Command {
@@ -28,8 +26,7 @@ public class ShootCommand extends Command {
   private boolean okToShoot;
   private boolean lookForPulse;
 
-  public 
-  ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
+  public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
       CommandSwerveDrivetrain swerve, boolean bypassInterlocks) {
     // Use addRequirements() here to declare subsystem dependencies.
     m_shooter = shooter;
@@ -54,8 +51,8 @@ public class ShootCommand extends Command {
     m_shooter.bypassShootInterlocks = m_bypassInterlocks;
 
     if (m_shooter.bypassShootInterlocks
-        || m_shooter.allVelocityInTolerance() && m_hood.isPositionWithinTolerance()
-            && (m_swerve.alignedToTarget || m_shooter.presetShoot)) {
+        || (m_shooter.allVelocityInTolerance()
+            && m_hood.isPositionWithinTolerance() && (m_swerve.alignedToTarget))) {
       okToShoot = true;
     }
 
@@ -81,7 +78,7 @@ public class ShootCommand extends Command {
           beltTimer.reset();
         }
 
-        //m_feeder.pulse = false;// force no belt reverse pulse
+        m_feeder.pulse = false;// force no belt reverse pulse
 
         if (!m_feeder.pulse)
           m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
@@ -101,7 +98,7 @@ public class ShootCommand extends Command {
     m_feeder.stopFeederBeltMotor();
     m_feeder.stopFeederRollerMotor();
     okToShoot = false;
-  
+
   }
 
   // Returns true when the command should end.

@@ -28,9 +28,9 @@
         1200
       ],
       "position": [
-        0.3,
+        0.31,
         0.0,
-        0.5
+        0.48
       ],
       "rotations": [
         {
@@ -39,7 +39,7 @@
         },
         {
           "axis": "y",
-          "degrees": -16
+          "degrees": -23
         },
         {
           "axis": "z",
@@ -55,22 +55,22 @@
         1200
       ],
       "position": [
-        0.254,
-        0.254,
-        0.254
+        0.232,
+        0.37,
+        0.45
       ],
       "rotations": [
         {
           "axis": "x",
-          "degrees": 0
+          "degrees": -2.5
         },
         {
           "axis": "y",
-          "degrees": -20
+          "degrees": -28.7
         },
         {
           "axis": "z",
-          "degrees": 90
+          "degrees": -90
         }
       ]
     },
@@ -82,22 +82,22 @@
         1200
       ],
       "position": [
-        0.254,
-        -0.254,
-        0.5
+        0.232,
+        -0.47,
+        0.45
       ],
       "rotations": [
         {
           "axis": "x",
-          "degrees": 0
+          "degrees": -2.2
         },
         {
           "axis": "y",
-          "degrees": -30
+          "degrees": -28.9
         },
         {
           "axis": "z",
-          "degrees": -90
+          "degrees": 90
         }
       ]
     }

@@ -54,7 +54,7 @@ public class LimelightTagsMT1Update extends Command {
         }
         if (m_llv.useMT1) {
 
-            rejectMT1Update = mt1.tagCount == 0
+            rejectMT1Update = !inFieldCheck(mt1.pose) || mt1.tagCount == 0
                     || mt1.tagCount == 1 && mt1.rawFiducials.length == 1 &&
                             mt1.rawFiducials[0].ambiguity > .7
                             && mt1.rawFiducials[0].distToCamera > 5;
@@ -95,7 +95,7 @@ public class LimelightTagsMT1Update extends Command {
 
     private boolean inFieldCheck(Pose2d pose) {
         boolean inLength = pose.getX() >= 0 && pose.getX() <= FieldConstants.fieldLength;
-        boolean inWidth = pose.getY() >= 0 && pose.getX() <= FieldConstants.fieldWidth;
+        boolean inWidth = pose.getY() >= 0 && pose.getY() <= FieldConstants.fieldWidth;
         return inLength && inWidth;
     }
 }

@@ -34,9 +34,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.CanbusConstants;
@@ -110,23 +108,17 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public boolean isShootOnTheMove;
 
-  public boolean shooterIsRunning;
+  private boolean shooterIsRunning;
 
-  public boolean presetShoot;
+  public boolean isShooterIsRunning() {
+    return shooterIsRunning;
+  }
+
+  public void setShooterIsRunning(boolean shooterIsRunning) {
+    this.shooterIsRunning = shooterIsRunning;
+  }
 
   private boolean alternate;
-
-  public boolean isPresetShoot() {
-    return presetShoot;
-  }
-
-  public void setPresetShoot(boolean presetShoot) {
-    this.presetShoot = presetShoot;
-  }
-
-  public Command setPresetShootCommand(boolean on) {
-    return Commands.runOnce(() -> setPresetShoot(on));
-  }
 
   public boolean isShootUsingDistance() {
     return shootUsingDistance;
@@ -202,15 +194,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
     return run(() -> runAllVelocityVoltage());
   }
 
-  public Command runAllShootersCommand(double delay) {
-    return new SequentialCommandGroup(
-        runVelocityVoltageCommand(leftMotor),
-        new WaitCommand(delay),
-        runVelocityVoltageCommand(middleMotor),
-        new WaitCommand(delay),
-        runVelocityVoltageCommand(rightMotor));
-  }
-
   public void runAllVelocityVoltage() {
     shooterIsRunning = true;
     if (leftMotorActive)
@@ -236,15 +219,20 @@ public class TripleShooterSubsystem extends SubsystemBase {
   }
 
   public void stopAllVelocityVoltage() {
+    shooterIsRunning = false;
     stopVelocityVoltage(leftMotor);
     stopVelocityVoltage(middleMotor);
     stopVelocityVoltage(rightMotor);
-    shooterIsRunning = false;
     disableAllShooters();
   }
 
   public Command stopAllShootersCommand() {
-    return run(this::stopAllVelocityVoltage);
+    return Commands.sequence(
+        runOnce(() -> setShooterIsRunning(false)),
+        runOnce(() -> stopVelocityVoltage(leftMotor)),
+        runOnce(() -> stopVelocityVoltage(middleMotor)),
+        runOnce(() -> stopVelocityVoltage(rightMotor)));
+
   }
 
   public void disableShooter(TalonFX motor) {
@@ -255,7 +243,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
     return leftMotor.getVelocity().getValue().lt(kVelocityTolerance)
         && middleMotor.getVelocity().getValue().lt(kVelocityTolerance)
         && rightMotor.getVelocity().getValue().lt(kVelocityTolerance);
-
   }
 
   public void disableAllShooters() {

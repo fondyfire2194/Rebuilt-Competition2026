@@ -6,6 +6,7 @@ package frc.robot.commands.AprilTags;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -57,15 +58,28 @@ public class LimelightTagsMT2Update extends Command {
         if (mt2.rawFiducials.length > 0) {
             m_llv.mt2ambiguity[m_cameraIndex] = mt2.rawFiducials[0].ambiguity;
             m_llv.numberMT2TagsSeen[m_cameraIndex] = mt2.tagCount;
-             m_llv.mt2distToCamera[m_cameraIndex]  = mt2.rawFiducials[0].distToCamera;
+            m_llv.mt2distToCamera[m_cameraIndex] = mt2.rawFiducials[0].distToCamera;
             m_llv.getMT2TagIDsSeen(m_cameraIndex, mt2.rawFiducials);
         }
         if (m_llv.useMT2) {
+
+            // if (m_cameraIndex == 1) {
+            //     SmartDashboard.putBoolean("AAAAAIFC", !inFieldCheck(m_llv.mt2Pose[m_cameraIndex]));
+            //     SmartDashboard.putBoolean("AAAAAAMBIG", mt2.rawFiducials[0].distToCamera > DISTANCE_CUTOFF);
+            //     SmartDashboard.putBoolean("AAAAAAROT", Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
+            //             .getValueAsDouble()) > ROTATION_RATE_CUTOFF);
+
+            //     SmartDashboard.putNumber("AAAAAAAFL", FieldConstants.fieldLength);
+            //     SmartDashboard.putNumber("AAAAAAAFW", FieldConstants.fieldWidth);
+
+            // }
             rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
                     || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
                             .getValueAsDouble()) > ROTATION_RATE_CUTOFF
                     || (mt2.tagCount == 1 && mt2.rawFiducials[0].ambiguity > AMBIGUITY_CUTOFF)
                     || mt2.rawFiducials[0].distToCamera > DISTANCE_CUTOFF;
+
+            m_llv.mt2RejectUpdate[m_cameraIndex] = rejectMT2Update;
 
             if (!rejectMT2Update) {
                 double standard_devs = mt2.rawFiducials[0].distToCamera / DISTANCE_STDDEVS_SCALAR;
@@ -97,7 +111,12 @@ public class LimelightTagsMT2Update extends Command {
 
     private boolean inFieldCheck(Pose2d pose) {
         boolean inLength = pose.getX() >= 0 && pose.getX() <= FieldConstants.fieldLength;
-        boolean inWidth = pose.getY() >= 0 && pose.getX() <= FieldConstants.fieldWidth;
+        boolean inWidth = pose.getY() >= 0 && pose.getY() <= FieldConstants.fieldWidth;
         return inLength && inWidth;
+    }
+
+    private boolean tagTooFar(Pose2d robot, Pose2d tag) {
+//if a tag is invalid if it shoWs a change in distance greater than the robot could have traveled
+        return false;
     }
 }

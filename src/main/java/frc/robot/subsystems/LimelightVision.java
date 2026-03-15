@@ -5,9 +5,6 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -64,10 +61,9 @@ public class LimelightVision extends SubsystemBase {
 
   public double[] mt1TimeStampSeconds = new double[numberTagsAllowed];
 
-   public int[] mt1PresetCount= new int[numberOfAprilTagCameras];
+  public int[] mt1PresetCount = new int[numberOfAprilTagCameras];
 
-   public int presetLimit = 50;
-
+  public int presetLimit = 50;
 
   public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
 
@@ -78,6 +74,8 @@ public class LimelightVision extends SubsystemBase {
   public double[] numberMT2TagsSeen = new double[numberOfAprilTagCameras];
 
   public double[] mt1ambiguity = new double[numberOfAprilTagCameras];
+
+  public boolean[] mt2RejectUpdate = new boolean[numberOfAprilTagCameras];
 
   public double[] mt1distToCamera = new double[numberOfAprilTagCameras];
 
@@ -107,7 +105,6 @@ public class LimelightVision extends SubsystemBase {
   Alert rightCameraDisconnected = new Alert("Right Camera Disconnected",
       AlertType.kError);
   public double totalTagsSeen;
- 
 
   public enum ImuMode {
     /**
@@ -169,19 +166,22 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("MT2", useMT2);
-   
+    SmartDashboard.putBoolean("UseMT2", useMT2);
+    SmartDashboard.putBoolean("UseMT1", useMT1);
+    Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
+
     if (showData) {
-     totalTagsSeen = numberMT2TagsSeen[frontCam]+numberMT2TagsSeen[leftCam]+numberMT2TagsSeen[rightCam];
+      totalTagsSeen = numberMT2TagsSeen[frontCam] + numberMT2TagsSeen[leftCam] + numberMT2TagsSeen[rightCam];
 
       Logger.log("FrontCamMT1Pose", mt1Pose[frontCam]);
       Logger.log("LeftCamMT1Pose", mt1Pose[leftCam]);
       Logger.log("RightCamMT1Pose", mt1Pose[rightCam]);
+      Logger.log("TotalTagsSeen", totalTagsSeen);
+
     }
     if (RobotBase.isReal()) {
       if (alternate) {
         Logger.log("FrontCamMT2Pose", mt2Pose[frontCam]);
-        Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
         Logger.log("RightCamMT2Pose", mt2Pose[rightCam]);
         Logger.log("FrontCamMT2TagsSeen", mt2TagIDsSeen[frontCam]);
         Logger.log("LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
@@ -189,9 +189,9 @@ public class LimelightVision extends SubsystemBase {
         Logger.log("FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
         Logger.log("LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
         Logger.log("RightCam # MT1TagsSeen", numberMT2TagsSeen[rightCam]);
-        totalTagsSeen= numberMT2TagsSeen[frontCam]+numberMT2TagsSeen[leftCam]+numberMT2TagsSeen[rightCam];
+        totalTagsSeen = numberMT2TagsSeen[frontCam] + numberMT2TagsSeen[leftCam] + numberMT2TagsSeen[rightCam];
         Logger.log("Total #MT2TagsSeen", totalTagsSeen);
-    
+        Logger.log("LeftCamMT2Reject", mt2RejectUpdate[leftCam]);
         Logger.log("FrontCamPipeline", LimelightHelpers.getCurrentPipelineType(frontName));
       } else {
 
@@ -199,7 +199,7 @@ public class LimelightVision extends SubsystemBase {
         Logger.log("LeftCamMT1Pose", mt1Pose[leftCam]);
         Logger.log("RightCamMT1Pose", mt1Pose[rightCam]);
         Logger.log("FrontCamMT1TagsSeen", mt1TagIDsSeen[frontCam]);
-        Logger.log("LeftCamMT!TagsSeen", mt1TagIDsSeen[leftCam]);
+        Logger.log("LeftCamMT1TagsSeen", mt1TagIDsSeen[leftCam]);
         Logger.log("RightCamMT1TagsSeen", mt1TagIDsSeen[rightCam]);
         Logger.log("FrontCam # MT!TagsSeen", numberMT1TagsSeen[frontCam]);
         Logger.log("LeftCam # MT1TagsSeen", numberMT1TagsSeen[leftCam]);
@@ -270,6 +270,13 @@ public class LimelightVision extends SubsystemBase {
         return "Unknown Mode";
     }
 
+  }
+
+  public boolean getFrontCamSeesHubTags() {
+    return LimelightHelpers.getFiducialID(frontName) == 9
+        || LimelightHelpers.getFiducialID(frontName) == 10
+        || LimelightHelpers.getFiducialID(frontName) == 25
+        || LimelightHelpers.getFiducialID(frontName) == 26;
   }
 
   public double[] getLLHW(String camName) {

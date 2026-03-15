@@ -19,6 +19,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
@@ -98,7 +99,7 @@ public class Robot extends TimedRobot {
         @Override
         public void robotPeriodic() {
 
-                 m_eventLoop.poll();
+                m_eventLoop.poll();
 
                 m_timeAndJoystickReplay.update();
 
@@ -123,6 +124,7 @@ public class Robot extends TimedRobot {
         @Override
         public void autonomousInit() {
 
+                autoHasRun=false;
                 m_robotContainer.m_shooter.setShootUsingDistance(true);
                 m_robotContainer.m_hood.setHoodUsingDistance(true);
 
@@ -166,18 +168,37 @@ public class Robot extends TimedRobot {
         @Override
         public void autonomousExit() {
                 autoHasRun = true;
+
+                if (DriverStation.isFMSAttached()) {
+                        LimelightHelpers.triggerRewindCapture(m_robotContainer.m_llv.leftName, 20);
+                        LimelightHelpers.triggerRewindCapture(m_robotContainer.m_llv.rightName, 20);
+                }
         }
 
         @Override
         public void teleopInit() {
 
+                if (RobotBase.isSimulation()) {
+                        LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
+                                        CameraConstants.apriltagPipeline);
+                        CommandScheduler.getInstance().schedule(
+                                        new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                                        m_robotContainer.m_llv.leftCam,
+                                                        m_robotContainer.drivetrain),
+                                        new LimelightTagsMT2Update(m_robotContainer.m_llv,
+                                                        m_robotContainer.m_llv.leftCam,
+                                                        m_robotContainer.drivetrain));
+                        m_robotContainer.m_llv.useMT1 = true;
+
+                }
+
                 if (RobotBase.isSimulation() && AllianceUtil.isBlueAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
                 if (RobotBase.isSimulation() && AllianceUtil.isRedAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
-                m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2,
-                                Rotation2d.fromDegrees(-115)));
-              
+                // m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2,
+                // Rotation2d.fromDegrees(-115)));
+
                 loopTimer.start();
 
                 if (RobotBase.isReal()) {
@@ -202,10 +223,12 @@ public class Robot extends TimedRobot {
                 }
 
                 m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
-                
-                // CommandScheduler.getInstance()
-                //                 .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
-                //                                 m_robotContainer.m_leds));
+
+                if (DriverStation.isFMSAttached()) {
+                        CommandScheduler.getInstance()
+                                        .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
+                                                        m_robotContainer.m_leds));
+                }
                 // new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
         }
@@ -216,6 +239,11 @@ public class Robot extends TimedRobot {
 
         @Override
         public void teleopExit() {
+
+                if (DriverStation.isFMSAttached()) {
+                        LimelightHelpers.triggerRewindCapture(m_robotContainer.m_llv.leftName, 130);
+                        LimelightHelpers.triggerRewindCapture(m_robotContainer.m_llv.rightName, 130);
+                }
         }
 
         @Override
