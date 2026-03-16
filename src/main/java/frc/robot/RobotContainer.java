@@ -6,7 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
-
 import java.util.Set;
 
 import com.ctre.phoenix6.SignalLogger;
