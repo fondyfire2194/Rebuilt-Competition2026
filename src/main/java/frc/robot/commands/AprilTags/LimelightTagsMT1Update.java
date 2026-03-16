@@ -19,7 +19,11 @@ public class LimelightTagsMT1Update extends Command {
     private final CommandSwerveDrivetrain m_swerve;
     private final LimelightVision m_llv;
     boolean rejectMT1Update;
-
+    // private Pose2d lastPoseSeen = new Pose2d();
+    private double xTolerance = .1;
+    private double yTolerance = .1;
+    private double rotTolerance = 5;
+    // private int nearPoseCount;
     LimelightHelpers.PoseEstimate mt1 = new PoseEstimate();
 
     private int m_cameraIndex;
@@ -52,11 +56,20 @@ public class LimelightTagsMT1Update extends Command {
             m_swerve.distanceLimelightToEstimator = mt1.rawFiducials[0].distToCamera;
             m_llv.getMT1TagIDsSeen(m_cameraIndex, mt1.rawFiducials);
         }
+        
         if (m_llv.useMT1) {
+            if (poseNearLastPose(m_llv.mt1LastPoseSeen[m_cameraIndex], mt1.pose)) {
+                m_llv.mt1NearPoseCount[m_cameraIndex]++;
+            } else
+                m_llv.mt1NearPoseCount[m_cameraIndex] = 0;
+            m_llv.mt1LastPoseSeen[m_cameraIndex] = mt1.pose;
 
-            rejectMT1Update = !inFieldCheck(mt1.pose) || mt1.tagCount == 0
-                    || mt1.tagCount == 1 && mt1.rawFiducials.length == 1 &&
-                            mt1.rawFiducials[0].ambiguity > .7
+            rejectMT1Update = m_llv.mt1NearPoseCount[m_cameraIndex] < 10
+                    || !inFieldCheck(mt1.pose)
+                    || mt1.tagCount == 0
+                    || mt1.tagCount == 1
+                            && mt1.rawFiducials.length == 1
+                            && mt1.rawFiducials[0].ambiguity > .7
                             && mt1.rawFiducials[0].distToCamera > 5;
 
             if (!rejectMT1Update) {
@@ -97,5 +110,13 @@ public class LimelightTagsMT1Update extends Command {
         boolean inLength = pose.getX() >= 0 && pose.getX() <= FieldConstants.fieldLength;
         boolean inWidth = pose.getY() >= 0 && pose.getY() <= FieldConstants.fieldWidth;
         return inLength && inWidth;
+    }
+
+    public boolean poseNearLastPose(Pose2d pose, Pose2d lastPose) {
+        boolean xInTolerance = Math.abs(pose.getX() - lastPose.getX()) < xTolerance;
+        boolean yInTolerance = Math.abs(pose.getY() - lastPose.getY()) < yTolerance;
+        boolean rotInTolerance = Math
+                .abs(pose.getRotation().getDegrees() - lastPose.getRotation().getDegrees()) < rotTolerance;
+        return xInTolerance && yInTolerance && rotInTolerance;
     }
 }

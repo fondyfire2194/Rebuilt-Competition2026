@@ -61,6 +61,10 @@ public class LimelightVision extends SubsystemBase {
 
   public double[] mt1TimeStampSeconds = new double[numberTagsAllowed];
 
+  public Pose2d[] mt1LastPoseSeen = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
+
+  public int[] mt1NearPoseCount = new int[numberOfAprilTagCameras];
+
   public int[] mt1PresetCount = new int[numberOfAprilTagCameras];
 
   public int presetLimit = 50;
@@ -169,7 +173,8 @@ public class LimelightVision extends SubsystemBase {
     SmartDashboard.putBoolean("UseMT2", useMT2);
     SmartDashboard.putBoolean("UseMT1", useMT1);
     Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
-
+    Logger.log("LeftCamNeartagsNum", mt1NearPoseCount[leftCam]);
+    
     if (showData) {
       totalTagsSeen = numberMT2TagsSeen[frontCam] + numberMT2TagsSeen[leftCam] + numberMT2TagsSeen[rightCam];
 

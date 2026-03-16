@@ -4,11 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-
-import java.util.function.BooleanSupplier;
-
 import com.ctre.phoenix6.HootAutoReplay;
 import com.ctre.phoenix6.SignalLogger;
 
@@ -28,7 +23,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.CameraConstants;
-import frc.robot.Constants.Dimensions;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.CollisionDetectionCommand;
 import frc.robot.commands.ShiftDetectionCommand;
@@ -80,7 +74,11 @@ public class Robot extends TimedRobot {
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
                 autoHasRun = false;
-             
+
+                // if (RobotBase.isReal()) {
+                runTagUpdateCommands();
+                setDefaultLLPipelines();
+                // }
         }
 
         @Override
@@ -111,20 +109,11 @@ public class Robot extends TimedRobot {
         @Override
         public void autonomousInit() {
 
-                autoHasRun=false;
-                m_robotContainer.m_shooter.setShootUsingDistance(true);
-                m_robotContainer.m_hood.setHoodUsingDistance(true);
+                autoHasRun = false;
+                m_robotContainer.m_llv.useMT1 = false;
+                m_robotContainer.m_llv.useMT2 = true;
 
-                if (RobotBase.isReal()) {
-                        LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
-                                        CameraConstants.apriltagPipeline);
-                        LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
-                                        CameraConstants.apriltagPipeline);
-                        LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname,
-                                        CameraConstants.apriltagPipeline);
-                        LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname,
-                                        CameraConstants.fuelDetectorPipeline);
-                }
+                m_robotContainer.setForAutoShootValues();
 
                 m_autonomousCommand = m_robotContainer.getAutonomousCommand();
                 SmartDashboard.putString("AutoName", m_autonomousCommand.getName());
@@ -132,19 +121,8 @@ public class Robot extends TimedRobot {
                         CommandScheduler.getInstance().schedule(m_autonomousCommand);
                 }
                 CommandScheduler.getInstance().schedule(
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.frontCam,
-                                                m_robotContainer.drivetrain),
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.leftCam,
-                                                m_robotContainer.drivetrain),
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.rightCam,
-                                                m_robotContainer.drivetrain),
-
                                 new CollisionDetectionCommand(m_robotContainer.drivetrain));
 
-              
         }
 
         @Override
@@ -175,37 +153,19 @@ public class Robot extends TimedRobot {
                                                         m_robotContainer.m_llv.leftCam,
                                                         m_robotContainer.drivetrain));
                         m_robotContainer.m_llv.useMT1 = true;
-
                 }
 
                 if (RobotBase.isSimulation() && AllianceUtil.isBlueAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
                 if (RobotBase.isSimulation() && AllianceUtil.isRedAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(15, 3.5, new Rotation2d(Math.PI)));
-                // m_robotContainer.drivetrain.resetPose(new Pose2d(3.5, 2,
-                // Rotation2d.fromDegrees(-115)));
 
                 loopTimer.start();
 
-                if (RobotBase.isReal()) {
-                        LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
-                                        CameraConstants.apriltagPipeline);
-                        LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
-                                        CameraConstants.apriltagPipeline);
-                        LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname,
-                                        CameraConstants.apriltagPipeline);
-                        LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname,
-                                        CameraConstants.fuelDetectorPipeline);
+                SignalLogger.setPath("/U/logs");
 
-                }
-                // SignalLogger.setPath("media/sda1/logs");
-                SignalLogger.setPath("/U/SigLogs/logs");
                 if (m_autonomousCommand != null) {
                         CommandScheduler.getInstance().cancel(m_autonomousCommand);
-                }
-
-                if (RobotBase.isReal() && !autoHasRun) {
-                        runTagUpdateCommands();
                 }
 
                 m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
@@ -249,7 +209,7 @@ public class Robot extends TimedRobot {
 
         @Override
         public void simulationPeriodic() {
-              
+
         }
 
         public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
@@ -258,29 +218,39 @@ public class Robot extends TimedRobot {
                 return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
         }
 
-       
+        public void setDefaultLLPipelines() {
 
-       
+                LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
+                                CameraConstants.apriltagPipeline);
+                LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
+                                CameraConstants.apriltagPipeline);
+                LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname,
+                                CameraConstants.apriltagPipeline);
+                LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname,
+                                CameraConstants.fuelDetectorPipeline);
+
+        }
+
         private void runTagUpdateCommands() {
                 CommandScheduler.getInstance().schedule(
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.frontCam,
-                                                m_robotContainer.drivetrain),
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.leftCam,
-                                                m_robotContainer.drivetrain),
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.rightCam,
-                                                m_robotContainer.drivetrain),
                                 new LimelightTagsMT1Update(m_robotContainer.m_llv,
                                                 m_robotContainer.m_llv.frontCam,
-                                                m_robotContainer.drivetrain),
-                                new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                                m_robotContainer.drivetrain).ignoringDisable(true),
+                                // new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                // m_robotContainer.m_llv.leftCam,
+                                // m_robotContainer.drivetrain).ignoringDisable(true),
+                                // new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                // m_robotContainer.m_llv.rightCam,
+                                // m_robotContainer.drivetrain).ignoringDisable(true),
+                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
+                                                m_robotContainer.m_llv.frontCam,
+                                                m_robotContainer.drivetrain).ignoringDisable(true),
+                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
                                                 m_robotContainer.m_llv.leftCam,
-                                                m_robotContainer.drivetrain),
-                                new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                                m_robotContainer.drivetrain).ignoringDisable(true),
+                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
                                                 m_robotContainer.m_llv.rightCam,
-                                                m_robotContainer.drivetrain));
+                                                m_robotContainer.drivetrain).ignoringDisable(true));
 
                 m_robotContainer.m_llv.useMT1 = true;
                 m_robotContainer.m_llv.useMT2 = false;
