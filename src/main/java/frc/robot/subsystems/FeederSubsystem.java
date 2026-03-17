@@ -111,8 +111,6 @@ public class FeederSubsystem extends SubsystemBase {
     Logger.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
 
     Logger.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
-Logger.log("Feeder/BeltSim", feederBeltPowerSim);
-
     Logger.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
     Logger.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
 

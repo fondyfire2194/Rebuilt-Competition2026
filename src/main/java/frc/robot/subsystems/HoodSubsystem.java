@@ -226,6 +226,9 @@ public class HoodSubsystem extends SubsystemBase {
         Logger.log("Hood/CurrentAngle", getHoodAngle());
         Logger.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
         Logger.log("Hood/AtTarget", isPositionWithinTolerance());
+        Logger.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
+        Logger.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
+
     }
 
     @Override

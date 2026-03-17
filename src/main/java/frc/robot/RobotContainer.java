@@ -95,13 +95,13 @@ public class RobotContainer {
 
         // public final PowerDistribution pdh;
 
-        private boolean showShooterData = true;
+        private boolean showShooterData = false;
         private boolean showHoodData = false;
-        private boolean showFeederData = true;
-        private boolean showIntakeData = true;
-        private boolean showIntakeArmData = true;
+        private boolean showFeederData = false;
+        private boolean showIntakeData = false;
+        private boolean showIntakeArmData = false;
 
-        private boolean showLLData = true;
+        private boolean showLLData = false;
 
         private Trigger driverFiveSecondWarningEndShootTrigger;
         private Trigger driverFiveSecondWarningEndPickupTrigger;
@@ -409,13 +409,15 @@ public class RobotContainer {
                 runIntake.onTrue(
                                 Commands.sequence(
                                                 m_intake.startIntakeCommand(),
-                                                m_intakeArm.intakeArmToIntakeAngleCommand()));
+                                                m_intakeArm.intakeArmToIntakeAngleCommand(),
+                                                Commands.waitUntil(() -> m_intakeArm.armInPosition())));
 
                 EventTrigger endIntake = new EventTrigger("END_INTAKE");
                 endIntake.onTrue(
                                 Commands.sequence(
                                                 m_intake.stopIntakeCommand(),
-                                                m_intakeArm.intakeArmToClearAngleCommand()));
+                                                m_intakeArm.intakeArmToClearAngleCommand(),
+                                                Commands.waitUntil(() -> m_intakeArm.armInPosition())));
 
         }
 

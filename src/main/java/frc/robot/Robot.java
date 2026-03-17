@@ -121,8 +121,10 @@ public class Robot extends TimedRobot {
                 if (m_autonomousCommand != null) {
                         CommandScheduler.getInstance().schedule(m_autonomousCommand);
                 }
-                CommandScheduler.getInstance().schedule(
-                                new CollisionDetectionCommand(m_robotContainer.drivetrain));
+                // CommandScheduler.getInstance().schedule(
+                //                 new CollisionDetectionCommand(m_robotContainer.drivetrain));
+
+
 
         }
 
@@ -220,8 +222,8 @@ public class Robot extends TimedRobot {
                                 CameraConstants.apriltagPipeline);
                 LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname,
                                 CameraConstants.apriltagPipeline);
-                LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname,
-                                CameraConstants.fuelDetectorPipeline);
+                // LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname,
+                //                 CameraConstants.fuelDetectorPipeline);
 
         }
 

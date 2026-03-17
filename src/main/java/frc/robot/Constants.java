@@ -364,7 +364,6 @@ public final class Constants {
     public static final int intakeID = 10;
     public static final int intakeArmID = 11;
 
-
     public static final int feederBeltID = 13;
     public static final int feederRollerID = 12;
 
@@ -451,6 +450,8 @@ public final class Constants {
         1280,
         960,
         true);
+
+    static double[] camRots = { -2.5, -28.7, 90 };
 
     static Pose3d leftCamPose = new Pose3d(
         Units.inchesToMeters(9.125),

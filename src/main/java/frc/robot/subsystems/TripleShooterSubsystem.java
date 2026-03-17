@@ -152,13 +152,13 @@ public class TripleShooterSubsystem extends SubsystemBase {
       SmartDashboard.putData(this);
 
     if (!statusL.isOK()) {
-      DogLog.log("Left Shooter", "Could not apply configs, error code: " + statusL.toString());
+      DogLog.log("Shooter/Left Shooter", "Could not apply configs, error code: " + statusL.toString());
     }
     if (!statusM.isOK()) {
-      DogLog.log("Middle Shooter", "Could not apply configs, error code: " + statusL.toString());
+      DogLog.log("Shooter/Middle Shooter", "Could not apply configs, error code: " + statusM.toString());
     }
     if (!statusR.isOK()) {
-      DogLog.log("Right Shooter", "Could not apply configs, error code: " + statusL.toString());
+      DogLog.log("Shooter/Right Shooter", "Could not apply configs, error code: " + statusR.toString());
     }
 
     shooterAlert.set(leftMotor.getFaultField().asSupplier().get() != 0
@@ -353,15 +353,17 @@ public class TripleShooterSubsystem extends SubsystemBase {
       Logger.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
       Logger.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
       Logger.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
-    } else {
       Logger.log("Shooter/UseDistForRPM", isShootUsingDistance());
+
+    } else {
+
       Logger.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
       Logger.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
       Logger.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
       Logger.log("Shooter/LeftAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
       Logger.log("Shooter/MiddleAmps", middleMotor.getStatorCurrent().getValue().in(Amps));
-      Logger.log("Shooter/RightAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
-      Logger.log("Shooter/RightVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
+      Logger.log("Shooter/RightAmps", rightMotor.getStatorCurrent().getValue().in(Amps));
+      Logger.log("Shooter/LeftVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
       Logger.log("Shooter/MilddleVolts", middleMotor.getMotorVoltage().getValue().in(Volts));
       Logger.log("Shooter/RightVolts", rightMotor.getMotorVoltage().getValue().in(Volts));
     }

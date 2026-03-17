@@ -4,7 +4,14 @@
 
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -91,7 +98,7 @@ public class LimelightVision extends SubsystemBase {
 
   public boolean[] useMT2 = new boolean[numberOfAprilTagCameras];
 
-  public boolean[] useMT1= new boolean[numberOfAprilTagCameras];
+  public boolean[] useMT1 = new boolean[numberOfAprilTagCameras];
 
   private boolean showData;
 
@@ -108,7 +115,20 @@ public class LimelightVision extends SubsystemBase {
       AlertType.kError);
   Alert rightCameraDisconnected = new Alert("Right Camera Disconnected",
       AlertType.kError);
-  public double totalTagsSeen;
+
+  private int logStep;
+
+  public static final Transform3d RIGHT_BACK_CAMERA_POSITION = new Transform3d(
+      Inches.of(-9.607),
+      Inches.of(-13.028588),
+      Inches.of(8.125806),
+      new Rotation3d(Degrees.of(0), Degrees.of(-23), Degrees.of(-165)));
+
+  public static Pose3d RBCP = new Pose3d(
+      Units.inchesToMeters(-9.607),
+      Units.inchesToMeters(-13.028),
+      Units.inchesToMeters(8.12),
+      new Rotation3d(Degrees.of(0), Degrees.of(-23), Degrees.of(-165)));
 
   public enum ImuMode {
     /**
@@ -152,10 +172,13 @@ public class LimelightVision extends SubsystemBase {
     rightName = cameras[rightCam].camname;
 
     setCamToRobotOffset(cameras[frontCam]);
+
     setCamToRobotOffset(cameras[leftCam]);
+
     setCamToRobotOffset(cameras[rightCam]);
 
     if (showData)
+
       SmartDashboard.putData(this);
 
     frontCameraDisconnected.set(!frontConnected);
@@ -170,45 +193,45 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-   
-    Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
-    Logger.log("LeftCamNeartagsNum", mt1NearPoseCount[leftCam]);
-    
-    if (showData) {
-      totalTagsSeen = numberMT2TagsSeen[frontCam] + numberMT2TagsSeen[leftCam] + numberMT2TagsSeen[rightCam];
 
-      Logger.log("FrontCamMT1Pose", mt1Pose[frontCam]);
-      Logger.log("LeftCamMT1Pose", mt1Pose[leftCam]);
-      Logger.log("RightCamMT1Pose", mt1Pose[rightCam]);
-      Logger.log("TotalTagsSeen", totalTagsSeen);
+    logStep++;
 
-    }
-    if (RobotBase.isReal()) {
-      if (alternate) {
-        Logger.log("FrontCamMT2Pose", mt2Pose[frontCam]);
-        Logger.log("RightCamMT2Pose", mt2Pose[rightCam]);
-        Logger.log("FrontCamMT2TagsSeen", mt2TagIDsSeen[frontCam]);
-        Logger.log("LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
-        Logger.log("RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
-        Logger.log("FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
-        Logger.log("LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
-        Logger.log("RightCam # MT1TagsSeen", numberMT2TagsSeen[rightCam]);
-        totalTagsSeen = numberMT2TagsSeen[frontCam] + numberMT2TagsSeen[leftCam] + numberMT2TagsSeen[rightCam];
-        Logger.log("Total #MT2TagsSeen", totalTagsSeen);
-        Logger.log("LeftCamMT2Reject", mt2RejectUpdate[leftCam]);
-        Logger.log("FrontCamPipeline", LimelightHelpers.getCurrentPipelineType(frontName));
-      } else {
+    switch (logStep) {
 
+      case 0:
         Logger.log("FrontCamMT1Pose", mt1Pose[frontCam]);
-        Logger.log("LeftCamMT1Pose", mt1Pose[leftCam]);
-        Logger.log("RightCamMT1Pose", mt1Pose[rightCam]);
+        Logger.log("FrontCamMT2Pose", mt2Pose[frontCam]);
+        Logger.log("FrontCamMT2TagsSeen", mt2TagIDsSeen[frontCam]);
+        Logger.log("FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
         Logger.log("FrontCamMT1TagsSeen", mt1TagIDsSeen[frontCam]);
-        Logger.log("LeftCamMT1TagsSeen", mt1TagIDsSeen[leftCam]);
-        Logger.log("RightCamMT1TagsSeen", mt1TagIDsSeen[rightCam]);
         Logger.log("FrontCam # MT!TagsSeen", numberMT1TagsSeen[frontCam]);
+
+        break;
+      case 1:
+        Logger.log("LeftCamMT1Pose", mt1Pose[leftCam]);
+        Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
+        Logger.log("LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
+        Logger.log("LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
+        Logger.log("LeftCamMT1TagsSeen", mt1TagIDsSeen[leftCam]);
         Logger.log("LeftCam # MT1TagsSeen", numberMT1TagsSeen[leftCam]);
+
+        break;
+      case 2:
+        Logger.log("RightCamMT1Pose", mt1Pose[rightCam]);
+        Logger.log("RightCamMT2Pose", mt2Pose[rightCam]);
+        Logger.log("RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
+        Logger.log("RightCam # MT2TagsSeen", numberMT2TagsSeen[rightCam]);
+        Logger.log("RightCamMT1TagsSeen", mt1TagIDsSeen[rightCam]);
         Logger.log("RightCam # MT1TagsSeen", numberMT1TagsSeen[rightCam]);
 
+        break;
+
+      case 3:
+        double totalTagsSeen = numberMT2TagsSeen[frontCam] + numberMT2TagsSeen[leftCam] + numberMT2TagsSeen[rightCam];
+        Logger.log("TotalTagsSeen", totalTagsSeen);
+        break;
+
+      case 4:
         double frontHeartbeat = getCameraHeartbeat(frontName);
         double leftHeartbeat = getCameraHeartbeat(leftName);
         double rightHeartbeat = getCameraHeartbeat(rightName);
@@ -227,15 +250,12 @@ public class LimelightVision extends SubsystemBase {
         if (rightConnected && rightCameraDisconnected.get())
           rightCameraDisconnected.close();
 
-      }
-      alternate = !alternate;
-    }
-    if (showData) {
+        break;
 
-      if (getLLHW(CameraConstants.frontCamera.camname).length > 0)
-        vals = getLLHW(CameraConstants.frontCamera.camname);
+      default:
+        logStep = -1;
+        break;
     }
-
   }
 
   public Command setIMUModeCommand(int n) {
@@ -248,9 +268,9 @@ public class LimelightVision extends SubsystemBase {
         cam.camPose.getX(),
         cam.camPose.getY(),
         cam.camPose.getZ(),
-        cam.camPose.getRotation().getY(),
-        cam.camPose.getRotation().getX(),
-        cam.camPose.getRotation().getZ());
+        Units.radiansToDegrees(cam.camPose.getRotation().getX()),
+        Units.radiansToDegrees(cam.camPose.getRotation().getY()),
+        Units.radiansToDegrees(cam.camPose.getRotation().getZ()));
   }
 
   public int getIMUMode(String camName) {

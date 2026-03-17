@@ -18,6 +18,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -31,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
+import frc.robot.utils.Logger;
 
 public class Intake4BarArmSubsystem extends SubsystemBase {
 
@@ -111,7 +113,7 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
     ki = DogLog.tunable("IntakeArm/IGain", .0, newKi -> m_controller.setI(newKi));
     kd = DogLog.tunable("IntakeArm/DGain", .0, newKd -> m_controller.setI(newKd));
     m_controller = new ProfiledPIDController(kp.get(), ki.get(), kd.get(), m_constraints, kDt);
-
+    m_controller.setTolerance(Units.degreesToRadians(10));
     m_controller.setGoal(homeAngle.in(Radians));
 
     if (showData)
@@ -141,6 +143,13 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   }
 
   public void periodic() {
+
+    Logger.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
+    Logger.log("IntakeArm/CurrentAngle", getIntakeArmAngle());
+    Logger.log("IntakeArm/AngleError", m_controller.getPositionError());
+    Logger.log("IntakeArm/AtTarget", m_controller.atGoal());
+    Logger.log("IntakeArm/FwdSoftLimit", intakeArmMotor.getForwardSoftLimit().isReached());
+    Logger.log("IntakeArm/RevSoftLimit", intakeArmMotor.getReverseSoftLimit().isReached());
 
   }
 
