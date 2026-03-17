@@ -56,8 +56,8 @@ public class LimelightTagsMT1Update extends Command {
             m_swerve.distanceLimelightToEstimator = mt1.rawFiducials[0].distToCamera;
             m_llv.getMT1TagIDsSeen(m_cameraIndex, mt1.rawFiducials);
         }
-        
-        if (m_llv.useMT1) {
+
+        if (m_llv.useMT1[m_cameraIndex]) {
             if (poseNearLastPose(m_llv.mt1LastPoseSeen[m_cameraIndex], mt1.pose)) {
                 m_llv.mt1NearPoseCount[m_cameraIndex]++;
             } else
@@ -74,11 +74,11 @@ public class LimelightTagsMT1Update extends Command {
 
             if (!rejectMT1Update) {
                 m_llv.mt1PresetCount[m_cameraIndex]++;
-                if (!m_llv.useMT2 && m_llv.mt1PresetCount[m_cameraIndex] >= m_llv.presetLimit) {
-                    m_llv.useMT2 = true;
-                    m_llv.useMT1 = false;
+                if (!m_llv.useMT2[m_cameraIndex] && m_llv.mt1PresetCount[m_cameraIndex] >= m_llv.presetLimit) {
+                    m_llv.useMT2[m_cameraIndex] = true;
+                    m_llv.useMT1[m_cameraIndex] = false;
                 }
-                if (m_llv.useMT2)
+                if (m_llv.useMT2[m_cameraIndex])
                     m_llv.mt1PresetCount[m_cameraIndex] = 0;
 
                 m_swerve.setVisionMeasurementStdDevs(

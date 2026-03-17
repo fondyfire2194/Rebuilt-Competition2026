@@ -19,7 +19,6 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoubleSubscriber;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -119,6 +118,14 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
       SmartDashboard.putData(this);
   }
 
+  public boolean getForwardSoftLimit(SparkMax motor) {
+    return motor.getForwardSoftLimit().isReached();
+  }
+
+  public boolean getReverseSoftLimit(SparkMax motor) {
+    return motor.getReverseSoftLimit().isReached();
+  }
+
   @Override
   public void initSendable(SendableBuilder builder) {
 
@@ -128,7 +135,8 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
     builder.addDoubleProperty("ActualPosition", () -> getIntakeArmAngle().in(Degrees), null);
     builder.addDoubleProperty("GoalPosition", () -> m_controller.getGoal().position, null);
     builder.addDoubleProperty("Velocity", () -> getIntakeArmVelocity().in(DegreesPerSecond), null);
-    builder.addBooleanProperty("AtSetpoint", m_controller::atSetpoint, null);
+    builder.addBooleanProperty("AtFwdSoftLimit", () -> getForwardSoftLimit(intakeArmMotor), null);
+    builder.addBooleanProperty("AtRevSoftLimit", () -> getReverseSoftLimit(intakeArmMotor), null);
 
   }
 
@@ -185,7 +193,7 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
         () -> {
         }, // init
         () -> {
-           intakeArmMotor.setVoltage(jogRate.getAsDouble() * RobotController.getBatteryVoltage());     
+          intakeArmMotor.setVoltage(jogRate.getAsDouble() * RobotController.getBatteryVoltage());
         }, // execute
         (interrupted) -> {
           intakeArmMotor.set(0);

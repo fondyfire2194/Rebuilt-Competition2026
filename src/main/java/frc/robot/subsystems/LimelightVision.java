@@ -89,9 +89,9 @@ public class LimelightVision extends SubsystemBase {
 
   public boolean mt1PoseSet;
 
-  public boolean useMT2 = false;
+  public boolean[] useMT2 = new boolean[numberOfAprilTagCameras];
 
-  public boolean useMT1;
+  public boolean[] useMT1= new boolean[numberOfAprilTagCameras];
 
   private boolean showData;
 
@@ -170,8 +170,7 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putBoolean("UseMT2", useMT2);
-    SmartDashboard.putBoolean("UseMT1", useMT1);
+   
     Logger.log("LeftCamMT2Pose", mt2Pose[leftCam]);
     Logger.log("LeftCamNeartagsNum", mt1NearPoseCount[leftCam]);
     

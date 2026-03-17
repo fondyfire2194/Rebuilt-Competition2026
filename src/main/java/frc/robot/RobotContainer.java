@@ -182,14 +182,14 @@ public class RobotContainer {
                 driver.leftTrigger().whileTrue(
                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false));
 
-                // driver.rightTrigger().whileTrue(
-                // Commands.parallel(
-                // m_intakeArm.intakeArmDownCommand(),
-                // m_intake.startIntakeCommand()))
-                // .onFalse(
-                // Commands.parallel(
-                // m_intakeArm.intakeArmUpCommand(),
-                // m_intake.stopIntakeCommand()));
+                driver.rightTrigger().whileTrue(
+                                Commands.parallel(
+                                                m_intakeArm.intakeArmToIntakeAngleCommand(),
+                                                m_intake.startIntakeCommand()))
+                                .onFalse(
+                                                Commands.parallel(
+                                                                m_intakeArm.intakeArmToClearAngleCommand(),
+                                                                m_intake.stopIntakeCommand()));
 
                 driver.leftBumper().onTrue(
                                 Commands.sequence(
@@ -253,7 +253,7 @@ public class RobotContainer {
                                 .whileTrue(m_intakeArm.jogIntakeArmCommand(() -> -codriver.getLeftY() / 5));
 
                 codriver.rightBumper().and(codriver.y()).onTrue(m_intakeArm.intakeArmToClearAngleCommand());
-                
+
                 codriver.rightBumper().and(codriver.a()).onTrue(m_intakeArm.intakeArmToIntakeAngleCommand());
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
@@ -282,8 +282,8 @@ public class RobotContainer {
 
                 codriver.leftTrigger().and(codriver.povUp())
                                 .onTrue(Commands.sequence(
-                                                Commands.runOnce(() -> m_llv.useMT1 = true),
-                                                (Commands.runOnce(() -> m_llv.useMT2 = false))));
+                                                Commands.runOnce(() -> m_llv.useMT1[m_llv.frontCam] = true),
+                                                (Commands.runOnce(() -> m_llv.useMT2[m_llv.frontCam] = false))));
 
                 codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
 
@@ -405,17 +405,17 @@ public class RobotContainer {
 
                 EventTrigger startShooters = new EventTrigger("START_SHOOTERS");
                 startShooters.onTrue(m_shooter.runAllVelocityVoltageCommand());
-                // EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
-                // runIntake.onTrue(
-                // Commands.sequence(
-                // m_intake.startIntakeCommand(),
-                // m_intakeArm.intakeArmDownCommand()));
+                EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
+                runIntake.onTrue(
+                                Commands.sequence(
+                                                m_intake.startIntakeCommand(),
+                                                m_intakeArm.intakeArmToIntakeAngleCommand()));
 
-                // EventTrigger endIntake = new EventTrigger("END_INTAKE");
-                // endIntake.onTrue(
-                // Commands.sequence(
-                // m_intake.stopIntakeCommand(),
-                // m_intakeArm.intakeArmUpCommand()));
+                EventTrigger endIntake = new EventTrigger("END_INTAKE");
+                endIntake.onTrue(
+                                Commands.sequence(
+                                                m_intake.stopIntakeCommand(),
+                                                m_intakeArm.intakeArmToClearAngleCommand()));
 
         }
 
