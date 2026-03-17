@@ -364,7 +364,6 @@ public final class Constants {
     public static final int intakeID = 10;
     public static final int intakeArmID = 11;
 
-    public static final int intakeArmFollowerID = 16;
 
     public static final int feederBeltID = 13;
     public static final int feederRollerID = 12;

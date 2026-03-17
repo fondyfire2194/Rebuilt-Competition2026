@@ -6,7 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -21,9 +20,8 @@ import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import frc.robot.subsystems.ArmSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
-import frc.robot.subsystems.IntakeSlideArmSubsystem;
+import frc.robot.subsystems.Intake4BarArmSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 
 /**
@@ -58,23 +56,21 @@ public final class Configs {
 
   public static final class IntakeSlideArm {
 
-    public static final SparkMaxConfig configLeader = new SparkMaxConfig();
-
-   // public static final SparkMaxConfig configFollower = new SparkMaxConfig();
+    public static final SparkMaxConfig configMotor = new SparkMaxConfig();
 
     static {
       // Configure basic settings of the intake motor
-      configLeader
-          .inverted(true)
+      configMotor
+          .inverted(false)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(.25)
           .smartCurrentLimit(60);
 
-      configLeader.encoder
-          .positionConversionFactor(IntakeSlideArmSubsystem.positionConversionFactor)
-          .velocityConversionFactor(IntakeSlideArmSubsystem.velocityConversionFactor);
+      configMotor.encoder
+          .positionConversionFactor(Intake4BarArmSubsystem.positionConversionFactor)
+          .velocityConversionFactor(Intake4BarArmSubsystem.velocityConversionFactor);
 
-      configLeader.closedLoop
+      configMotor.closedLoop
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
           // Set PID values for position control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
@@ -83,38 +79,38 @@ public final class Configs {
           .d(0)
           .outputRange(-1, 1);
 
-      configLeader.softLimit.forwardSoftLimit(IntakeSlideArmSubsystem.maxDistance.in(Inches))
-          .reverseSoftLimit(IntakeSlideArmSubsystem.minDistance.in(Inches))
+      configMotor.softLimit.forwardSoftLimit(Intake4BarArmSubsystem.maxAngle.in(Radians))
+          .reverseSoftLimit(Intake4BarArmSubsystem.minAngle.in(Radians))
           .forwardSoftLimitEnabled(false)
           .reverseSoftLimitEnabled(false);
 
-      configLeader.signals.primaryEncoderPositionPeriodMs(10);
+      configMotor.signals.primaryEncoderPositionPeriodMs(10);
 
     }
   }
 
   public static final class IntakeArm {
 
-    public static final SparkMaxConfig armConfig = new SparkMaxConfig();
+    public static final SparkMaxConfig armConfig1 = new SparkMaxConfig();
 
     static {
       // Configure basic settings of the arm motor
 
-      armConfig
+      armConfig1
           .inverted(false)
           .idleMode(IdleMode.kBrake)
           .smartCurrentLimit(60);
 
-      armConfig.encoder
-          .positionConversionFactor(ArmSubsystem.positionConversionFactor)
-          .velocityConversionFactor(ArmSubsystem.velocityConversionFactor);
+      armConfig1.encoder
+          .positionConversionFactor(Intake4BarArmSubsystem.positionConversionFactor)
+          .velocityConversionFactor(Intake4BarArmSubsystem.velocityConversionFactor);
 
-      armConfig.softLimit.forwardSoftLimit(ArmSubsystem.maxAngle.in(Radians))
-          .reverseSoftLimit(ArmSubsystem.minAngle.in(Radians))
+      armConfig1.softLimit.forwardSoftLimit(Intake4BarArmSubsystem.maxAngle.in(Radians))
+          .reverseSoftLimit(Intake4BarArmSubsystem.minAngle.in(Radians))
           .forwardSoftLimitEnabled(true)
           .reverseSoftLimitEnabled(true);
 
-      armConfig.signals.primaryEncoderPositionPeriodMs(10);
+      armConfig1.signals.primaryEncoderPositionPeriodMs(10);
 
     }
 

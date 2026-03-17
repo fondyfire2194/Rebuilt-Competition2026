@@ -35,7 +35,7 @@ import frc.robot.subsystems.AddressableLEDSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
-import frc.robot.subsystems.IntakeSlideArmSubsystem;
+import frc.robot.subsystems.Intake4BarArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
@@ -85,10 +85,10 @@ public class RobotContainer {
 
         private final FeederSubsystem m_feeder;
 
-        final IntakeSubsystem m_intake;
+        private final IntakeSubsystem m_intake;
 
-        // private final ArmSubsystem m_intakeArm;
-        private final IntakeSlideArmSubsystem m_intakeSlideArm;
+        private final Intake4BarArmSubsystem m_intakeArm;
+
         public final LimelightVision m_llv;
 
         public final AddressableLEDSubsystem m_leds;
@@ -100,6 +100,7 @@ public class RobotContainer {
         private boolean showFeederData = true;
         private boolean showIntakeData = true;
         private boolean showIntakeArmData = true;
+
         private boolean showLLData = true;
 
         private Trigger driverFiveSecondWarningEndShootTrigger;
@@ -122,8 +123,7 @@ public class RobotContainer {
                 m_hood = new HoodSubsystem(showHoodData);
                 m_feeder = new FeederSubsystem(showFeederData);
                 m_intake = new IntakeSubsystem(showIntakeData);
-                // m_intakeArm = new ArmSubsystem(showIntakeArmData);
-                m_intakeSlideArm = new IntakeSlideArmSubsystem(showIntakeData);
+                m_intakeArm = new Intake4BarArmSubsystem(showIntakeArmData);
                 m_llv = new LimelightVision(showLLData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
@@ -159,7 +159,7 @@ public class RobotContainer {
                                                 .withRotationalRate(
                                                                 -driver.getRightX() * RobotConstants.MaxAngularRate)));
 
-                // m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmSlideCommand());
+                m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
 
                 m_hood.setDefaultCommand(m_hood.positionHoodCommand());
         }
@@ -249,9 +249,12 @@ public class RobotContainer {
 
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
-                // codriver.rightBumper().whileTrue(m_intakeArm.jogIntakeArmCommand(() ->
-                // codriver.getLeftY()));
-                codriver.rightBumper().whileTrue(m_intakeSlideArm.jogIntakeArmCommand(() -> codriver.getLeftY()));
+                codriver.rightBumper().and(codriver.b())
+                                .whileTrue(m_intakeArm.jogIntakeArmCommand(() -> -codriver.getLeftY() / 5));
+
+                codriver.rightBumper().and(codriver.y()).onTrue(m_intakeArm.intakeArmToClearAngleCommand());
+                
+                codriver.rightBumper().and(codriver.a()).onTrue(m_intakeArm.intakeArmToIntakeAngleCommand());
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
