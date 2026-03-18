@@ -153,12 +153,10 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
     Logger.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
     Logger.log("IntakeArm/CurrentAngle", getIntakeArmAngle());
-     Logger.log("IntakeArm/FollowerAngle", getIntakeFollowerAngle());
     Logger.log("IntakeArm/AngleError", m_controller.getPositionError());
     Logger.log("IntakeArm/AtTarget", m_controller.atGoal());
     Logger.log("IntakeArm/LeaderAmps", intakeArmMotor.getOutputCurrent());
-    Logger.log("IntakeArm/FollowerAmps", intakeArmMotorFollower.getOutputCurrent());
-   
+
     Logger.log("IntakeArm/FwdSoftLimit", intakeArmMotor.getForwardSoftLimit().isReached());
     Logger.log("IntakeArm/RevSoftLimit", intakeArmMotor.getReverseSoftLimit().isReached());
 
@@ -174,7 +172,8 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
             Commands.sequence(
                 intakeArmToMidDownAngleCommand(),
                 Commands.waitSeconds(pauseBetween),
-                intakeArmToMidUpAngleCommand()))
+                intakeArmToMidUpAngleCommand(),
+                Commands.waitSeconds(pauseBetween)))
         .repeatedly();
   }
 

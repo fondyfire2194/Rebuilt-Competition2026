@@ -452,7 +452,6 @@ public final class Constants {
         960,
         true);
 
-    static double[] camRots = { -2.5, -28.7, 90 };
 
     static Pose3d leftCamPose = new Pose3d(
         Units.inchesToMeters(9.125),
@@ -461,7 +460,7 @@ public final class Constants {
         new Rotation3d(
             Units.degreesToRadians(-2.5),
             Units.degreesToRadians(-28.7),
-            Units.degreesToRadians(-90)));
+            Units.degreesToRadians(90)));
 
     public static Cameras leftCamera = new Cameras(
         "limelight-left",
@@ -481,7 +480,7 @@ public final class Constants {
         new Rotation3d(
             Units.degreesToRadians(-2.2),
             Units.degreesToRadians(-28.9),
-            Units.degreesToRadians(90)));
+            Units.degreesToRadians(-90)));
 
     public static Cameras rightCamera = new Cameras(
         "limelight-right",

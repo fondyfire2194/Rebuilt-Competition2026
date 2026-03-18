@@ -108,8 +108,6 @@ public class RobotContainer {
         private Trigger endGameWarningTrigger;
 
         private Trigger collisionTrigger;
-        private Trigger setViewFinderPipelineTrigger;
-        private Trigger setAprilTagPipelineTrigger;
 
         // Presets
         // public static final double hubPresetDistance = 0.96;
@@ -230,7 +228,9 @@ public class RobotContainer {
                                                 () -> m_shooter.isShootUsingDistance()), Set.of()));
 
                 driver.povRight().onTrue(Commands.none());
+
                 driver.back().onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()));
+
                 // Reset the field-centric heading
                 driver.start().onTrue(
                                 drivetrain.runOnce(drivetrain::seedFieldCentric));
@@ -295,28 +295,7 @@ public class RobotContainer {
 
                 // collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
 
-                setAprilTagPipelineTrigger = new Trigger((() -> !m_llv.getFrontCamSeesHubTags()));
-
-                setAprilTagPipelineTrigger.onTrue(
-                                Commands.sequence(
-                                                Commands.runOnce(() -> LimelightHelpers.setPipelineIndex(
-                                                                Constants.CameraConstants.leftCamera.camname,
-                                                                Constants.CameraConstants.apriltagPipeline)),
-                                                Commands.runOnce(() -> LimelightHelpers.setPipelineIndex(
-                                                                Constants.CameraConstants.rightCamera.camname,
-                                                                Constants.CameraConstants.apriltagPipeline))));
-
-                setViewFinderPipelineTrigger = new Trigger((() -> m_llv.getFrontCamSeesHubTags()));
-
-                setViewFinderPipelineTrigger.onTrue(
-                                Commands.sequence(
-                                                Commands.runOnce(() -> LimelightHelpers.setPipelineIndex(
-                                                                Constants.CameraConstants.leftCamera.camname,
-                                                                Constants.CameraConstants.viewFinderPipeline)),
-                                                Commands.runOnce(() -> LimelightHelpers.setPipelineIndex(
-                                                                Constants.CameraConstants.rightCamera.camname,
-                                                                Constants.CameraConstants.viewFinderPipeline))));
-
+              
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 
                 driverFiveSecondWarningEndPickupTrigger
@@ -430,18 +409,6 @@ public class RobotContainer {
                 /* Run the path selected from the auto chooser */
                 return autoChooser.getSelected();
                 // return new PathPlannerAuto("SimpleAuto");
-        }
-
-        private Command driveAtBumpAngle() {
-                return Commands.sequence(
-                                Commands.runOnce(() -> AllianceUtil.getBumpCrossAngle(drivetrain.getState().Pose)),
-                                drivetrain.applyRequest(() -> driveFacingAngle
-                                                .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
-                                                .withVelocityX(-driver.getLeftY() * RobotConstants.MaxSpeed)
-                                                .withVelocityY(-driver.getLeftX() * RobotConstants.MaxSpeed)
-                                                .withTargetDirection(AllianceUtil.bumpRotation2d))
-                                                .andThen(Commands.none()));
-
         }
 
         public Command clearRevStickyFaultsCommand() {

@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import java.lang.management.RuntimeMXBean;
-
 import com.ctre.phoenix6.HootAutoReplay;
 import com.ctre.phoenix6.SignalLogger;
 
@@ -20,6 +18,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.event.BooleanEvent;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -37,6 +36,9 @@ import frc.robot.utils.LoopEvents;
 public class Robot extends TimedRobot {
         private Command m_autonomousCommand;
         private final EventLoop m_eventLoop = new EventLoop();
+
+        private BooleanEvent frontCamHasHubTag;
+
         NetworkTableInstance inst = NetworkTableInstance.getDefault();
 
         private final NetworkTable hubPoseTable = inst.getTable("HubPoses");
@@ -57,10 +59,15 @@ public class Robot extends TimedRobot {
                         .withJoystickReplay();
 
         public Robot() {
+                m_robotContainer = new RobotContainer();
+
+        }
+
+        @Override
+        public void robotInit() {
                 hubPoseRed.set(FieldConstants.redHubPose);
                 hubPoseBlue.set(FieldConstants.blueHubPose);
                 // inst.flush();
-                m_robotContainer = new RobotContainer();
 
                 Logger.setOptions(
                                 new DogLogOptions()
@@ -74,15 +81,20 @@ public class Robot extends TimedRobot {
 
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
+
+                frontCamHasHubTag = new BooleanEvent(m_eventLoop,
+                                () -> m_robotContainer.m_llv.getFrontCamSeesHubTags()).debounce(1);
+
+                frontCamHasHubTag.ifHigh(() -> m_robotContainer.m_llv.setViewFinderLLPipelines());
+
+                frontCamHasHubTag.negate().ifHigh(() -> m_robotContainer.m_llv.setDefaultLLPipelines());
+
                 autoHasRun = false;
+                m_robotContainer.m_llv.setDefaultLLPipelines();
+                runFrontTagUpdateCommands(true, true, false, false);
+                runLeftTagUpdateCommands(true, false, false, false);
+                runRightTagUpdateCommands(true, false, false, false);
 
-                if (RobotBase.isReal()) {
-
-                        setDefaultLLPipelines();
-                        runFrontTagUpdateCommands(true, true, true, true);
-                        runLeftTagUpdateCommands(true, false, false, false);
-                        runRightTagUpdateCommands(true, false, false, false);
-                }
         }
 
         @Override
@@ -98,7 +110,6 @@ public class Robot extends TimedRobot {
 
         @Override
         public void disabledInit() {
-
         }
 
         @Override
@@ -143,13 +154,6 @@ public class Robot extends TimedRobot {
 
         @Override
         public void teleopInit() {
-                // test vision in sim with left cam
-                if (RobotBase.isSimulation()) {
-                        LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
-                                        CameraConstants.apriltagPipeline);
-                        runLeftTagUpdateCommands(true, true, true, true);
-
-                }
 
                 if (RobotBase.isSimulation() && AllianceUtil.isBlueAlliance())
                         m_robotContainer.drivetrain.resetPose(new Pose2d(1, 3.5, new Rotation2d()));
@@ -213,19 +217,6 @@ public class Robot extends TimedRobot {
                 return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
         }
 
-        public void setDefaultLLPipelines() {
-
-                LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
-                                CameraConstants.apriltagPipeline);
-                LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
-                                CameraConstants.apriltagPipeline);
-                LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname,
-                                CameraConstants.apriltagPipeline);
-                // LimelightHelpers.setPipelineIndex(CameraConstants.rearCamera.camname,
-                // CameraConstants.fuelDetectorPipeline);
-
-        }
-
         private void runFrontTagUpdateCommands(boolean runMT1, boolean runMT2, boolean mt1Correct, boolean mt2Correct) {
                 if (runMT1) {
                         CommandScheduler.getInstance().schedule(
@@ -265,16 +256,16 @@ public class Robot extends TimedRobot {
                 if (runMT1) {
                         CommandScheduler.getInstance().schedule(
                                         new LimelightTagsMT1Update(m_robotContainer.m_llv,
-                                                        m_robotContainer.m_llv.leftCam,
+                                                        m_robotContainer.m_llv.rightCam,
                                                         m_robotContainer.drivetrain).ignoringDisable(true));
                 }
 
                 if (runMT2) {
                         CommandScheduler.getInstance().schedule(new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                        m_robotContainer.m_llv.leftCam,
+                                        m_robotContainer.m_llv.rightCam,
                                         m_robotContainer.drivetrain).ignoringDisable(true));
                 }
-                m_robotContainer.m_llv.useMT1[m_robotContainer.m_llv.leftCam] = mt1Correct;
-                m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.leftCam] = mt2Correct;
+                m_robotContainer.m_llv.useMT1[m_robotContainer.m_llv.rightCam] = mt1Correct;
+                m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.rightCam] = mt2Correct;
         }
 }

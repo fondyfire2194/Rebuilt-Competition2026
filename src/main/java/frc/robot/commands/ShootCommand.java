@@ -59,23 +59,23 @@ public class ShootCommand extends Command {
 
       m_feeder.runFeederRollerAtVelocity();
 
-      if (RobotBase.isSimulation() ||
-          Math.abs(m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt)
+      if (Math.abs(m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt
+          || RobotBase.isSimulation())
 
       {
 
-        if (!lookForPulse && beltTimer.get() > m_feeder.beltInitialShootTime) {
-          lookForPulse = true;
-          beltTimer.reset();
-        }
+        // if (!lookForPulse && beltTimer.get() > m_feeder.beltInitialShootTime) {
+        //   lookForPulse = true;
+        //   beltTimer.reset();
+        // }
 
-        if (lookForPulse && beltTimer.get() > m_feeder.beltStartPulseTime)
-          m_feeder.pulse = true;
+        // if (lookForPulse && beltTimer.get() > m_feeder.beltStartPulseTime)
+        //   m_feeder.pulse = true;
 
-        if (lookForPulse && beltTimer.get() > m_feeder.beltStopPulseTime) {
-          m_feeder.pulse = false;
-          beltTimer.reset();
-        }
+        // if (lookForPulse && beltTimer.get() > m_feeder.beltStopPulseTime) {
+        //   m_feeder.pulse = false;
+        //   beltTimer.reset();
+        // }
 
         m_feeder.pulse = false;// force no belt reverse pulse
 
@@ -85,8 +85,6 @@ public class ShootCommand extends Command {
           m_feeder.pulseBelt();
       }
     }
-
-  
 
   }
 
