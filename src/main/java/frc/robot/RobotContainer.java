@@ -17,9 +17,12 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.shuffleboard.EventImportance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -41,6 +44,7 @@ import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.LimelightHelpers;
+import frc.robot.utils.Logger;
 import frc.robot.utils.ShootingData;
 
 public class RobotContainer {
@@ -139,6 +143,8 @@ public class RobotContainer {
 
                 configureTriggers();
 
+                // logRunningCommands();
+
                 buildAutoChooser();
 
                 SignalLogger.setPath("media/sda1/ctre-logs");
@@ -157,7 +163,7 @@ public class RobotContainer {
                                                 .withRotationalRate(
                                                                 -driver.getRightX() * RobotConstants.MaxAngularRate)));
 
-              //  m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
+                // m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
 
                 m_hood.setDefaultCommand(m_hood.positionHoodCommand());
         }
@@ -201,10 +207,7 @@ public class RobotContainer {
                 driver.rightBumper().onTrue(
                                 Commands.parallel(
                                                 setForAutoShootValues(),
-                                                m_shooter.stopAllShootersCommand(),
-                                                m_feeder.stopFeederRollerCommand(),
-                                                m_feeder.stopFeederBeltCommand(),
-                                                m_intake.stopIntakeCommand(),
+                                                stopShootersFeedersIntake(),
                                                 m_intakeArm.intakeArmToClearAngleCommand()));
 
                 driver.y().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
@@ -295,7 +298,6 @@ public class RobotContainer {
 
                 // collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
 
-              
                 driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
 
                 driverFiveSecondWarningEndPickupTrigger
@@ -323,6 +325,28 @@ public class RobotContainer {
                                                                 Commands.runOnce(() -> driver.setRumble(
                                                                                 RumbleType.kBothRumble, 0))));
 
+        }
+
+        public void logRunningCommands() {
+                // Set the scheduler to log Shuffleboard events for command initialize,
+                // interrupt, finish
+                // Set the scheduler to log Shuffleboard events for command initialize,
+                // interrupt, finish
+                CommandScheduler.getInstance()
+                                .onCommandInitialize(command -> Logger.log(command.getName(), "Command initialized"));
+                // command -> Shuffleboard.addEventMarker(
+                // "Command initialized", command.getName(),
+                // EventImportance.kNormal));
+                CommandScheduler.getInstance()
+                                .onCommandInterrupt(
+                                                command -> Shuffleboard.addEventMarker(
+                                                                "Command interrupted", command.getName(),
+                                                                EventImportance.kNormal));
+                CommandScheduler.getInstance()
+                                .onCommandFinish(
+                                                command -> Shuffleboard.addEventMarker(
+                                                                "Command finished", command.getName(),
+                                                                EventImportance.kNormal));
         }
 
         private void configurePDH() {
@@ -428,10 +452,17 @@ public class RobotContainer {
                                                 m_hood.setManualTargetCommand(
                                                                 ShootingData.hoodAngleMap.get(distance).getDegrees())),
                                 m_shooter.runAllVelocityVoltageCommand(),
-                                Commands.waitUntil(() -> m_shooter.allVelocityInTolerance()
-                                                && m_hood.isPositionWithinTolerance())
-                                                .andThen(new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain,
-                                                                true)));
+                                Commands.waitUntil(
+                                                () -> m_shooter.allVelocityInTolerance()
+                                                                && m_hood.isPositionWithinTolerance())
+                                                .andThen(
+                                                                Commands.parallel(
+                                                                                new ShootCommand(m_shooter, m_hood,
+                                                                                                m_feeder, drivetrain,
+                                                                                                false),
+                                                                                m_intakeArm.helpShootCommand(10, 3))
+                                                                                .finallyDo((() -> stopShootersFeedersIntake()))));
+
         }
 
         public Command setForManualShootValues() {
@@ -452,6 +483,15 @@ public class RobotContainer {
                 return Commands.parallel(
                                 m_shooter.setShootUsingDistanceCommand(false),
                                 m_hood.setHoodUsingDistanceCommand(false));
+
+        }
+
+        public Command stopShootersFeedersIntake() {
+                return Commands.sequence(
+                                m_shooter.stopAllShootersCommand(),
+                                m_feeder.stopFeederRollerCommand(),
+                                m_feeder.stopFeederBeltCommand(),
+                                m_intake.stopIntakeCommand());
 
         }
 

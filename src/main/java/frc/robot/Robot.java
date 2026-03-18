@@ -91,7 +91,7 @@ public class Robot extends TimedRobot {
 
                 autoHasRun = false;
                 m_robotContainer.m_llv.setDefaultLLPipelines();
-                runFrontTagUpdateCommands(true, true, false, false);
+                runFrontTagUpdateCommands(false, false, false, false);
                 runLeftTagUpdateCommands(true, false, false, false);
                 runRightTagUpdateCommands(true, false, false, false);
 
@@ -222,12 +222,14 @@ public class Robot extends TimedRobot {
                         CommandScheduler.getInstance().schedule(
                                         new LimelightTagsMT1Update(m_robotContainer.m_llv,
                                                         m_robotContainer.m_llv.frontCam,
-                                                        m_robotContainer.drivetrain).ignoringDisable(true));
+                                                        m_robotContainer.drivetrain).ignoringDisable(true)
+                                                        .withName("FrontMT1"));
                 }
                 if (runMT2) {
                         CommandScheduler.getInstance().schedule(new LimelightTagsMT2Update(m_robotContainer.m_llv,
                                         m_robotContainer.m_llv.frontCam,
-                                        m_robotContainer.drivetrain).ignoringDisable(true));
+                                        m_robotContainer.drivetrain).ignoringDisable(true)
+                                        .withName("FrontMT2"));
                 }
 
                 m_robotContainer.m_llv.useMT1[m_robotContainer.m_llv.frontCam] = mt1Correct;
@@ -240,13 +242,15 @@ public class Robot extends TimedRobot {
                         CommandScheduler.getInstance().schedule(
                                         new LimelightTagsMT1Update(m_robotContainer.m_llv,
                                                         m_robotContainer.m_llv.leftCam,
-                                                        m_robotContainer.drivetrain).ignoringDisable(true));
+                                                        m_robotContainer.drivetrain).ignoringDisable(true)
+                                                        .withName("LeftMT1"));
                 }
 
                 if (runMT2) {
                         CommandScheduler.getInstance().schedule(new LimelightTagsMT2Update(m_robotContainer.m_llv,
                                         m_robotContainer.m_llv.leftCam,
-                                        m_robotContainer.drivetrain).ignoringDisable(true));
+                                        m_robotContainer.drivetrain).ignoringDisable(true)
+                                        .withName("LeftMT2"));
                 }
                 m_robotContainer.m_llv.useMT1[m_robotContainer.m_llv.leftCam] = mt1Correct;
                 m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.leftCam] = mt2Correct;
@@ -254,16 +258,17 @@ public class Robot extends TimedRobot {
 
         private void runRightTagUpdateCommands(boolean runMT1, boolean runMT2, boolean mt1Correct, boolean mt2Correct) {
                 if (runMT1) {
-                        CommandScheduler.getInstance().schedule(
-                                        new LimelightTagsMT1Update(m_robotContainer.m_llv,
-                                                        m_robotContainer.m_llv.rightCam,
-                                                        m_robotContainer.drivetrain).ignoringDisable(true));
+                        CommandScheduler.getInstance().schedule(new LimelightTagsMT1Update(m_robotContainer.m_llv,
+                                        m_robotContainer.m_llv.rightCam,
+                                        m_robotContainer.drivetrain).ignoringDisable(true)
+                                        .withName("RightMT1"));
                 }
 
                 if (runMT2) {
                         CommandScheduler.getInstance().schedule(new LimelightTagsMT2Update(m_robotContainer.m_llv,
                                         m_robotContainer.m_llv.rightCam,
-                                        m_robotContainer.drivetrain).ignoringDisable(true));
+                                        m_robotContainer.drivetrain).ignoringDisable(true)
+                                        .withName("RightMT2"));
                 }
                 m_robotContainer.m_llv.useMT1[m_robotContainer.m_llv.rightCam] = mt1Correct;
                 m_robotContainer.m_llv.useMT2[m_robotContainer.m_llv.rightCam] = mt2Correct;
