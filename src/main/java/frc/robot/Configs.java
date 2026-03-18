@@ -20,6 +20,7 @@ import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import frc.robot.Constants.CANIDConstants;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.Intake4BarArmSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
@@ -92,6 +93,7 @@ public final class Configs {
   public static final class IntakeArm {
 
     public static final SparkMaxConfig armConfig1 = new SparkMaxConfig();
+    public static final SparkMaxConfig armConfig2 = new SparkMaxConfig();
 
     static {
       // Configure basic settings of the arm motor
@@ -111,6 +113,15 @@ public final class Configs {
           .reverseSoftLimitEnabled(true);
 
       armConfig1.signals.primaryEncoderPositionPeriodMs(10);
+
+    }
+
+    static {
+      armConfig2
+          .idleMode(IdleMode.kBrake)
+          .smartCurrentLimit(60);
+      armConfig2
+          .follow(CANIDConstants.intakeArmID,true);
 
     }
 

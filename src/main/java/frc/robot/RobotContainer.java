@@ -180,16 +180,16 @@ public class RobotContainer {
                 // new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))));
 
                 driver.leftTrigger().whileTrue(
-                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false));
+                                Commands.parallel(
+                                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false),
+                                                m_intakeArm.helpShootCommand(10, 3)));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
                                                 m_intakeArm.intakeArmToIntakeAngleCommand(),
                                                 m_intake.startIntakeCommand()))
                                 .onFalse(
-                                                Commands.parallel(
-                                                                m_intakeArm.intakeArmToClearAngleCommand(),
-                                                                m_intake.stopIntakeCommand()));
+                                                m_intake.stopIntakeCommand());
 
                 driver.leftBumper().onTrue(
                                 Commands.sequence(
@@ -206,8 +206,8 @@ public class RobotContainer {
                                                 m_shooter.stopAllShootersCommand(),
                                                 m_feeder.stopFeederRollerCommand(),
                                                 m_feeder.stopFeederBeltCommand(),
-                                                m_intake.stopIntakeCommand()))
-                                .whileTrue(Commands.defer(this::driveAtBumpAngle, Set.of(drivetrain)));
+                                                m_intake.stopIntakeCommand(),
+                                                m_intakeArm.intakeArmToClearAngleCommand()));
 
                 driver.y().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
@@ -250,7 +250,7 @@ public class RobotContainer {
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
                 codriver.rightBumper().and(codriver.b())
-                                .whileTrue(m_intakeArm.jogIntakeArmCommand(() -> -codriver.getLeftY() / 5));
+                                .whileTrue(m_intakeArm.jogIntakeArmCommand(() -> -codriver.getLeftX() / 4));
 
                 codriver.rightBumper().and(codriver.y()).onTrue(m_intakeArm.intakeArmToClearAngleCommand());
 
@@ -397,7 +397,12 @@ public class RobotContainer {
                                                 Commands.waitSeconds(5),
                                                 new AutoAlignHub(drivetrain, m_shooter, m_hood, 1),
                                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false)
-                                                                .andThen(m_shooter.stopAllShootersCommand())));
+                                                                .andThen(
+                                                                                Commands.sequence(
+                                                                                                m_shooter.stopAllShootersCommand(),
+                                                                                                m_feeder.stopFeederRollerCommand(),
+                                                                                                m_feeder.stopFeederBeltCommand(),
+                                                                                                m_intake.stopIntakeCommand()))));
 
         }
 

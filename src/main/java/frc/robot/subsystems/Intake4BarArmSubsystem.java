@@ -37,6 +37,8 @@ import frc.robot.utils.Logger;
 public class Intake4BarArmSubsystem extends SubsystemBase {
 
   private final SparkMax intakeArmMotor = new SparkMax(CANIDConstants.intakeArmID, MotorType.kBrushless);
+  private final SparkMax intakeArmMotorFollower = new SparkMax(CANIDConstants.intakeArmFollowerID,
+      MotorType.kBrushless);
 
   private static final double gearRatio = 57.38;
 
@@ -71,7 +73,8 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   public Angle intakingAngle = Degree.of(100);
 
   public Angle homeAngle = Degree.of(0);
-
+  public Angle midUpAngle = Degree.of(30);
+  public Angle midDownAngle = Degree.of(60);
   private Current stallCurrent = Amps.of(15);
 
   private Debouncer stallDebouncer = new Debouncer(.5);
@@ -80,8 +83,6 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   private double kg = 0;
   private double kv = 12 / maxArmRadiansPerSec;
 
-  private int tst;
-
   public boolean showData;
 
   public Intake4BarArmSubsystem(boolean showData) {
@@ -89,6 +90,12 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
     intakeArmMotor
         .configure(
             Configs.IntakeArm.armConfig1,
+            ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters);
+
+    intakeArmMotorFollower
+        .configure(
+            Configs.IntakeArm.armConfig2,
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters);
 
@@ -146,8 +153,12 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
     Logger.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
     Logger.log("IntakeArm/CurrentAngle", getIntakeArmAngle());
+     Logger.log("IntakeArm/FollowerAngle", getIntakeFollowerAngle());
     Logger.log("IntakeArm/AngleError", m_controller.getPositionError());
     Logger.log("IntakeArm/AtTarget", m_controller.atGoal());
+    Logger.log("IntakeArm/LeaderAmps", intakeArmMotor.getOutputCurrent());
+    Logger.log("IntakeArm/FollowerAmps", intakeArmMotorFollower.getOutputCurrent());
+   
     Logger.log("IntakeArm/FwdSoftLimit", intakeArmMotor.getForwardSoftLimit().isReached());
     Logger.log("IntakeArm/RevSoftLimit", intakeArmMotor.getReverseSoftLimit().isReached());
 
@@ -157,8 +168,20 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   }
 
+  public Command helpShootCommand(double preWait, double pauseBetween) {
+    return Commands.waitSeconds(preWait)
+        .andThen(
+            Commands.sequence(
+                intakeArmToMidDownAngleCommand(),
+                Commands.waitSeconds(pauseBetween),
+                intakeArmToMidUpAngleCommand()))
+        .repeatedly();
+  }
+
   public boolean armInPosition() {
-    return Math.abs(m_controller.getGoal().position - intakeArmMotor.getEncoder().getPosition()) < .2;// 10 degrees
+    return m_controller.atGoal();
+    // return Math.abs(m_controller.getGoal().position -
+    // intakeArmMotor.getEncoder().getPosition()) < .2;// 10 degrees
   }
 
   public Command intakeArmToIntakeAngleCommand() {
@@ -167,6 +190,14 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   public Command intakeArmToClearAngleCommand() {
     return Commands.runOnce(() -> m_controller.setGoal(homeAngle.in(Radians)));
+  }
+
+  public Command intakeArmToMidUpAngleCommand() {
+    return Commands.runOnce(() -> m_controller.setGoal(midUpAngle.in(Radians)));
+  }
+
+  public Command intakeArmToMidDownAngleCommand() {
+    return Commands.runOnce(() -> m_controller.setGoal(midDownAngle.in(Radians)));
   }
 
   public Command positionIntakeArmCommand() {
@@ -182,6 +213,10 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   public Angle getIntakeArmAngle() {
     return Radians.of(intakeArmMotor.getEncoder().getPosition());
+  }
+
+  public Angle getIntakeFollowerAngle() {
+    return Radians.of(intakeArmMotorFollower.getEncoder().getPosition());
   }
 
   public AngularVelocity getIntakeArmVelocity() {
