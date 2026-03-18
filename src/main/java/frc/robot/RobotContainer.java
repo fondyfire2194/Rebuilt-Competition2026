@@ -159,7 +159,7 @@ public class RobotContainer {
                                                 .withRotationalRate(
                                                                 -driver.getRightX() * RobotConstants.MaxAngularRate)));
 
-                m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
+              //  m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
 
                 m_hood.setDefaultCommand(m_hood.positionHoodCommand());
         }
@@ -249,12 +249,12 @@ public class RobotContainer {
 
                 codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
 
-                codriver.rightBumper().and(codriver.b())
-                                .whileTrue(m_intakeArm.jogIntakeArmCommand(() -> -codriver.getLeftX() / 4));
+                codriver.rightBumper()
+                                .whileTrue(m_intakeArm.jogIntakeArmCommand(() -> codriver.getLeftX() / 4));
 
-                codriver.rightBumper().and(codriver.y()).onTrue(m_intakeArm.intakeArmToClearAngleCommand());
+                // codriver.rightBumper().and(codriver.y()).onTrue(m_intakeArm.intakeArmToClearAngleCommand());
 
-                codriver.rightBumper().and(codriver.a()).onTrue(m_intakeArm.intakeArmToIntakeAngleCommand());
+                // codriver.rightBumper().and(codriver.a()).onTrue(m_intakeArm.intakeArmToIntakeAngleCommand());
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
