@@ -13,6 +13,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -26,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants;
 import frc.robot.Constants.FeederSetpoints;
-import frc.robot.utils.Logger;
 
 public class FeederSubsystem extends SubsystemBase {
   /** Creates a new FeederSubsystem. */
@@ -105,18 +105,18 @@ public class FeederSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if (DriverStation.isEnabled()) {
+    
 
       // This method will be called once per scheduler run
-      Logger.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
-      Logger.log("Feeder/RollerTargetRPM", closedLoopController.getSetpoint());
-      Logger.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
-      Logger.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+      DogLog.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
+      DogLog.log("Feeder/RollerTargetRPM", closedLoopController.getSetpoint());
+      DogLog.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
+      DogLog.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
 
-      Logger.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
-      Logger.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
-      Logger.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
-    }
+      DogLog.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
+      DogLog.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
+      DogLog.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+    
 
   }
 

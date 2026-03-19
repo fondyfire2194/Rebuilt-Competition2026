@@ -39,7 +39,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.CanbusConstants;
-import frc.robot.utils.Logger;
 
 public class TripleShooterSubsystem extends SubsystemBase {
   /** Creates a new TripleShooterSubsystem. */
@@ -344,30 +343,29 @@ public class TripleShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    if (alternate) {
+      DogLog.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
+      DogLog.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
+      DogLog.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
 
-    Logger.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
-    Logger.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
-    Logger.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
-
-    if (DriverStation.isEnabled() && alternate) {
-      Logger.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
-      Logger.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
-      Logger.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
-      Logger.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
-      Logger.log("Shooter/UseDistForRPM", isShootUsingDistance());
+      DogLog.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
+      DogLog.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
+      DogLog.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
+      DogLog.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
+      DogLog.log("Shooter/UseDistForRPM", isShootUsingDistance());
 
     }
-    if (DriverStation.isEnabled() && !alternate) {
+    if (!alternate) {
 
-      Logger.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
-      Logger.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
-      Logger.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
-      Logger.log("Shooter/LeftAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
-      Logger.log("Shooter/MiddleAmps", middleMotor.getStatorCurrent().getValue().in(Amps));
-      Logger.log("Shooter/RightAmps", rightMotor.getStatorCurrent().getValue().in(Amps));
-      Logger.log("Shooter/LeftVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
-      Logger.log("Shooter/MilddleVolts", middleMotor.getMotorVoltage().getValue().in(Volts));
-      Logger.log("Shooter/RightVolts", rightMotor.getMotorVoltage().getValue().in(Volts));
+      DogLog.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
+      DogLog.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
+      DogLog.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
+      DogLog.log("Shooter/LeftAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
+      DogLog.log("Shooter/MiddleAmps", middleMotor.getStatorCurrent().getValue().in(Amps));
+      DogLog.log("Shooter/RightAmps", rightMotor.getStatorCurrent().getValue().in(Amps));
+      DogLog.log("Shooter/LeftVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
+      DogLog.log("Shooter/MilddleVolts", middleMotor.getMotorVoltage().getValue().in(Volts));
+      DogLog.log("Shooter/RightVolts", rightMotor.getMotorVoltage().getValue().in(Volts));
     }
     alternate = !alternate;
   }

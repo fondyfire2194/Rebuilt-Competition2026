@@ -455,7 +455,7 @@ public final class Constants {
 
     static Pose3d leftCamPose = new Pose3d(
         Units.inchesToMeters(9.125),
-        Units.inchesToMeters(14.55),
+        Units.inchesToMeters(-14.55),
         Units.inchesToMeters(17.75),
         new Rotation3d(
             Units.degreesToRadians(-2.5),
@@ -475,7 +475,7 @@ public final class Constants {
 
     static Pose3d rightCamPose = new Pose3d(
         Units.inchesToMeters(9.125),
-        Units.inchesToMeters(-14.55),
+        Units.inchesToMeters(14.55),
         Units.inchesToMeters(17.75),
         new Rotation3d(
             Units.degreesToRadians(-2.2),

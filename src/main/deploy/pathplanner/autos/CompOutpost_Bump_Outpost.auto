@@ -7,25 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepBmpPickup"
+            "pathName": "OutpostBumpPickup"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 0.5
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ALIGN_AND_SHOOT"
+            "waitTime": 1.5
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "DepotBehindHubDepot"
+            "pathName": "PickupBumpOutpost"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "START_SHOOTERS"
           }
         },
         {

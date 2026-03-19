@@ -9,6 +9,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -22,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants;
 import frc.robot.Constants.IntakeSetpoints;
-import frc.robot.utils.Logger;
 
 public class IntakeSubsystem extends SubsystemBase {
   // Initialize intake SPARK. We will use open loop control for this.
@@ -141,12 +141,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
- if (DriverStation.isEnabled()) {
     
-    Logger.log("Intake/MotorRPM", intakeMotor.getEncoder().getVelocity());
-    Logger.log("Intake/MotorAmps", intakeMotor.getOutputCurrent());
-    Logger.log("Intake/MotorVolts", intakeMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
- }
+    DogLog.log("Intake/MotorRPM", intakeMotor.getEncoder().getVelocity());
+    DogLog.log("Intake/MotorAmps", intakeMotor.getOutputCurrent());
+    DogLog.log("Intake/MotorVolts", intakeMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+ 
   }
 
 }

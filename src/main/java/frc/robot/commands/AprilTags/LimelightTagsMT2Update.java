@@ -24,6 +24,10 @@ public class LimelightTagsMT2Update extends Command {
     private final double DISTANCE_STDDEVS_SCALAR = 2;
     private final double ROTATION_RATE_CUTOFF = 720;
 
+    private double xTolerance = .1;
+    private double yTolerance = .1;
+    private double rotTolerance = 5;
+
     LimelightHelpers.PoseEstimate mt2 = new PoseEstimate();
 
     private int m_cameraIndex;
@@ -61,7 +65,14 @@ public class LimelightTagsMT2Update extends Command {
             m_llv.getMT2TagIDsSeen(m_cameraIndex, mt2.rawFiducials);
         }
 
-        rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
+        if (poseNearLastPose(m_llv.mt2LastPoseSeen[m_cameraIndex], mt2.pose)) {
+            m_llv.mt2NearPoseCount[m_cameraIndex]++;
+        } else
+            m_llv.mt2NearPoseCount[m_cameraIndex] = 0;
+        m_llv.mt2LastPoseSeen[m_cameraIndex] = mt2.pose;
+
+        rejectMT2Update = m_cameraIndex != 0 ||
+                mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
                 || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
                         .getValueAsDouble()) > ROTATION_RATE_CUTOFF
                 || (mt2.tagCount == 1 && mt2.rawFiducials[0].ambiguity > AMBIGUITY_CUTOFF)
@@ -103,9 +114,12 @@ public class LimelightTagsMT2Update extends Command {
         return inLength && inWidth;
     }
 
-    private boolean tagTooFar(Pose2d robot, Pose2d tag) {
-        // if a tag is invalid if it shoWs a change in distance greater than the robot
-        // could have traveled
-        return false;
+    public boolean poseNearLastPose(Pose2d pose, Pose2d lastPose) {
+        boolean xInTolerance = Math.abs(pose.getX() - lastPose.getX()) < xTolerance;
+        boolean yInTolerance = Math.abs(pose.getY() - lastPose.getY()) < yTolerance;
+        boolean rotInTolerance = Math
+                .abs(pose.getRotation().getDegrees() - lastPose.getRotation().getDegrees()) < rotTolerance;
+        return xInTolerance && yInTolerance && rotInTolerance;
     }
+
 }

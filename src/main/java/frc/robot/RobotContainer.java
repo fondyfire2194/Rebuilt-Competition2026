@@ -44,7 +44,6 @@ import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.LimelightHelpers;
-import frc.robot.utils.Logger;
 import frc.robot.utils.ShootingData;
 
 public class RobotContainer {
@@ -142,9 +141,6 @@ public class RobotContainer {
                 configureCodriverBindings();
 
                 configureTriggers();
-
-                // logRunningCommands();
-
                 buildAutoChooser();
 
                 SignalLogger.setPath("media/sda1/ctre-logs");
@@ -187,7 +183,7 @@ public class RobotContainer {
                                 Commands.parallel(
                                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false),
                                                 Commands.sequence(Commands.waitSeconds(5),
-                                                                m_intakeArm.helpShootCommand( 1))));
+                                                                m_intakeArm.helpShootCommand(1))));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
@@ -213,9 +209,9 @@ public class RobotContainer {
 
                 driver.y().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
-                driver.b().whileTrue(new DeferredCommand(() -> presetShoot(trenchPresetDistance), Set.of()));
+                driver.b().whileTrue(presetShoot(trenchPresetDistance));
 
-                driver.x().whileTrue(new DeferredCommand(() -> presetShoot(towerPresetDistance), Set.of()));
+                driver.x().whileTrue(presetShoot(towerPresetDistance));
 
                 driver.a().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
 
@@ -262,7 +258,7 @@ public class RobotContainer {
 
                 codriver.rightBumper().and(codriver.x()).onTrue(m_intakeArm.intakeArmToMidDownAngleCommand());
 
-                codriver.rightBumper().and(codriver.povUp()).whileTrue(m_intakeArm.helpShootCommand( 1));
+                codriver.rightBumper().and(codriver.povUp()).whileTrue(m_intakeArm.helpShootCommand(1));
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
@@ -290,8 +286,8 @@ public class RobotContainer {
 
                 codriver.leftTrigger().and(codriver.povUp())
                                 .onTrue(Commands.sequence(
-                                                Commands.runOnce(() -> m_llv.useMT1[m_llv.frontCam] = true),
-                                                (Commands.runOnce(() -> m_llv.useMT2[m_llv.frontCam] = false))));
+                                                Commands.runOnce(() -> m_llv.useMT1 = true),
+                                                (Commands.runOnce(() -> m_llv.useMT2 = false))));
 
                 codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
 
@@ -330,28 +326,6 @@ public class RobotContainer {
                                                                 Commands.runOnce(() -> driver.setRumble(
                                                                                 RumbleType.kBothRumble, 0))));
 
-        }
-
-        public void logRunningCommands() {
-                // Set the scheduler to log Shuffleboard events for command initialize,
-                // interrupt, finish
-                // Set the scheduler to log Shuffleboard events for command initialize,
-                // interrupt, finish
-                CommandScheduler.getInstance()
-                                .onCommandInitialize(command -> Logger.log(command.getName(), "Command initialized"));
-                // command -> Shuffleboard.addEventMarker(
-                // "Command initialized", command.getName(),
-                // EventImportance.kNormal));
-                CommandScheduler.getInstance()
-                                .onCommandInterrupt(
-                                                command -> Shuffleboard.addEventMarker(
-                                                                "Command interrupted", command.getName(),
-                                                                EventImportance.kNormal));
-                CommandScheduler.getInstance()
-                                .onCommandFinish(
-                                                command -> Shuffleboard.addEventMarker(
-                                                                "Command finished", command.getName(),
-                                                                EventImportance.kNormal));
         }
 
         private void configurePDH() {
@@ -404,13 +378,13 @@ public class RobotContainer {
                                 Commands.deadline(
                                                 Commands.waitSeconds(5),
                                                 new AutoAlignHub(drivetrain, m_shooter, m_hood, 1),
-                                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false)
-                                                                .andThen(
-                                                                                Commands.sequence(
-                                                                                                m_shooter.stopAllShootersCommand(),
-                                                                                                m_feeder.stopFeederRollerCommand(),
-                                                                                                m_feeder.stopFeederBeltCommand(),
-                                                                                                m_intake.stopIntakeCommand()))));
+                                                Commands.parallel(
+                                                                new ShootCommand(m_shooter, m_hood, m_feeder,
+                                                                                drivetrain, false),
+                                                                Commands.sequence(
+                                                                                Commands.waitSeconds(5),
+                                                                                m_intakeArm.helpShootCommand(1))))
+                                                .andThen(stopShootersFeedersIntake()));
 
         }
 
@@ -418,19 +392,15 @@ public class RobotContainer {
 
                 EventTrigger startShooters = new EventTrigger("START_SHOOTERS");
                 startShooters.onTrue(m_shooter.runAllVelocityVoltageCommand());
+
                 EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
                 runIntake.onTrue(
                                 Commands.sequence(
                                                 m_intake.startIntakeCommand(),
-                                                m_intakeArm.intakeArmToIntakeAngleCommand(),
-                                                Commands.waitUntil(() -> m_intakeArm.armInPosition())));
+                                                m_intakeArm.intakeArmToIntakeAngleCommand()));
 
                 EventTrigger endIntake = new EventTrigger("END_INTAKE");
-                endIntake.onTrue(
-                                Commands.sequence(
-                                                m_intake.stopIntakeCommand(),
-                                                m_intakeArm.intakeArmToClearAngleCommand(),
-                                                Commands.waitUntil(() -> m_intakeArm.armInPosition())));
+                endIntake.onTrue(m_intake.stopIntakeCommand());
 
         }
 
@@ -465,8 +435,11 @@ public class RobotContainer {
                                                                                 new ShootCommand(m_shooter, m_hood,
                                                                                                 m_feeder, drivetrain,
                                                                                                 false),
-                                                                                m_intakeArm.helpShootCommand( 1))
-                                                                                .finallyDo((() -> stopShootersFeedersIntake()))));
+                                                                                Commands.sequence(
+                                                                                                Commands.waitSeconds(5),
+                                                                                                m_intakeArm.helpShootCommand(
+                                                                                                                1)))))
+                                .finallyDo((() -> stopShootersFeedersIntake()));
 
         }
 

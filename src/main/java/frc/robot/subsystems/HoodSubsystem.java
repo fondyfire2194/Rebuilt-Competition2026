@@ -11,6 +11,7 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -25,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Configs;
 import frc.robot.Constants;
-import frc.robot.utils.Logger;
 
 public class HoodSubsystem extends SubsystemBase {
     public static final Angle kMinPosition = Degrees.of(0.0);
@@ -34,6 +34,22 @@ public class HoodSubsystem extends SubsystemBase {
     private static final double kPositionTolerance = 0.25;
 
     private static double manualTargetAngle;
+
+    public static double getManualTargetAngle() {
+        return manualTargetAngle;
+    }
+
+    public void setManualTargetAngle(double manualTargetAngle) {
+        HoodSubsystem.manualTargetAngle = manualTargetAngle;
+    }
+
+    public static double getAutoTargetAngle() {
+        return autoTargetAngle;
+    }
+
+    public static void setFinalTargetAngle(double finalTargetAngle) {
+        HoodSubsystem.finalTargetAngle = finalTargetAngle;
+    }
 
     public static double autoTargetAngle;
 
@@ -168,8 +184,8 @@ public class HoodSubsystem extends SubsystemBase {
 
     public Command setManualTargetCommand(double position) {
         return Commands.sequence(
-                Commands.runOnce(() -> finalTargetAngle = position),
-                Commands.runOnce(() -> manualTargetAngle = position));
+                Commands.runOnce(() -> setManualTargetAngle(position)),
+                Commands.runOnce(() -> setAutoTargetAngle(position)));
     }
 
     public double getHoodAngle() {
@@ -221,19 +237,16 @@ public class HoodSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
 
-        Logger.log("Hood/CurrentAngle", getHoodAngle());
+        DogLog.log("Hood/CurrentAngle", getHoodAngle());
 
-        if (DriverStation.isEnabled()) {
-
-            Logger.log("Hood/FinalTargetAngle", finalTargetAngle);
-            Logger.log("Hood/ManualTargetAngle", manualTargetAngle);
-            Logger.log("Hood/AutoTargetAngle", autoTargetAngle);
-            Logger.log("Hood/UseAutoTarget", isHoodUsingDistance());
-            Logger.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
-            Logger.log("Hood/AtTarget", isPositionWithinTolerance());
-            Logger.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
-            Logger.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
-        }
+        DogLog.log("Hood/FinalTargetAngle", finalTargetAngle);
+        DogLog.log("Hood/ManualTargetAngle", manualTargetAngle);
+        DogLog.log("Hood/AutoTargetAngle", autoTargetAngle);
+        DogLog.log("Hood/UseAutoTarget", isHoodUsingDistance());
+        DogLog.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
+        DogLog.log("Hood/AtTarget", isPositionWithinTolerance());
+        DogLog.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
+        DogLog.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
 
     }
 

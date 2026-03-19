@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
@@ -19,7 +20,6 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.Logger;
 import frc.robot.utils.ShootingData;
 
 public class AutoAlignHub extends Command {
@@ -100,15 +100,15 @@ public class AutoAlignHub extends Command {
 
     m_swerve.alignedToTarget = Math.abs(m_swerve.m_alignTargetPID.getError()) < m_toleranceDegrees;
 
-    Logger.log("Align/AlignedToHub", m_swerve.alignedToTarget);
-    Logger.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
-    Logger.log("Align/AlignDistance", distanceToTarget);
-    Logger.log("Align/AlignAngle", targetDegrees);
-    Logger.log("Align/HoodAngle", HoodSubsystem.autoTargetAngle);
-    Logger.log("Align/ShootSpeed", m_shooter.autoSetTargetRPM);
-    Logger.log("Align/TargetPose", targetPose);
-    Logger.log("Align/AccumIntegral", m_swerve.m_alignTargetPID.getAccumulatedError());
-    Logger.log("Align/RotationVal", rotationVal);
+    DogLog.log("Align/AlignedToHub", m_swerve.alignedToTarget);
+    DogLog.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
+    DogLog.log("Align/AlignDistance", distanceToTarget);
+    DogLog.log("Align/AlignAngle", targetDegrees);
+    DogLog.log("Align/HoodAngle", HoodSubsystem.autoTargetAngle);
+    DogLog.log("Align/ShootSpeed", m_shooter.autoSetTargetRPM);
+    DogLog.log("Align/TargetPose", targetPose);
+    DogLog.log("Align/AccumIntegral", m_swerve.m_alignTargetPID.getAccumulatedError());
+    DogLog.log("Align/RotationVal", rotationVal);
   }
 
   // Called once the command ends or is interrupted.

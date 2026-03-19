@@ -6,10 +6,10 @@ package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.utils.Logger;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class CollisionDetectionCommand extends Command {
@@ -52,11 +52,11 @@ public class CollisionDetectionCommand extends Command {
     if (!firstPass && (Math.abs(xJerk) > xJerkLimit || Math.abs(yJerk) > yJerkLimit))
       m_swerve.jerkLimitExceeded = true;
     
-    Logger.log("COllDetect/xJerk", xJerk);
-    Logger.log("COllDetect/yJerk", yJerk);
-    Logger.log("COllDetect/xAccel", linearAccerationX.in(MetersPerSecondPerSecond));
-    Logger.log("COllDetect/yAccel", linearAccerationY.in(MetersPerSecondPerSecond));
-    Logger.log("COllDetect/detected", m_swerve.jerkLimitExceeded);
+    DogLog.log("COllDetect/xJerk", xJerk);
+    DogLog.log("COllDetect/yJerk", yJerk);
+    DogLog.log("COllDetect/xAccel", linearAccerationX.in(MetersPerSecondPerSecond));
+    DogLog.log("COllDetect/yAccel", linearAccerationY.in(MetersPerSecondPerSecond));
+    DogLog.log("COllDetect/detected", m_swerve.jerkLimitExceeded);
     firstPass = false;
   }
 

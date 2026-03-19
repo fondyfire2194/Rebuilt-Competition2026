@@ -7,6 +7,7 @@ package frc.robot.commands;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
@@ -18,7 +19,6 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.Logger;
 import frc.robot.utils.ShootingData;
 import frc.robot.utils.geometry.AllianceFlipUtil;
 
@@ -131,16 +131,16 @@ public class AlignTargetOdometry extends Command {
 
     m_swerve.alignedToTarget = Math.abs(m_swerve.m_alignTargetPID.getError()) < m_toleranceDegrees;
 
-    Logger.log("Align/AlignedToHub", m_swerve.alignedToTarget);
-    Logger.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
-    Logger.log("Align/AlignDistance", distanceToTarget);
-    Logger.log("Align/AlignAngle", targetDegrees);
-    Logger.log("Align/HoodAngle", HoodSubsystem.autoTargetAngle);
-    Logger.log("Align/ShootSpeed", shooter.autoSetTargetRPM);
-    Logger.log("Align/Passing", passing);
-    Logger.log("Align/TargetPose", targetPose);
-    Logger.log("Align/AccumIntegral", m_swerve.m_alignTargetPID.getAccumulatedError());
-    Logger.log("Align/RotationVal", rotationVal);
+    DogLog.log("Align/AlignedToHub", m_swerve.alignedToTarget);
+    DogLog.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
+    DogLog.log("Align/AlignDistance", distanceToTarget);
+    DogLog.log("Align/AlignAngle", targetDegrees);
+    DogLog.log("Align/HoodAngle", HoodSubsystem.autoTargetAngle);
+    DogLog.log("Align/ShootSpeed", shooter.autoSetTargetRPM);
+    DogLog.log("Align/Passing", passing);
+    DogLog.log("Align/TargetPose", targetPose);
+    DogLog.log("Align/AccumIntegral", m_swerve.m_alignTargetPID.getAccumulatedError());
+    DogLog.log("Align/RotationVal", rotationVal);
 
   }
 

@@ -32,7 +32,6 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.Logger;
 import frc.robot.utils.ShootingData;
 import frc.robot.utils.geometry.AllianceFlipUtil;
 
@@ -159,7 +158,7 @@ public class DriveWithShootOnTheMove extends Command {
     DogLog.log("SOTM/DegreesToTarget", targetDegrees);
     DogLog.log("SOTM/RotnVal", rotationVal);
     DogLog.log("SOTM/RotnError", m_alignTargetPID.getError());    
-    Logger.log("SOTM/AlignedToHub", m_swerve.alignedToTarget);
+    DogLog.log("SOTM/AlignedToHub", m_swerve.alignedToTarget);
 
   }
 

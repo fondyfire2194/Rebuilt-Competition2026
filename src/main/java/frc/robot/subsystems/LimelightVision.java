@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -24,7 +25,6 @@ import frc.robot.Constants.CameraConstants.Cameras;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.IMUData;
 import frc.robot.utils.LimelightHelpers.RawFiducial;
-import frc.robot.utils.Logger;
 
 public class LimelightVision extends SubsystemBase {
   /** Creates a new LimelightVision. */
@@ -67,9 +67,9 @@ public class LimelightVision extends SubsystemBase {
 
   public double[] mt1TimeStampSeconds = new double[numberTagsAllowed];
 
-  public Pose2d[] mt1LastPoseSeen = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
+  public Pose2d[] mt2LastPoseSeen = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
 
-  public int[] mt1NearPoseCount = new int[numberOfAprilTagCameras];
+  public int[] mt2NearPoseCount = new int[numberOfAprilTagCameras];
 
   public int[] mt1PresetCount = new int[numberOfAprilTagCameras];
 
@@ -95,9 +95,9 @@ public class LimelightVision extends SubsystemBase {
 
   public boolean mt1PoseSet;
 
-  public boolean[] useMT2 = new boolean[numberOfAprilTagCameras];
+  public boolean useMT2;
 
-  public boolean[] useMT1 = new boolean[numberOfAprilTagCameras];
+  public boolean useMT1;
 
   private boolean showData;
 
@@ -197,47 +197,33 @@ public class LimelightVision extends SubsystemBase {
     switch (logStep) {
 
       case 0:
-        Logger.log("LLV_FrontCamMT1Pose", mt1Pose[frontCam]);
-        Logger.log("LLV_FrontCamMT2Pose", mt2Pose[frontCam]);
-        Logger.log("LLV_FrontCamMT2TagsSeen", mt2TagIDsSeen[frontCam]);
-        Logger.log("LLV_FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
-        Logger.log("LLV_FrontCamMT1TagsSeen", mt1TagIDsSeen[frontCam]);
-        Logger.log("LLV_FrontCam # MT1TagsSeen", numberMT1TagsSeen[frontCam]);
-        Logger.log("LLV_FrontCamUseMT1", useMT1[frontCam]);
-        Logger.log("LLV_FrontCamUseMT2", useMT2[frontCam]);
-        Logger.log("LLV_FrontPipeline#", LimelightHelpers.getCurrentPipelineIndex(frontName));
+        DogLog.log("LLV_FrontCamMT1Pose", mt1Pose[frontCam]);
+        DogLog.log("LLV_FrontCamMT2Pose", mt2Pose[frontCam]);
+        DogLog.log("LLV_FrontCamMT2TagsSeen", mt2TagIDsSeen[frontCam]);
+        DogLog.log("LLV_FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
+        DogLog.log("LLV_FrontCamMT1TagsSeen", mt1TagIDsSeen[frontCam]);
+        DogLog.log("LLV_FrontCam # MT1TagsSeen", numberMT1TagsSeen[frontCam]);
+        DogLog.log("LLV_FrontCamUseMT1", useMT1);
+        DogLog.log("LLV_FrontCamUseMT2", useMT2);
+        DogLog.log("LLV_FrontPipeline#", LimelightHelpers.getCurrentPipelineIndex(frontName));
         break;
 
       case 1:
-        Logger.log("LLV_LeftCamMT1Pose", mt1Pose[leftCam]);
-        Logger.log("LLV_LeftCamMT2Pose", mt2Pose[leftCam]);
-        Logger.log("LLV_LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
-        Logger.log("LLV_LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
-        Logger.log("LLV_LeftCamMT1TagsSeen", mt1TagIDsSeen[leftCam]);
-        Logger.log("LLV_LeftCam # MT1TagsSeen", numberMT1TagsSeen[leftCam]);
-        Logger.log("LLV_LeftCamUseMT1", useMT1[leftCam]);
-        Logger.log("LLV_LeftUseMT2", useMT2[leftCam]);
-        Logger.log("LLV_LeftPipeline#", LimelightHelpers.getCurrentPipelineIndex(leftName));
+        DogLog.log("LLV_LeftCamMT2Pose", mt2Pose[leftCam]);
+        DogLog.log("LLV_LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
+        DogLog.log("LLV_LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
+        DogLog.log("LLV_LeftPipeline#", LimelightHelpers.getCurrentPipelineIndex(leftName));
         break;
 
       case 2:
-        Logger.log("LLV_RightCamMT1Pose", mt1Pose[rightCam]);
-        Logger.log("LLV_RightCamMT2Pose", mt2Pose[rightCam]);
-        Logger.log("LLV_RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
-        Logger.log("LLV_RightCam # MT2TagsSeen", numberMT2TagsSeen[rightCam]);
-        Logger.log("LLV_RightCamMT1TagsSeen", mt1TagIDsSeen[rightCam]);
-        Logger.log("LLV_RightCam # MT1TagsSeen", numberMT1TagsSeen[rightCam]);
-        Logger.log("LLV_RightCamUseMT1", useMT1[rightCam]);
-        Logger.log("LLV_RightCamUseMT2", useMT2[rightCam]);
-        Logger.log("LLV_RightPipeline#", LimelightHelpers.getCurrentPipelineIndex(rightName));
+        DogLog.log("LLV_RightCamMT2Pose", mt2Pose[rightCam]);
+        DogLog.log("LLV_RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
+        DogLog.log("LLV_RightCam # MT2TagsSeen", numberMT2TagsSeen[rightCam]);
+        DogLog.log("LLV_RightPipeline#", LimelightHelpers.getCurrentPipelineIndex(rightName));
         break;
 
       case 3:
-        double totalTagsSeen = numberMT2TagsSeen[frontCam] + numberMT2TagsSeen[leftCam] + numberMT2TagsSeen[rightCam];
-        Logger.log("LLV_TotalTagsSeen", totalTagsSeen);
-        break;
 
-      case 4:
         double frontHeartbeat = getCameraHeartbeat(frontName);
         double leftHeartbeat = getCameraHeartbeat(leftName);
         double rightHeartbeat = getCameraHeartbeat(rightName);
@@ -256,6 +242,10 @@ public class LimelightVision extends SubsystemBase {
         if (rightConnected && rightCameraDisconnected.get())
           rightCameraDisconnected.close();
 
+        break;
+
+      case 4:
+        logStep = -1;
         break;
 
       default:

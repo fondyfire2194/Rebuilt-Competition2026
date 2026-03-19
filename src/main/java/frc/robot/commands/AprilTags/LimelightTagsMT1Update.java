@@ -19,11 +19,6 @@ public class LimelightTagsMT1Update extends Command {
     private final CommandSwerveDrivetrain m_swerve;
     private final LimelightVision m_llv;
     boolean rejectMT1Update;
-    // private Pose2d lastPoseSeen = new Pose2d();
-    private double xTolerance = .1;
-    private double yTolerance = .1;
-    private double rotTolerance = 5;
-    // private int nearPoseCount;
     LimelightHelpers.PoseEstimate mt1 = new PoseEstimate();
 
     private int m_cameraIndex;
@@ -57,15 +52,9 @@ public class LimelightTagsMT1Update extends Command {
             m_llv.getMT1TagIDsSeen(m_cameraIndex, mt1.rawFiducials);
         }
 
-        if (m_llv.useMT1[m_cameraIndex]) {
-            if (poseNearLastPose(m_llv.mt1LastPoseSeen[m_cameraIndex], mt1.pose)) {
-                m_llv.mt1NearPoseCount[m_cameraIndex]++;
-            } else
-                m_llv.mt1NearPoseCount[m_cameraIndex] = 0;
-            m_llv.mt1LastPoseSeen[m_cameraIndex] = mt1.pose;
+        if (m_llv.useMT1 && m_cameraIndex == 0) {
 
-            rejectMT1Update = m_llv.mt1NearPoseCount[m_cameraIndex] < 10
-                    || !inFieldCheck(mt1.pose)
+            rejectMT1Update = !inFieldCheck(mt1.pose)
                     || mt1.tagCount == 0
                     || mt1.tagCount == 1
                             && mt1.rawFiducials.length == 1
@@ -74,11 +63,11 @@ public class LimelightTagsMT1Update extends Command {
 
             if (!rejectMT1Update) {
                 m_llv.mt1PresetCount[m_cameraIndex]++;
-                if (!m_llv.useMT2[m_cameraIndex] && m_llv.mt1PresetCount[m_cameraIndex] >= m_llv.presetLimit) {
-                    m_llv.useMT2[m_cameraIndex] = true;
-                    m_llv.useMT1[m_cameraIndex] = false;
+                if (!m_llv.useMT2 && m_llv.mt1PresetCount[m_cameraIndex] >= m_llv.presetLimit) {
+                    m_llv.useMT2 = true;
+                    m_llv.useMT1 = false;
                 }
-                if (m_llv.useMT2[m_cameraIndex])
+                if (m_llv.useMT2)
                     m_llv.mt1PresetCount[m_cameraIndex] = 0;
 
                 m_swerve.setVisionMeasurementStdDevs(
@@ -112,11 +101,4 @@ public class LimelightTagsMT1Update extends Command {
         return inLength && inWidth;
     }
 
-    public boolean poseNearLastPose(Pose2d pose, Pose2d lastPose) {
-        boolean xInTolerance = Math.abs(pose.getX() - lastPose.getX()) < xTolerance;
-        boolean yInTolerance = Math.abs(pose.getY() - lastPose.getY()) < yTolerance;
-        boolean rotInTolerance = Math
-                .abs(pose.getRotation().getDegrees() - lastPose.getRotation().getDegrees()) < rotTolerance;
-        return xInTolerance && yInTolerance && rotInTolerance;
-    }
 }

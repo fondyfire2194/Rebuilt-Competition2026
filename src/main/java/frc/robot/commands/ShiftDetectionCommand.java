@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import java.util.Optional;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
@@ -13,8 +14,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.AddressableLEDSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
-import frc.robot.utils.Logger;
-
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class ShiftDetectionCommand extends Command {
   /** Creates a new ShiftDetectionCommand. */
@@ -71,12 +70,12 @@ public class ShiftDetectionCommand extends Command {
     m_leds.inEndGame = getInEndGame();
     m_leds.endOfMatch = endOfMatch();
 
-    Logger.log("SHDET/HubActive", m_shooter.hubIsActive);
-    Logger.log("SHDET/MatchTime", matchTime);
-    Logger.log("SHDET/ShiftNum", shiftNumber);
-    Logger.log("SHDET/BLUEFIRST", blueActiveFirst);
-    Logger.log("SHDET/TimeLeftInShift", timeLeftInShift);
-    Logger.log("EndOfMatch", endOfMatch());
+    // DogLog.log("SHDET/HubActive", m_shooter.hubIsActive);
+    // DogLog.log("SHDET/MatchTime", matchTime);
+    // DogLog.log("SHDET/ShiftNum", shiftNumber);
+    // DogLog.log("SHDET/BLUEFIRST", blueActiveFirst);
+    // DogLog.log("SHDET/TimeLeftInShift", timeLeftInShift);
+    // DogLog.log("EndOfMatch", endOfMatch());
   }
 
   // Called once the command ends or is interrupted.
