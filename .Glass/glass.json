@@ -1,0 +1,30 @@
+{
+  "NetworkTables": {
+    "transitory": {
+      "CameraPublisher": {
+        "open": true
+      }
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/Pose": "Field2d",
+      "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Module 0": "Mechanism2d",
+      "/SmartDashboard/Module 1": "Mechanism2d",
+      "/SmartDashboard/Module 2": "Mechanism2d",
+      "/SmartDashboard/Module 3": "Mechanism2d",
+      "/SmartDashboard/PPAutoChooser": "String Chooser",
+      "/SmartDashboard/PathPlanner": "Alerts"
+    }
+  },
+  "NetworkTables Info": {
+    "Server": {
+      "open": true
+    },
+    "visible": true
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "10.21.94.2"
+  }
+}

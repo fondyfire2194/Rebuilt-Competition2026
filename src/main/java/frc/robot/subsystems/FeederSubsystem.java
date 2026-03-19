@@ -15,6 +15,7 @@ import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
@@ -104,15 +105,18 @@ public class FeederSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
-    Logger.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
-    Logger.log("Feeder/RollerTargetRPM", closedLoopController.getSetpoint());
-    Logger.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
-    Logger.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+    if (DriverStation.isEnabled()) {
 
-    Logger.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
-    Logger.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
-    Logger.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+      // This method will be called once per scheduler run
+      Logger.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
+      Logger.log("Feeder/RollerTargetRPM", closedLoopController.getSetpoint());
+      Logger.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
+      Logger.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+
+      Logger.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
+      Logger.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
+      Logger.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+    }
 
   }
 

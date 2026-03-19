@@ -12,6 +12,7 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -140,11 +141,12 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-
+ if (DriverStation.isEnabled()) {
+    
     Logger.log("Intake/MotorRPM", intakeMotor.getEncoder().getVelocity());
     Logger.log("Intake/MotorAmps", intakeMotor.getOutputCurrent());
     Logger.log("Intake/MotorVolts", intakeMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
-
+ }
   }
 
 }

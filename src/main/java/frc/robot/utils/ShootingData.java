@@ -53,12 +53,12 @@ public class ShootingData {
         // hoodAngleMap.put(4.35, Rotation2d.fromDegrees(14.0));
         // hoodAngleMap.put(4.84, Rotation2d.fromDegrees(15.0));
 
-        shooterSpeedMap.put(1.73, 2600.0);
-        shooterSpeedMap.put(2.3, 2800.0);
-        shooterSpeedMap.put(3., 3000.0);
-        shooterSpeedMap.put(4.33, 3500.0);
-        shooterSpeedMap.put(5.04, 3800.0);
-        shooterSpeedMap.put(6., 4100.);
+        shooterSpeedMap.put(1.73, 2600.0 * 1.05);
+        shooterSpeedMap.put(2.3, 2800.0 * 1.05);
+        shooterSpeedMap.put(3., 3000.0 * 1.05);
+        shooterSpeedMap.put(4.33, 3500.0 * 1.05);
+        shooterSpeedMap.put(5.04, 3800.0 * 1.05);
+        shooterSpeedMap.put(6., 4100. * 1.05);
 
         // shooterSpeedMap.put(2.70, 3500.0);
         // shooterSpeedMap.put(2.94, 3850.0);

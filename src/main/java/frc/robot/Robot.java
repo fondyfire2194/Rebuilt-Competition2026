@@ -91,7 +91,7 @@ public class Robot extends TimedRobot {
 
                 autoHasRun = false;
                 m_robotContainer.m_llv.setDefaultLLPipelines();
-                runFrontTagUpdateCommands(false, false, false, false);
+                runFrontTagUpdateCommands(true, true, true, true);
                 runLeftTagUpdateCommands(true, false, false, false);
                 runRightTagUpdateCommands(true, false, false, false);
 

@@ -24,6 +24,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -53,8 +54,8 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   private static double kDt = 0.02;
 
-  private static double kMaxTrapVelocity = Math.toRadians(100.);
-  private static double kMaxTrapAcceleration = Math.toRadians(250);
+  private static double kMaxTrapVelocity = Math.toRadians(200.);
+  private static double kMaxTrapAcceleration = Math.toRadians(500);
 
   private DoubleSubscriber kp;
   private DoubleSubscriber ki;
@@ -67,10 +68,10 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   public ProfiledPIDController m_controller;
   private ArmFeedforward m_feedforward;
 
-  public static Angle maxAngle = Degree.of(120);
-  public static Angle minAngle = Degree.of(-10);
-  public static Angle zeroOffsetAngle = Degrees.of(60);
-  public Angle intakingAngle = Degree.of(100);
+  public static Angle maxAngle = Degree.of(100);
+  public static Angle minAngle = Degree.of(5);
+  public static Angle zeroOffsetAngle = Degrees.of(65);
+  public Angle intakingAngle = Degree.of(95);
 
   public Angle homeAngle = Degree.of(0);
   public Angle midUpAngle = Degree.of(30);
@@ -79,8 +80,8 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   private Debouncer stallDebouncer = new Debouncer(.5);
 
-  private double ks = .1;
-  private double kg = 0;
+  private double ks = .2;
+  private double kg = 0.5;
   private double kv = 12 / maxArmRadiansPerSec;
 
   public boolean showData;
@@ -116,7 +117,7 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
     intakeArmMotor.getEncoder().setPosition(homeAngle.in(Radians));
 
-    kp = DogLog.tunable("IntakeArm/PGain", .03, newKp -> m_controller.setP(newKp));
+    kp = DogLog.tunable("IntakeArm/PGain", 8., newKp -> m_controller.setP(newKp));
     ki = DogLog.tunable("IntakeArm/IGain", .0, newKi -> m_controller.setI(newKi));
     kd = DogLog.tunable("IntakeArm/DGain", .0, newKd -> m_controller.setI(newKd));
     m_controller = new ProfiledPIDController(kp.get(), ki.get(), kd.get(), m_constraints, kDt);
@@ -143,37 +144,44 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
     builder.addDoubleProperty("Motor Amps", () -> intakeArmMotor.getOutputCurrent(), null);
     builder.addDoubleProperty("ActualPosition", () -> getIntakeArmAngle().in(Degrees), null);
     builder.addDoubleProperty("GoalPosition", () -> m_controller.getGoal().position, null);
-    builder.addDoubleProperty("Velocity", () -> getIntakeArmVelocity().in(DegreesPerSecond), null);
+    builder.addDoubleProperty("Velocity", () -> intakeArmMotor.getEncoder().getVelocity(), null);
     builder.addBooleanProperty("AtFwdSoftLimit", () -> getForwardSoftLimit(intakeArmMotor), null);
     builder.addBooleanProperty("AtRevSoftLimit", () -> getReverseSoftLimit(intakeArmMotor), null);
 
   }
 
   public void periodic() {
-
-    Logger.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
-    Logger.log("IntakeArm/CurrentAngle", getIntakeArmAngle());
-    Logger.log("IntakeArm/AngleError", m_controller.getPositionError());
-    Logger.log("IntakeArm/AtTarget", m_controller.atGoal());
-    Logger.log("IntakeArm/LeaderAmps", intakeArmMotor.getOutputCurrent());
-
+    Logger.log("IntakeArm/CurrentAngle", getIntakeArmAngle().in(Degrees));
+    Logger.log("IntakeArm/Encoder", intakeArmMotor.getEncoder().getPosition());
+    Logger.log("IntakeArm/EncoderVel", intakeArmMotor.getEncoder().getVelocity());
+    Logger.log("IntakeArm/MotorVolts", intakeArmMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+    Logger.log("IntakeArm/FollowerEncoder", intakeArmMotorFollower.getEncoder().getPosition());
     Logger.log("IntakeArm/FwdSoftLimit", intakeArmMotor.getForwardSoftLimit().isReached());
     Logger.log("IntakeArm/RevSoftLimit", intakeArmMotor.getReverseSoftLimit().isReached());
 
+    if (DriverStation.isEnabled()) {
+
+      Logger.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
+      Logger.log("IntakeArm/AngleError", m_controller.getPositionError());
+      Logger.log("IntakeArm/AtTarget", m_controller.atGoal());
+      Logger.log("IntakeArm/LeaderAmps", intakeArmMotor.getOutputCurrent());
+      Logger.log("IntakeArm/FollowerAmps", intakeArmMotorFollower.getOutputCurrent());
+
+
+    }
   }
 
   public void simulationPeriodic() {
 
   }
 
-  public Command helpShootCommand(double preWait, double pauseBetween) {
-    return Commands.waitSeconds(preWait)
-        .andThen(
-            Commands.sequence(
-                intakeArmToMidDownAngleCommand(),
-                Commands.waitSeconds(pauseBetween),
-                intakeArmToMidUpAngleCommand(),
-                Commands.waitSeconds(pauseBetween)))
+  public Command helpShootCommand(double pauseBetween) {
+
+    return Commands.sequence(
+        intakeArmToMidDownAngleCommand(),
+        Commands.waitSeconds(pauseBetween),
+        intakeArmToMidUpAngleCommand(),
+        Commands.waitSeconds(pauseBetween))
         .repeatedly();
   }
 
@@ -204,8 +212,8 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   }
 
   public void positionIntakeArm() {
-    double ff = m_feedforward.calculate((getIntakeArmAngle().in(Radians) - zeroOffsetAngle.in(Radians)),
-        m_controller.getSetpoint().velocity);
+    double ff =0;// m_feedforward.calculate((getIntakeArmAngle().in(Radians) - zeroOffsetAngle.in(Radians)),
+     //   m_controller.getSetpoint().velocity);
     double pidout = m_controller.calculate(getIntakeArmAngle().in(Radians));
     intakeArmMotor.setVoltage(ff + pidout);
   }

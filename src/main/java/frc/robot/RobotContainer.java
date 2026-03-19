@@ -163,7 +163,7 @@ public class RobotContainer {
                                                 .withRotationalRate(
                                                                 -driver.getRightX() * RobotConstants.MaxAngularRate)));
 
-                // m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
+                m_intakeArm.setDefaultCommand(m_intakeArm.positionIntakeArmCommand());
 
                 m_hood.setDefaultCommand(m_hood.positionHoodCommand());
         }
@@ -186,7 +186,8 @@ public class RobotContainer {
                 driver.leftTrigger().whileTrue(
                                 Commands.parallel(
                                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false),
-                                                m_intakeArm.helpShootCommand(10, 3)));
+                                                Commands.sequence(Commands.waitSeconds(5),
+                                                                m_intakeArm.helpShootCommand( 1))));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
@@ -250,14 +251,18 @@ public class RobotContainer {
                 codriver.start().and(codriver.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
                 codriver.start().and(codriver.povRight()).onTrue(Commands.runOnce(() -> SignalLogger.stop()));
 
-                codriver.leftBumper().onTrue(m_shooter.stopAllShootersCommand());
-
-                codriver.rightBumper()
+                codriver.leftBumper()
                                 .whileTrue(m_intakeArm.jogIntakeArmCommand(() -> codriver.getLeftX() / 4));
 
-                // codriver.rightBumper().and(codriver.y()).onTrue(m_intakeArm.intakeArmToClearAngleCommand());
+                codriver.rightBumper().and(codriver.y()).onTrue(m_intakeArm.intakeArmToClearAngleCommand());
 
-                // codriver.rightBumper().and(codriver.a()).onTrue(m_intakeArm.intakeArmToIntakeAngleCommand());
+                codriver.rightBumper().and(codriver.a()).onTrue(m_intakeArm.intakeArmToIntakeAngleCommand());
+
+                codriver.rightBumper().and(codriver.b()).onTrue(m_intakeArm.intakeArmToMidUpAngleCommand());
+
+                codriver.rightBumper().and(codriver.x()).onTrue(m_intakeArm.intakeArmToMidDownAngleCommand());
+
+                codriver.rightBumper().and(codriver.povUp()).whileTrue(m_intakeArm.helpShootCommand( 1));
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
@@ -460,7 +465,7 @@ public class RobotContainer {
                                                                                 new ShootCommand(m_shooter, m_hood,
                                                                                                 m_feeder, drivetrain,
                                                                                                 false),
-                                                                                m_intakeArm.helpShootCommand(10, 3))
+                                                                                m_intakeArm.helpShootCommand( 1))
                                                                                 .finallyDo((() -> stopShootersFeedersIntake()))));
 
         }

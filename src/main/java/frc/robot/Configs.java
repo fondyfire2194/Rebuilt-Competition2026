@@ -99,9 +99,9 @@ public final class Configs {
       // Configure basic settings of the arm motor
 
       armConfig1
-          .inverted(false)
+          .inverted(true)
           .idleMode(IdleMode.kBrake)
-          .smartCurrentLimit(60);
+          .smartCurrentLimit(40);
 
       armConfig1.encoder
           .positionConversionFactor(Intake4BarArmSubsystem.positionConversionFactor)

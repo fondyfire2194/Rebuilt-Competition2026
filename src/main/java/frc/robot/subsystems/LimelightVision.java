@@ -218,7 +218,6 @@ public class LimelightVision extends SubsystemBase {
         Logger.log("LLV_LeftCamUseMT1", useMT1[leftCam]);
         Logger.log("LLV_LeftUseMT2", useMT2[leftCam]);
         Logger.log("LLV_LeftPipeline#", LimelightHelpers.getCurrentPipelineIndex(leftName));
-
         break;
 
       case 2:
@@ -231,7 +230,6 @@ public class LimelightVision extends SubsystemBase {
         Logger.log("LLV_RightCamUseMT1", useMT1[rightCam]);
         Logger.log("LLV_RightCamUseMT2", useMT2[rightCam]);
         Logger.log("LLV_RightPipeline#", LimelightHelpers.getCurrentPipelineIndex(rightName));
-
         break;
 
       case 3:

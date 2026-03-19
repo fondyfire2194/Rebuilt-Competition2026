@@ -89,9 +89,9 @@ public class AddressableLEDSubsystem extends SubsystemBase {
   public boolean currentAllianceShootActive;
 
   public AddressableLEDSubsystem() {
-    // PWM port 9
+    // PWM port 
     // Must be a PWM header, not MXP or DIO
-    m_led = new AddressableLED(9);
+    m_led = new AddressableLED(0);
     m_ledBuffer = new AddressableLEDBuffer(60);
     m_led.setLength(m_ledBuffer.getLength());
 

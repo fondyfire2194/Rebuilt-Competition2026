@@ -16,6 +16,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -219,15 +220,20 @@ public class HoodSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.log("Hood/FinalTargetAngle", finalTargetAngle);
-        Logger.log("Hood/ManualTargetAngle", manualTargetAngle);
-        Logger.log("Hood/AutoTargetAngle", autoTargetAngle);
-        Logger.log("Hood/UseAutoTarget", isHoodUsingDistance());
+
         Logger.log("Hood/CurrentAngle", getHoodAngle());
-        Logger.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
-        Logger.log("Hood/AtTarget", isPositionWithinTolerance());
-        Logger.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
-        Logger.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
+
+        if (DriverStation.isEnabled()) {
+
+            Logger.log("Hood/FinalTargetAngle", finalTargetAngle);
+            Logger.log("Hood/ManualTargetAngle", manualTargetAngle);
+            Logger.log("Hood/AutoTargetAngle", autoTargetAngle);
+            Logger.log("Hood/UseAutoTarget", isHoodUsingDistance());
+            Logger.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
+            Logger.log("Hood/AtTarget", isPositionWithinTolerance());
+            Logger.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
+            Logger.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
+        }
 
     }
 

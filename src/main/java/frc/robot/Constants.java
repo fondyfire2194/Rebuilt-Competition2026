@@ -327,8 +327,8 @@ public final class Constants {
 
   public static final class IntakeSetpoints {
     public static final double kJogIntake = 0.25;
-    public static final double kIntake = 0.4;
-    public static final double kExtake = -0.4;
+    public static final double kIntake = .99;
+    public static final double kExtake = -0.9;
   }
 
   public static final class FeederSetpoints {

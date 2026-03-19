@@ -30,6 +30,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -344,18 +345,19 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
 
-    if (alternate) {
+    Logger.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
+    Logger.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
+    Logger.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
 
-      Logger.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
-      Logger.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
-      Logger.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
+    if (DriverStation.isEnabled() && alternate) {
       Logger.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
       Logger.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
       Logger.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
       Logger.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
       Logger.log("Shooter/UseDistForRPM", isShootUsingDistance());
 
-    } else {
+    }
+    if (DriverStation.isEnabled() && !alternate) {
 
       Logger.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
       Logger.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
