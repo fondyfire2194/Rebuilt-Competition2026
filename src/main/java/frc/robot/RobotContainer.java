@@ -429,10 +429,8 @@ public class RobotContainer {
                                                 m_hood.setManualTargetCommand(
                                                                 ShootingData.hoodAngleMap.get(distance).getDegrees()))
 
-                              
                                                 .andThen(
-                                                                Commands.parallel(m_shooter
-                                                                                .runAllVelocityVoltageCommand(),
+                                                                Commands.parallel(
                                                                                 new ShootCommand(m_shooter, m_hood,
                                                                                                 m_feeder, drivetrain,
                                                                                                 true),
