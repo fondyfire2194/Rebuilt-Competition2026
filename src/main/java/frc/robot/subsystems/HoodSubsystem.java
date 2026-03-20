@@ -40,6 +40,8 @@ public class HoodSubsystem extends SubsystemBase {
 
     public void setManualTargetAngle(double manualTargetAngle) {
         HoodSubsystem.manualTargetAngle = manualTargetAngle;
+         HoodSubsystem.finalTargetAngle = manualTargetAngle;
+        
     }
 
     public static double getAutoTargetAngle() {
@@ -184,7 +186,7 @@ public class HoodSubsystem extends SubsystemBase {
     public Command setManualTargetCommand(double position) {
         return Commands.sequence(
                 Commands.runOnce(() -> setManualTargetAngle(position)),
-                Commands.runOnce(() -> setAutoTargetAngle(position)));
+                Commands.runOnce(() -> setFinalTargetAngle(position)));
     }
 
     public double getHoodAngle() {
