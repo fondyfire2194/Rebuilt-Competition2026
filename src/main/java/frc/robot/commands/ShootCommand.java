@@ -25,6 +25,7 @@ public class ShootCommand extends Command {
   private Timer beltTimer = new Timer();
   private boolean okToShoot;
   private boolean lookForPulse;
+  private int shootRunning;
 
   public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
       CommandSwerveDrivetrain swerve, boolean bypassAlign) {
@@ -42,18 +43,20 @@ public class ShootCommand extends Command {
     okToShoot = false;
     beltTimer.start();
     lookForPulse = false;
+    shootRunning=0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-
+shootRunning++;
     m_shooter.runAllVelocityVoltage();
 
     DogLog.log("Shoot/OKTOShoot", okToShoot);
-    DogLog.log("Shoot/ShootersAtSpeedt", m_shooter.allVelocityInTolerance());
+    DogLog.log("Shoot/ShootersAtSpeed", m_shooter.allVelocityInTolerance());
     DogLog.log("Shoot/HoodAtTarget", m_hood.isPositionWithinTolerance());
     DogLog.log("Shoot/Aligned", m_swerve.alignedToTarget);
+ DogLog.log("Shoot/Running", shootRunning);
 
     m_shooter.bypassShootInterlocks = m_bypassAlign;
 

@@ -114,8 +114,11 @@ public class TripleShooterSubsystem extends SubsystemBase {
     return shooterIsRunning;
   }
 
-  public void setShooterIsRunning(boolean shooterIsRunning) {
-    this.shooterIsRunning = shooterIsRunning;
+  public void setShooterIsRunning() {
+    this.shooterIsRunning = true;
+  }
+   public void resetShooterIsRunning() {
+    this.shooterIsRunning = false;
   }
 
   private boolean alternate;
@@ -228,7 +231,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public Command stopAllShootersCommand() {
     return Commands.sequence(
-        runOnce(() -> setShooterIsRunning(false)),
+        runOnce(() -> resetShooterIsRunning()),
         runOnce(() -> stopVelocityVoltage(leftMotor)),
         runOnce(() -> stopVelocityVoltage(middleMotor)),
         runOnce(() -> stopVelocityVoltage(rightMotor)));

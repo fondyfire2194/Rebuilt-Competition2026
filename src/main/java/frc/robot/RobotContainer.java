@@ -209,9 +209,9 @@ public class RobotContainer {
 
                 driver.y().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
 
-                driver.b().whileTrue(presetShoot(trenchPresetDistance));
+                driver.b().onTrue(presetShoot(trenchPresetDistance));
 
-                driver.x().whileTrue(presetShoot(towerPresetDistance));
+                driver.x().onTrue(presetShoot(towerPresetDistance));
 
                 driver.a().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMaxPosition.in(Degrees)));
 
@@ -219,13 +219,13 @@ public class RobotContainer {
 
                 driver.povDown().onTrue(m_shooter.changeFinalTargetVelocityCommand(-100));
 
-                driver.povLeft().onTrue(
-                                new DeferredCommand(() -> Commands.either(
-                                                Commands.parallel(m_shooter.setShootUsingDistanceCommand(false),
-                                                                m_hood.setHoodUsingDistanceCommand(false)),
-                                                Commands.parallel(m_shooter.setShootUsingDistanceCommand(true),
-                                                                m_hood.setHoodUsingDistanceCommand(false)),
-                                                () -> m_shooter.isShootUsingDistance()), Set.of()));
+                driver.povLeft().onTrue(Commands.none());
+                // new DeferredCommand(() -> Commands.either(
+                // Commands.parallel(m_shooter.setShootUsingDistanceCommand(false),
+                // m_hood.setHoodUsingDistanceCommand(false)),
+                // Commands.parallel(m_shooter.setShootUsingDistanceCommand(true),
+                // m_hood.setHoodUsingDistanceCommand(false)),
+                // () -> m_shooter.isShootUsingDistance()), Set.of()));
 
                 driver.povRight().onTrue(Commands.none());
 
@@ -240,12 +240,13 @@ public class RobotContainer {
         private void configureCodriverBindings() {
                 // Run SysId routines when holding back/start and X/Y.
                 // Note that each routine should be run exactly once in a single log.
-                codriver.back().and(codriver.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-                codriver.back().and(codriver.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+                // codriver.back().and(codriver.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+                // codriver.back().and(codriver.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
 
-                codriver.start().and(codriver.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-                codriver.start().and(codriver.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-                codriver.start().and(codriver.povRight()).onTrue(Commands.runOnce(() -> SignalLogger.stop()));
+                // codriver.start().and(codriver.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+                // codriver.start().and(codriver.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+                // codriver.start().and(codriver.povRight()).onTrue(Commands.runOnce(() ->
+                // SignalLogger.stop()));
 
                 codriver.leftBumper()
                                 .whileTrue(m_intakeArm.jogIntakeArmCommand(() -> codriver.getLeftX() / 4));
@@ -430,7 +431,8 @@ public class RobotContainer {
                                                                 ShootingData.hoodAngleMap.get(distance).getDegrees()))
 
                                                 .andThen(
-                                                                Commands.parallel(
+                                                                Commands.deadline(
+                                                                                Commands.waitSeconds(10),
                                                                                 new ShootCommand(m_shooter, m_hood,
                                                                                                 m_feeder, drivetrain,
                                                                                                 true),
