@@ -17,6 +17,7 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -135,8 +136,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     NetworkTableInstance rob = NetworkTableInstance.getDefault();
     private final NetworkTable robotTable = rob.getTable("RobotPose");
 
-    private final StructPublisher<Pose2d> robotPose = robotTable.getStructTopic("RobotPose", Pose2d.struct)
-            .publish();
+    
     public Pose2d projectedOnTheMoveShootPose = new Pose2d();
     public Rotation2d projectedOnTheMoveShootAngle = new Rotation2d();
     public Rotation2d bumpr2d;
@@ -301,7 +301,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     @Override
     public void periodic() {
-         robotPose.accept(getState().Pose);
+         DogLog.log("RobotPose",getState().Pose);
 
         /*
          * Periodically try to apply the operator perspective.
