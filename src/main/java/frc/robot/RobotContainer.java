@@ -432,7 +432,7 @@ public class RobotContainer {
 
                                                 .andThen(
                                                                 Commands.deadline(
-                                                                                Commands.waitSeconds(10),
+                                                                                Commands.waitSeconds(8),
                                                                                 new ShootCommand(m_shooter, m_hood,
                                                                                                 m_feeder, drivetrain,
                                                                                                 true),
