@@ -100,7 +100,7 @@ public final class Configs {
 
       armConfig1
           .inverted(true)
-          .idleMode(IdleMode.kBrake)
+          .idleMode(IdleMode.kCoast)
           .smartCurrentLimit(40);
 
       armConfig1.encoder
@@ -118,7 +118,7 @@ public final class Configs {
 
     static {
       armConfig2
-          .idleMode(IdleMode.kBrake)
+          .idleMode(IdleMode.kCoast)
           .smartCurrentLimit(60);
       armConfig2
           .follow(CANIDConstants.intakeArmID,true);

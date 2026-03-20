@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -20,19 +21,19 @@ public class ShootCommand extends Command {
   private final HoodSubsystem m_hood;
   private final FeederSubsystem m_feeder;
   private final CommandSwerveDrivetrain m_swerve;
-  private boolean m_bypassInterlocks;
+  private boolean m_bypassAlign;
   private Timer beltTimer = new Timer();
   private boolean okToShoot;
   private boolean lookForPulse;
 
   public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
-      CommandSwerveDrivetrain swerve, boolean bypassInterlocks) {
+      CommandSwerveDrivetrain swerve, boolean bypassAlign) {
     // Use addRequirements() here to declare subsystem dependencies.
     m_shooter = shooter;
     m_hood = hood;
     m_feeder = feeder;
     m_swerve = swerve;
-    m_bypassInterlocks = bypassInterlocks;
+    m_bypassAlign = bypassAlign;
   }
 
   // Called when the command is initially scheduled.
@@ -47,11 +48,17 @@ public class ShootCommand extends Command {
   @Override
   public void execute() {
 
-    m_shooter.bypassShootInterlocks = m_bypassInterlocks;
+    m_shooter.runAllVelocityVoltage();
 
-    if (m_shooter.bypassShootInterlocks
-        || (m_shooter.allVelocityInTolerance()
-            && m_hood.isPositionWithinTolerance() && (m_swerve.alignedToTarget))) {
+    DogLog.log("Shoot/OKTOShoot", okToShoot);
+    DogLog.log("Shoot/ShootersAtSpeedt", m_shooter.allVelocityInTolerance());
+    DogLog.log("Shoot/HoodAtTarget", m_hood.isPositionWithinTolerance());
+    DogLog.log("Shoot/Aligned", m_swerve.alignedToTarget);
+
+    m_shooter.bypassShootInterlocks = m_bypassAlign;
+
+    if ((m_shooter.allVelocityInTolerance()
+        && m_hood.isPositionWithinTolerance() && (m_swerve.alignedToTarget || m_shooter.bypassShootInterlocks))) {
       okToShoot = true;
     }
 
@@ -65,16 +72,16 @@ public class ShootCommand extends Command {
       {
 
         // if (!lookForPulse && beltTimer.get() > m_feeder.beltInitialShootTime) {
-        //   lookForPulse = true;
-        //   beltTimer.reset();
+        // lookForPulse = true;
+        // beltTimer.reset();
         // }
 
         // if (lookForPulse && beltTimer.get() > m_feeder.beltStartPulseTime)
-        //   m_feeder.pulse = true;
+        // m_feeder.pulse = true;
 
         // if (lookForPulse && beltTimer.get() > m_feeder.beltStopPulseTime) {
-        //   m_feeder.pulse = false;
-        //   beltTimer.reset();
+        // m_feeder.pulse = false;
+        // beltTimer.reset();
         // }
 
         m_feeder.pulse = false;// force no belt reverse pulse

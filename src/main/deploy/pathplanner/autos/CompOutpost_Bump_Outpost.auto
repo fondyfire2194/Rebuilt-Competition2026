@@ -13,7 +13,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.5
+            "waitTime": 0.1
           }
         },
         {
@@ -25,13 +25,13 @@
         {
           "type": "named",
           "data": {
-            "name": "START_SHOOTERS"
+            "name": "ALIGN_AND_START_SHOOT"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "ALIGN_AND_SHOOT"
+            "name": "SHOOT"
           }
         }
       ]

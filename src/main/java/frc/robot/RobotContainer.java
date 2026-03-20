@@ -372,19 +372,21 @@ public class RobotContainer {
 
         private void registerNamedCommands() {
 
-                NamedCommands.registerCommand("START_SHOOTERS", m_shooter.runAllVelocityVoltageCommand());
+                NamedCommands.registerCommand("SHOOT",
 
-                NamedCommands.registerCommand("ALIGN_AND_SHOOT",
-                                Commands.deadline(
-                                                Commands.waitSeconds(5),
-                                                new AutoAlignHub(drivetrain, m_shooter, m_hood, 1),
-                                                Commands.parallel(
-                                                                new ShootCommand(m_shooter, m_hood, m_feeder,
-                                                                                drivetrain, false),
-                                                                Commands.sequence(
-                                                                                Commands.waitSeconds(5),
-                                                                                m_intakeArm.helpShootCommand(1))))
+                                Commands.deadline(Commands.waitSeconds(10),
+                                                new ShootCommand(m_shooter, m_hood,
+                                                                m_feeder,
+                                                                drivetrain, false),
+                                                Commands.sequence(
+                                                                Commands.waitSeconds(2),
+                                                                m_intakeArm.helpShootCommand(
+                                                                                .5)))
                                                 .andThen(stopShootersFeedersIntake()));
+
+                NamedCommands.registerCommand("ALIGN_AND_START_SHOOT",
+                                // Commands.sequence(m_shooter.runAllVelocityVoltageCommand(),
+                                new AutoAlignHub(drivetrain, m_shooter, m_hood, 2));
 
         }
 
@@ -396,8 +398,8 @@ public class RobotContainer {
                 EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
                 runIntake.onTrue(
                                 Commands.sequence(
-                                                m_intake.startIntakeCommand(),
-                                                m_intakeArm.intakeArmToIntakeAngleCommand()));
+                                                m_intakeArm.intakeArmToIntakeAngleCommand(),
+                                                m_intake.startIntakeCommand()));
 
                 EventTrigger endIntake = new EventTrigger("END_INTAKE");
                 endIntake.onTrue(m_intake.stopIntakeCommand());
@@ -425,16 +427,15 @@ public class RobotContainer {
                                                 m_shooter.setManualTargetVelocityCommand(
                                                                 RPM.of(ShootingData.shooterSpeedMap.get(distance))),
                                                 m_hood.setManualTargetCommand(
-                                                                ShootingData.hoodAngleMap.get(distance).getDegrees())),
-                                m_shooter.runAllVelocityVoltageCommand(),
-                                Commands.waitUntil(
-                                                () -> m_shooter.allVelocityInTolerance()
-                                                                && m_hood.isPositionWithinTolerance())
+                                                                ShootingData.hoodAngleMap.get(distance).getDegrees()))
+
+                              
                                                 .andThen(
-                                                                Commands.parallel(
+                                                                Commands.parallel(m_shooter
+                                                                                .runAllVelocityVoltageCommand(),
                                                                                 new ShootCommand(m_shooter, m_hood,
                                                                                                 m_feeder, drivetrain,
-                                                                                                false),
+                                                                                                true),
                                                                                 Commands.sequence(
                                                                                                 Commands.waitSeconds(5),
                                                                                                 m_intakeArm.helpShootCommand(
@@ -466,6 +467,7 @@ public class RobotContainer {
 
         public Command stopShootersFeedersIntake() {
                 return Commands.sequence(
+                                m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)),
                                 m_shooter.stopAllShootersCommand(),
                                 m_feeder.stopFeederRollerCommand(),
                                 m_feeder.stopFeederBeltCommand(),

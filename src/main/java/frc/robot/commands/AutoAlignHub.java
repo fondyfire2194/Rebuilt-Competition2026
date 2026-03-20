@@ -13,6 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DigitalGlitchFilter;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.RobotConstants;
@@ -37,6 +38,7 @@ public class AutoAlignHub extends Command {
   private double lastTargetDegrees;
 
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
+  private int alignedCounter;
 
   public AutoAlignHub(
       CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, HoodSubsystem hood, double toleranceDegrees) {
@@ -62,7 +64,7 @@ public class AutoAlignHub extends Command {
     elapsedTime = new Timer();
     elapsedTime.reset();
     elapsedTime.start();
-
+    alignedCounter = 0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -74,6 +76,7 @@ public class AutoAlignHub extends Command {
     distanceToTarget = targetPose.getTranslation()
         .getDistance(robotPose.getTranslation());
 
+   // distanceToTarget = 2.;
     m_shooter.setAutoSetTargetRPM(ShootingData.shooterSpeedMap.get(distanceToTarget));
 
     m_hood.setAutoTargetAngle(ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
@@ -84,7 +87,7 @@ public class AutoAlignHub extends Command {
       m_swerve.m_alignTargetPID.setSetpoint(targetDegrees);
       lastTargetDegrees = targetDegrees;
     }
-    
+
     if (m_swerve.alignedToTarget || Math.abs(m_swerve.m_alignTargetPID.getError()) > m_swerve.alignIzone) {
       m_swerve.m_alignTargetPID.setIntegratorRange(0, 0);
     } else
@@ -99,6 +102,11 @@ public class AutoAlignHub extends Command {
         .withRotationalRate(rotationVal * MaxAngularRate));
 
     m_swerve.alignedToTarget = Math.abs(m_swerve.m_alignTargetPID.getError()) < m_toleranceDegrees;
+
+    if (m_swerve.alignedToTarget) {
+      alignedCounter++;
+    } else
+      alignedCounter = 0;
 
     DogLog.log("Align/AlignedToHub", m_swerve.alignedToTarget);
     DogLog.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
@@ -125,7 +133,7 @@ public class AutoAlignHub extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return m_swerve.alignedToTarget && alignedCounter > 25;
   }
 
   public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {

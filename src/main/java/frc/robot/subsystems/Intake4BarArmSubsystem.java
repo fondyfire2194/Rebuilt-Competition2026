@@ -53,7 +53,7 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   private static double kDt = 0.02;
 
-  private static double kMaxTrapVelocity = Math.toRadians(200.);
+  private static double kMaxTrapVelocity = Math.toRadians(250.);
   private static double kMaxTrapAcceleration = Math.toRadians(500);
 
   private DoubleSubscriber kp;
