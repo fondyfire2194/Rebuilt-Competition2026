@@ -51,6 +51,7 @@ public class FeederSubsystem extends SubsystemBase {
   public double beltStopPulseTime = beltStartPulseTime + beltPulseTime;
 
   public double beltInitialShootTime = 5.;
+  private boolean alternate;
 
   public FeederSubsystem(boolean logData) {
     feederBeltMotor = new SparkMax(Constants.CANIDConstants.feederBeltID, MotorType.kBrushless);
@@ -89,15 +90,20 @@ public class FeederSubsystem extends SubsystemBase {
   public void periodic() {
 
     if (logData) {
-      // This method will be called once per scheduler run
-      DogLog.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
-      DogLog.log("Feeder/RollerTargetRPM", rollerClosedLoopController.getSetpoint());
-      DogLog.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
-      DogLog.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+      if (alternate) {
 
-      DogLog.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
-      DogLog.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
-      DogLog.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+        DogLog.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
+        DogLog.log("Feeder/RollerTargetRPM", rollerClosedLoopController.getSetpoint());
+        DogLog.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
+        DogLog.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+      } else {
+
+        DogLog.log("Feeder/BeltTargetRPM", beltClosedLoopController.getSetpoint());
+        DogLog.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
+        DogLog.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
+        DogLog.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+      }
+      alternate = !alternate;
     }
   }
 

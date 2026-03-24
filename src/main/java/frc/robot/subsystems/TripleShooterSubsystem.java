@@ -27,10 +27,8 @@ import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -59,6 +57,24 @@ public class TripleShooterSubsystem extends SubsystemBase {
   public boolean rightMotorActive;
 
   private boolean logData;
+
+  private boolean endShoot;
+
+  public boolean isEndShoot() {
+    return endShoot;
+  }
+
+  public void setEndShoot() {
+    this.endShoot = true;
+  }
+
+  public void resetEndShoot() {
+    this.endShoot = false;
+  }
+
+  public Command endShootCommand() {
+    return Commands.runOnce(this::setEndShoot);
+  }
 
   private final Alert shooterAlert = new Alert(
       "Shooter Fault",
@@ -99,8 +115,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
   private AngularAcceleration targetAcceleration = RotationsPerSecondPerSecond.of(500);
 
   private int tst = 0;
-
-  public boolean hubIsActive;
 
   private boolean shootUsingDistance;
 

@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepBmpPickup"
+            "pathName": "DepBmpPickupShort"
           }
         },
         {
@@ -19,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "PickupBmpDep"
+            "pathName": "PickupBmpDepShort"
           }
         },
         {

@@ -30,13 +30,13 @@ public class ShootCommand extends Command {
   private int shootRunning;
 
   public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
-      CommandSwerveDrivetrain swerve,IntakeSubsystem intake, boolean bypassAlign) {
+      CommandSwerveDrivetrain swerve, IntakeSubsystem intake, boolean bypassAlign) {
     // Use addRequirements() here to declare subsystem dependencies.
     m_shooter = shooter;
     m_hood = hood;
     m_feeder = feeder;
     m_swerve = swerve;
-    m_intake=intake;
+    m_intake = intake;
     m_bypassAlign = bypassAlign;
   }
 
@@ -47,6 +47,7 @@ public class ShootCommand extends Command {
     beltTimer.start();
     lookForPulse = false;
     shootRunning = 0;
+    m_shooter.resetEndShoot();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -94,8 +95,8 @@ public class ShootCommand extends Command {
         m_feeder.pulse = false;// force no belt reverse pulse
 
         if (!m_feeder.pulse) {
-         m_feeder.runFeederBeltAtVelocity();
-        //  m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
+          m_feeder.runFeederBeltAtVelocity();
+          // m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
         } else
           m_feeder.pulseBelt();
       }
@@ -110,12 +111,13 @@ public class ShootCommand extends Command {
     m_feeder.stopFeederRollerMotor();
     m_intake.stopIntakeMotor();
     okToShoot = false;
+    m_shooter.resetEndShoot();
 
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return m_shooter.isEndShoot();
   }
 }

@@ -7,6 +7,8 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
+import java.util.function.LongFunction;
+
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -170,12 +172,11 @@ public class LimelightVision extends SubsystemBase {
 
     setCamToRobotOffset(cameras[frontCam]);
 
-    setCamToRobotOffset(cameras[leftCam]);
+    if (CameraConstants.leftCamera.isUsed)
+      setCamToRobotOffset(cameras[leftCam]);
 
-    setCamToRobotOffset(cameras[rightCam]);
-
-    if (logData)
-      SmartDashboard.putData(this);
+    if (CameraConstants.rightCamera.isUsed)
+      setCamToRobotOffset(cameras[rightCam]);
 
     frontCameraDisconnected.set(!frontConnected);
     leftCameraDisconnected.set(!leftConnected);
@@ -189,75 +190,83 @@ public class LimelightVision extends SubsystemBase {
 
   @Override
   public void periodic() {
+    if (logData) {
+      logStep++;
 
-    logStep++;
+      switch (logStep) {
 
-    switch (logStep) {
+        case 0:
 
-      case 0:
-        DogLog.log("LLV_FrontCamMT1Pose", mt1Pose[frontCam]);
-        DogLog.log("LLV_FrontCamMT2Pose", mt2Pose[frontCam]);
-        DogLog.log("LLV_FrontCamMT2TagsSeen", mt2TagIDsSeen[frontCam]);
-        DogLog.log("LLV_FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
-        DogLog.log("LLV_FrontCamMT1TagsSeen", mt1TagIDsSeen[frontCam]);
-        DogLog.log("LLV_FrontCam # MT1TagsSeen", numberMT1TagsSeen[frontCam]);
-        DogLog.log("LLV_FrontCamUseMT1", useMT1);
-        DogLog.log("LLV_FrontCamUseMT2", useMT2);
-        DogLog.log("LLV_FrontPipeline#", LimelightHelpers.getCurrentPipelineIndex(frontName));
-        break;
+          DogLog.log("LLV_FrontCamMT1Pose", mt1Pose[frontCam]);
+          DogLog.log("LLV_FrontCamMT2Pose", mt2Pose[frontCam]);
+          DogLog.log("LLV_FrontCamMT2TagsSeen", mt2TagIDsSeen[frontCam]);
+          DogLog.log("LLV_FrontCam # MT2TagsSeen", numberMT2TagsSeen[frontCam]);
+          DogLog.log("LLV_FrontCamMT1TagsSeen", mt1TagIDsSeen[frontCam]);
+          DogLog.log("LLV_FrontCam # MT1TagsSeen", numberMT1TagsSeen[frontCam]);
 
-      case 1:
-        if (CameraConstants.leftCamera.isUsed) {
-          DogLog.log("LLV_LeftCamMT2Pose", mt2Pose[leftCam]);
-          DogLog.log("LLV_LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
-          DogLog.log("LLV_LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
-          DogLog.log("LLV_LeftPipeline#", LimelightHelpers.getCurrentPipelineIndex(leftName));
-        }
-        break;
+          break;
 
-      case 2:
-        if (CameraConstants.rightCamera.isUsed) {
-          DogLog.log("LLV_RightCamMT2Pose", mt2Pose[rightCam]);
-          DogLog.log("LLV_RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
-          DogLog.log("LLV_RightCam # MT2TagsSeen", numberMT2TagsSeen[rightCam]);
-          DogLog.log("LLV_RightPipeline#", LimelightHelpers.getCurrentPipelineIndex(rightName));
-        }
-        break;
+        case 1:
 
-      case 3:
+          DogLog.log("LLV_FrontCamUseMT1", useMT1);
+          DogLog.log("LLV_FrontCamUseMT2", useMT2);
+          DogLog.log("LLV_FrontPipeline#", LimelightHelpers.getCurrentPipelineIndex(frontName));
 
-        double leftHeartbeat = 0;
-        double rightHeartbeat = 0;
+          break;
 
-        double frontHeartbeat = getCameraHeartbeat(frontName);
-        if (CameraConstants.leftCamera.isUsed)
-          leftHeartbeat = getCameraHeartbeat(leftName);
-        if (CameraConstants.rightCamera.isUsed)
-          rightHeartbeat = getCameraHeartbeat(rightName);
+        case 2:
+          if (CameraConstants.leftCamera.isUsed) {
+            DogLog.log("LLV_LeftCamMT2Pose", mt2Pose[leftCam]);
+            DogLog.log("LLV_LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
+            DogLog.log("LLV_LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
+            DogLog.log("LLV_LeftPipeline#", LimelightHelpers.getCurrentPipelineIndex(leftName));
+          }
+          break;
 
-        frontConnected = frontHeartbeat != lastFrontHeartbeat;
-        lastFrontHeartbeat = frontHeartbeat;
-        leftConnected = leftHeartbeat != lastLeftHeartbeat;
-        lastLeftHeartbeat = leftHeartbeat;
-        rightConnected = rightHeartbeat != lastRightHeartbeat;
-        lastRightHeartbeat = rightHeartbeat;
+        case 3:
+          if (CameraConstants.rightCamera.isUsed) {
+            DogLog.log("LLV_RightCamMT2Pose", mt2Pose[rightCam]);
+            DogLog.log("LLV_RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
+            DogLog.log("LLV_RightCam # MT2TagsSeen", numberMT2TagsSeen[rightCam]);
+            DogLog.log("LLV_RightPipeline#", LimelightHelpers.getCurrentPipelineIndex(rightName));
+          }
+          break;
 
-        if (frontConnected && frontCameraDisconnected.get())
-          frontCameraDisconnected.close();
-        if (leftConnected && leftCameraDisconnected.get())
-          leftCameraDisconnected.close();
-        if (rightConnected && rightCameraDisconnected.get())
-          rightCameraDisconnected.close();
+        case 4:
 
-        break;
+          double leftHeartbeat = 0;
+          double rightHeartbeat = 0;
+          if (logData) {
+            double frontHeartbeat = getCameraHeartbeat(frontName);
+            if (CameraConstants.leftCamera.isUsed)
+              leftHeartbeat = getCameraHeartbeat(leftName);
+            if (CameraConstants.rightCamera.isUsed)
+              rightHeartbeat = getCameraHeartbeat(rightName);
 
-      case 4:
-        logStep = -1;
-        break;
+            frontConnected = frontHeartbeat != lastFrontHeartbeat;
+            lastFrontHeartbeat = frontHeartbeat;
+            leftConnected = leftHeartbeat != lastLeftHeartbeat;
+            lastLeftHeartbeat = leftHeartbeat;
+            rightConnected = rightHeartbeat != lastRightHeartbeat;
+            lastRightHeartbeat = rightHeartbeat;
 
-      default:
-        logStep = -1;
-        break;
+            if (frontConnected && frontCameraDisconnected.get())
+              frontCameraDisconnected.close();
+            if (leftConnected && leftCameraDisconnected.get())
+              leftCameraDisconnected.close();
+            if (rightConnected && rightCameraDisconnected.get())
+              rightCameraDisconnected.close();
+          }
+          break;
+
+        case 5:
+          logStep = -1;
+          break;
+
+        default:
+          logStep = -1;
+          break;
+      }
     }
   }
 

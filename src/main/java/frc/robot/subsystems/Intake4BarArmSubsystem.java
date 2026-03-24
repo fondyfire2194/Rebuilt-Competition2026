@@ -64,7 +64,7 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   public static Angle maxAngle = Degree.of(100);
   public static Angle minAngle = Degree.of(5);
-  public Angle intakingAngle = Degree.of(90);
+  public Angle intakingAngle = Degree.of(85.);
 
   public Angle homeAngle = Degree.of(0);
   public Angle midUpAngle = Degree.of(30);
@@ -190,9 +190,9 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   }
 
   public void positionIntakeArm() {
-    
+
     double pidout = m_controller.calculate(getIntakeArmAngle().in(Radians));
-    intakeArmMotor.setVoltage( pidout);
+    intakeArmMotor.setVoltage(pidout);
   }
 
   public Angle getIntakeArmAngle() {

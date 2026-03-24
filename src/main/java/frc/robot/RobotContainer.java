@@ -29,7 +29,6 @@ import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.AddressableLEDSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
@@ -87,7 +86,6 @@ public class RobotContainer {
 
         public final LimelightVision m_llv;
 
-        public final AddressableLEDSubsystem m_leds;
 
         // public final PowerDistribution pdh;
 
@@ -98,10 +96,7 @@ public class RobotContainer {
         private boolean logIntakeArmData = true;
         private boolean logLLData = false;
 
-        private Trigger driverFiveSecondWarningEndShootTrigger;
-        private Trigger driverFiveSecondWarningEndPickupTrigger;
-        private Trigger endGameWarningTrigger;
-
+      
         private Trigger collisionTrigger;
 
         // Presets
@@ -118,7 +113,6 @@ public class RobotContainer {
                 m_intake = new IntakeSubsystem(logIntakeData);
                 m_intakeArm = new Intake4BarArmSubsystem(logIntakeArmData);
                 m_llv = new LimelightVision(logLLData);
-                m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
                 registerNamedCommands();
                 registerEventTriggers();
@@ -198,6 +192,7 @@ public class RobotContainer {
                                 Commands.parallel(
                                                 setForAutoShootValues(),
                                                 stopShootersFeedersIntake(),
+                                                m_shooter.endShootCommand(),
                                                 m_intakeArm.intakeArmToClearAngleCommand()));
 
                 driver.y().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
@@ -293,32 +288,6 @@ public class RobotContainer {
 
                 // collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
 
-                driverFiveSecondWarningEndPickupTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfPickup);
-
-                driverFiveSecondWarningEndPickupTrigger
-                                .onTrue(Commands.sequence(
-                                                Commands.runOnce(() -> driver
-                                                                .setRumble(RumbleType.kLeftRumble, 1)),
-                                                Commands.waitSeconds(.5),
-                                                Commands.runOnce(() -> driver
-                                                                .setRumble(RumbleType.kLeftRumble, 0))));
-
-                driverFiveSecondWarningEndShootTrigger = new Trigger(() -> m_leds.fiveSecondWarningEndOfShoot);
-                driverFiveSecondWarningEndShootTrigger
-                                .onTrue(Commands.sequence(
-                                                Commands.runOnce(() -> driver.setRumble(RumbleType.kRightRumble, 1)),
-                                                Commands.waitSeconds(.5),
-                                                Commands.runOnce(() -> driver.setRumble(RumbleType.kRightRumble, 0))));
-
-                endGameWarningTrigger = new Trigger(() -> m_leds.endGameWarning);
-                endGameWarningTrigger
-                                .onTrue(
-                                                Commands.sequence(
-                                                                Commands.runOnce(() -> driver
-                                                                                .setRumble(RumbleType.kBothRumble, 1)),
-                                                                Commands.waitSeconds(.75),
-                                                                Commands.runOnce(() -> driver.setRumble(
-                                                                                RumbleType.kBothRumble, 0))));
 
         }
 

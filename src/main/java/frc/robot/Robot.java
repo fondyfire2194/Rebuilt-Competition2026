@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.LimelightTagsMT1Update;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.AllianceUtil;
@@ -184,15 +183,8 @@ public class Robot extends TimedRobot {
                         CommandScheduler.getInstance().cancel(m_autonomousCommand);
                 }
 
-                m_robotContainer.m_shooter.hubIsActive = !autoHasRun;
-
-                // if (DriverStation.isFMSAttached()) {
-                CommandScheduler.getInstance()
-                                .schedule(new ShiftDetectionCommand(m_robotContainer.m_shooter,
-                                                m_robotContainer.m_leds));
-                // }
-                // new CollisionDetectionCommand(m_robotContainer.drivetrain));
-
+            
+        
         }
 
         @Override
