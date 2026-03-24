@@ -69,6 +69,10 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   public Angle homeAngle = Degree.of(0);
   public Angle midUpAngle = Degree.of(30);
   public Angle midDownAngle = Degree.of(60);
+
+  public Angle nextUpAngle = midUpAngle;
+ public Angle nextDownAngle = midDownAngle;
+
   private Current stallCurrent = Amps.of(15);
 
   private Debouncer stallDebouncer = new Debouncer(.5);
@@ -124,15 +128,16 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   public void periodic() {
     if (logData) {
       if (alternate) {
+        DogLog.log("IntakeArm/TargetAngle", Units.radiansToDegrees(m_controller.getGoal().position));
+
         DogLog.log("IntakeArm/CurrentAngle", getIntakeArmAngle().in(Degrees));
         DogLog.log("IntakeArm/Encoder", intakeArmMotor.getEncoder().getPosition());
         DogLog.log("IntakeArm/EncoderVel", intakeArmMotor.getEncoder().getVelocity());
         DogLog.log("IntakeArm/MotorVolts", intakeArmMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
-        DogLog.log("IntakeArm/FollowerEncoder", intakeArmMotorFollower.getEncoder().getPosition());
         DogLog.log("IntakeArm/FwdSoftLimit", intakeArmMotor.getForwardSoftLimit().isReached());
         DogLog.log("IntakeArm/RevSoftLimit", intakeArmMotor.getReverseSoftLimit().isReached());
       } else {
-
+        DogLog.log("IntakeArm/FollowerEncoder", intakeArmMotorFollower.getEncoder().getPosition());
         DogLog.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
         DogLog.log("IntakeArm/AngleError", m_controller.getPositionError());
         DogLog.log("IntakeArm/AtTarget", m_controller.atGoal());
@@ -150,11 +155,22 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   }
 
   public Command helpShootCommand(double pauseBetween) {
-
     return Commands.sequence(
         intakeArmToMidDownAngleCommand(),
         Commands.waitSeconds(pauseBetween),
         intakeArmToMidUpAngleCommand(),
+        Commands.waitSeconds(pauseBetween))
+        .repeatedly();
+  }
+
+  public Command helpShootCommand(double pauseBetween, Angle angleChange) {
+    return Commands.sequence(
+        intakeArmToNextMidDownAngleCommand(),
+         setNextDownAngleCommand(angleChange),
+        Commands.waitSeconds(pauseBetween),
+        intakeArmToNextMidUpAngleCommand(),
+        setNextUpAngleCommand(angleChange),
+        
         Commands.waitSeconds(pauseBetween))
         .repeatedly();
   }
@@ -178,6 +194,36 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   public Command intakeArmToMidDownAngleCommand() {
     return Commands.runOnce(() -> m_controller.setGoal(midDownAngle.in(Radians)));
   }
+
+  public void setNextUpAngle(Angle angleChange) {
+    Angle temp = nextUpAngle.minus(angleChange);
+    if (temp.in(Degrees) > 15)
+      nextUpAngle = temp;
+  }
+
+  public Command setNextUpAngleCommand(Angle angleChange) {
+    return Commands.runOnce(() -> setNextUpAngle(angleChange));
+  }
+
+   public void setNextDownAngle(Angle angleChange) {
+    Angle temp = nextDownAngle.minus(angleChange);
+    if (temp.in(Degrees) > 40)
+      nextDownAngle = temp;
+  }
+
+  public Command setNextDownAngleCommand(Angle angleChange) {
+    return Commands.runOnce(() -> setNextDownAngle(angleChange));
+  }
+
+  public Command intakeArmToNextMidUpAngleCommand() {
+    return Commands.runOnce(
+        () -> m_controller.setGoal(nextUpAngle.in(Radians)));
+  }
+ public Command intakeArmToNextMidDownAngleCommand() {
+    return Commands.runOnce(
+        () -> m_controller.setGoal(nextDownAngle.in(Radians)));
+  }
+
 
   public Command positionIntakeArmCommand() {
     return Commands.run(() -> positionIntakeArm(), this);

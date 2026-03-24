@@ -86,7 +86,6 @@ public class RobotContainer {
 
         public final LimelightVision m_llv;
 
-
         // public final PowerDistribution pdh;
 
         private boolean logShooterData = true;
@@ -96,7 +95,6 @@ public class RobotContainer {
         private boolean logIntakeArmData = true;
         private boolean logLLData = false;
 
-      
         private Trigger collisionTrigger;
 
         // Presets
@@ -167,15 +165,15 @@ public class RobotContainer {
 
                 driver.leftTrigger().whileTrue(
                                 Commands.parallel(
-                                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain,m_intake, false),
+                                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, m_intake,
+                                                                false),
                                                 Commands.sequence(Commands.waitSeconds(5),
-                                                                m_intakeArm.helpShootCommand(1))));
+                                                                m_intakeArm.helpShootCommand(.75, Degrees.of(2)))));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
                                                 m_intakeArm.intakeArmToIntakeAngleCommand(),
                                                 m_intake.runIntakeAtVelocityCommand()))
-                                // m_intake.startIntakeCommand()))
                                 .onFalse(
                                                 m_intake.stopIntakeCommand());
 
@@ -244,7 +242,7 @@ public class RobotContainer {
 
                 codriver.rightBumper().and(codriver.x()).onTrue(m_intakeArm.intakeArmToMidDownAngleCommand());
 
-                codriver.rightBumper().and(codriver.povUp()).whileTrue(m_intakeArm.helpShootCommand(1));
+                codriver.rightBumper().and(codriver.povUp()).whileTrue(m_intakeArm.helpShootCommand(1,Degrees.of(2)));
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
@@ -284,7 +282,6 @@ public class RobotContainer {
                 collisionTrigger = new Trigger(() -> drivetrain.jerkLimitExceeded);
 
                 // collisionTrigger.onTrue(m_intakeArm.intakeArmUpCommand());
-
 
         }
 
@@ -339,13 +336,13 @@ public class RobotContainer {
                                                                 m_feeder,
                                                                 drivetrain, m_intake, false),
                                                 Commands.sequence(
-                                                                Commands.waitSeconds(2),
+                                                                Commands.waitSeconds(4),
                                                                 m_intakeArm.helpShootCommand(
-                                                                                .5)))
+                                                                                .75,
+                                                                                 Degrees.of(2))))
                                                 .andThen(stopShootersFeedersIntake()));
 
                 NamedCommands.registerCommand("ALIGN_AND_START_SHOOT",
-                                // Commands.sequence(m_shooter.runAllVelocityVoltageCommand(),
                                 new AutoAlignHub(drivetrain, m_shooter, m_hood, 2));
 
         }
@@ -392,7 +389,8 @@ public class RobotContainer {
                                                                                 Commands.sequence(
                                                                                                 Commands.waitSeconds(5),
                                                                                                 m_intakeArm.helpShootCommand(
-                                                                                                                1)))))
+                                                                                                                .75,
+                                                                                                                Degrees.of(2.5))))))
                                 .finallyDo((() -> stopShootersFeedersIntake()));
 
         }
