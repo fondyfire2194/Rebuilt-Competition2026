@@ -26,6 +26,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.generated.TunerConstants;
@@ -192,6 +193,7 @@ public final class Constants {
       public static final double width = Units.inchesToMeters(73.0);
       public static final double height = Units.inchesToMeters(6.513);
       public static final double depth = Units.inchesToMeters(44.4);
+      public static final double yMid = FieldConstants.fieldWidth/2 + Units.inchesToMeters(73/2);
 
       // Relevant reference points on alliance side
       public static final Translation2d nearLeftCorner = new Translation2d(LinesVertical.hubCenter + width / 2,

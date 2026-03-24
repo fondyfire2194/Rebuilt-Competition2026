@@ -106,7 +106,7 @@ public class Robot extends TimedRobot {
                                 runFrontMT1UpdatesCommand(),
                                 runMT2UpdatesCommand());
                 m_robotContainer.m_llv.useMT1 = true;
-
+SmartDashboard.putNumber("BUMPCNTER",Constants.FieldConstants.RightBump.yMid);
         }
 
         @Override

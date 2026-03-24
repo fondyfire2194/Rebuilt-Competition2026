@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.PersistMode;
+import com.revrobotics.REVLibError;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -17,7 +18,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -139,10 +139,15 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     if (logData) {
+      DogLog.log("Intake/TargetRPM", IntakeSetpoints.kIntakeRPM);
       DogLog.log("Intake/MotorRPM", intakeMotor.getEncoder().getVelocity());
       DogLog.log("Intake/MotorAmps", intakeMotor.getOutputCurrent());
       DogLog.log("Intake/MotorVolts", intakeMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
     }
+  }
+
+  public boolean pingSparkMax() {
+    return intakeMotor.clearFaults() == REVLibError.kCANDisconnected;
   }
 
 }

@@ -22,6 +22,8 @@ public class LimelightTagsMT2Update extends Command {
     private final double AMBIGUITY_CUTOFF = 0.7;
     private final double DISTANCE_CUTOFF = 4.0;
     private final double DISTANCE_STDDEVS_SCALAR = 2;
+    private final double HUB_STDDEVS_SCALAR = 1;
+
     private final double ROTATION_RATE_CUTOFF = 720;
 
     private double xTolerance = .1;
@@ -82,6 +84,8 @@ public class LimelightTagsMT2Update extends Command {
 
         if (!rejectMT2Update) {
             double standard_devs = mt2.rawFiducials[0].distToCamera / DISTANCE_STDDEVS_SCALAR;
+            if (mt2.tagCount >= 2 && (m_llv.getFrontCamSeesHubTags()))
+                standard_devs = mt2.rawFiducials[0].distToCamera / HUB_STDDEVS_SCALAR;
             m_swerve.setVisionMeasurementStdDevs(
                     VecBuilder.fill(standard_devs,
                             standard_devs, 9999999));

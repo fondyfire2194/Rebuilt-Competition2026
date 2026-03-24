@@ -90,14 +90,14 @@ public class FeederSubsystem extends SubsystemBase {
   public void periodic() {
 
     if (logData) {
-      if (alternate) {
 
+      if (alternate) {
         DogLog.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
         DogLog.log("Feeder/RollerTargetRPM", rollerClosedLoopController.getSetpoint());
         DogLog.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
         DogLog.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+   
       } else {
-
         DogLog.log("Feeder/BeltTargetRPM", beltClosedLoopController.getSetpoint());
         DogLog.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
         DogLog.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());

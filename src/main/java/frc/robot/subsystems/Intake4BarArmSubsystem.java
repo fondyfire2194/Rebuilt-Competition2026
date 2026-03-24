@@ -73,10 +73,6 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   private Debouncer stallDebouncer = new Debouncer(.5);
 
-  private double ks = .2;
-  private double kg = 0.5;
-  private double kv = 12 / maxArmRadiansPerSec;
-
   public boolean logData;
   private boolean alternate;
 
@@ -165,8 +161,6 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   public boolean armInPosition() {
     return m_controller.atGoal();
-    // return Math.abs(m_controller.getGoal().position -
-    // intakeArmMotor.getEncoder().getPosition()) < .2;// 10 degrees
   }
 
   public Command intakeArmToIntakeAngleCommand() {

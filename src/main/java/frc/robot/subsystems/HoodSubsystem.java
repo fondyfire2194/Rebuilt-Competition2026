@@ -86,6 +86,7 @@ public class HoodSubsystem extends SubsystemBase {
 
     private int tst;
     private boolean hoodUsingDistance;
+    private boolean alternate;
 
     public boolean isHoodUsingDistance() {
         return hoodUsingDistance;
@@ -235,16 +236,20 @@ public class HoodSubsystem extends SubsystemBase {
     public void periodic() {
 
         if (logData) {
+            if (alternate) {
+                DogLog.log("Hood/CurrentAngle", getHoodAngle());
+                DogLog.log("Hood/FinalTargetAngle", finalTargetAngle);
+                DogLog.log("Hood/ManualTargetAngle", manualTargetAngle);
+                DogLog.log("Hood/AutoTargetAngle", autoTargetAngle);
+                DogLog.log("Hood/UseAutoTarget", isHoodUsingDistance());
+            } else {
 
-            DogLog.log("Hood/CurrentAngle", getHoodAngle());
-            DogLog.log("Hood/FinalTargetAngle", finalTargetAngle);
-            DogLog.log("Hood/ManualTargetAngle", manualTargetAngle);
-            DogLog.log("Hood/AutoTargetAngle", autoTargetAngle);
-            DogLog.log("Hood/UseAutoTarget", isHoodUsingDistance());
-            DogLog.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
-            DogLog.log("Hood/AtTarget", isPositionWithinTolerance());
-            DogLog.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
-            DogLog.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
+                DogLog.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
+                DogLog.log("Hood/AtTarget", isPositionWithinTolerance());
+                DogLog.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
+                DogLog.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
+            }
+            alternate = !alternate;
         }
     }
 
