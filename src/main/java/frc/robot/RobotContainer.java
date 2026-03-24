@@ -242,7 +242,12 @@ public class RobotContainer {
 
                 codriver.rightBumper().and(codriver.x()).onTrue(m_intakeArm.intakeArmToMidDownAngleCommand());
 
-                codriver.rightBumper().and(codriver.povUp()).whileTrue(m_intakeArm.helpShootCommand(1,Degrees.of(2)));
+                codriver.rightBumper().and(codriver.povUp()).whileTrue(m_intakeArm.helpShootCommand(1, Degrees.of(2)));
+
+                codriver.rightBumper().and(codriver.povDown())
+                                .onTrue(
+                                                clearRevStickyFaultsCommand()
+                                                                .andThen(clearShooterStickyFaultsCommand()));
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 
@@ -339,7 +344,7 @@ public class RobotContainer {
                                                                 Commands.waitSeconds(4),
                                                                 m_intakeArm.helpShootCommand(
                                                                                 .75,
-                                                                                 Degrees.of(2))))
+                                                                                Degrees.of(2))))
                                                 .andThen(stopShootersFeedersIntake()));
 
                 NamedCommands.registerCommand("ALIGN_AND_START_SHOOT",
@@ -367,8 +372,12 @@ public class RobotContainer {
                 return Commands.sequence(
                                 m_feeder.clearFeederStickyFaultsCommand(),
                                 m_hood.clearHoodStickyFaultsCommand(),
-                                m_intake.clearIntakeStickyFaultsCommand());
-                // m_intakeSideArm.clearStickyFaultsCommand());
+                                m_intake.clearIntakeStickyFaultsCommand(),
+                                m_intakeArm.clearIntakeArmStickyFaultsCommand());
+        }
+
+        public Command clearShooterStickyFaultsCommand() {
+                return m_shooter.clearShooterStickyFaultsCommand();
         }
 
         public Command presetShoot(double distance) {

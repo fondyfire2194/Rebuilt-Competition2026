@@ -122,7 +122,7 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
     faultCheckTimer = new Timer();
     faultCheckTimer.start();
-    
+
     intakeArmMotor.getEncoder().setPosition(homeAngle.in(Radians));
 
     kp = DogLog.tunable("IntakeArm/PGain", 8., newKp -> m_controller.setP(newKp));
@@ -285,6 +285,11 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   public boolean stalledAtEndTravel() {
     boolean stalled = getMotorCurrent().gt(stallCurrent);
     return stallDebouncer.calculate(stalled);
+  }
+
+  
+  public Command clearIntakeArmStickyFaultsCommand() {
+    return Commands.runOnce(() -> intakeArmMotor.clearFaults());
   }
 
   public Command jogIntakeArmCommand(DoubleSupplier jogRate) {
