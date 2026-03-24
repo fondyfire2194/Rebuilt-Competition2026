@@ -113,7 +113,7 @@ public final class Configs {
       hoodConfig
           .inverted(false)
           .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(5)          
+          .openLoopRampRate(5)
           .closedLoopRampRate(.25)
           .smartCurrentLimit(40);
 
@@ -155,10 +155,12 @@ public final class Configs {
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
           // Set PID values for speed control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
-          .p(0.00005)
+          .p(0.001)
           .i(0)
           .d(0)
-          .outputRange(-1, 1).feedForward
+          .outputRange(-1, 1);
+
+      feederBeltConfig.closedLoop.feedForward
           // kV is now in Volts, so we multiply by the nominal voltage (12V)
           .kV(12.0 / 5767, ClosedLoopSlot.kSlot0);
 
@@ -169,18 +171,20 @@ public final class Configs {
       feederRollerConfig
           .inverted(false)
           .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(.1)          
-          .closedLoopRampRate(.25)
+          .openLoopRampRate(.1)
+          .closedLoopRampRate(.1)
           .smartCurrentLimit(80);
 
       feederRollerConfig.closedLoop
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
           // Set PID values for speed control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
-          .p(0.00005)
+          .p(0.001)
           .i(0)
           .d(0)
-          .outputRange(-1, 1).feedForward
+          .outputRange(-1, 1);
+
+      feederRollerConfig.closedLoop.feedForward
           // kV is now in Volts, so we multiply by the nominal voltage (12V)
           .kV(12.0 / 5767, ClosedLoopSlot.kSlot0);
     }
