@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.CANBus;
+import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -329,6 +330,7 @@ public final class Constants {
     public static final double kJogIntake = 0.25;
     public static final double kIntake = .99;
     public static final double kExtake = -0.9;
+    public static final double kIntakeRPM = 4000;
   }
 
   public static final class FeederSetpoints {
@@ -339,6 +341,7 @@ public final class Constants {
     public static final double kFeedBeltJogSetpoint = 0.5;
 
     public static double kRollerShootRPM = 4500;
+    public static double kBeltShootRPM = 3800;
     public static double rollerSpeedToStartBelt = 3500;
 
   }
@@ -452,7 +455,6 @@ public final class Constants {
         960,
         true);
 
-
     static Pose3d leftCamPose = new Pose3d(
         Units.inchesToMeters(9.125),
         Units.inchesToMeters(-14.55),
@@ -471,7 +473,7 @@ public final class Constants {
         49.7,
         1280,
         960,
-        true);
+        false);
 
     static Pose3d rightCamPose = new Pose3d(
         Units.inchesToMeters(9.125),
@@ -491,7 +493,7 @@ public final class Constants {
         49.7,
         1280,
         960,
-        true);
+        false);
 
     public static Cameras rearCamera = new Cameras(
         "limelight-rear",
@@ -502,7 +504,7 @@ public final class Constants {
         49.7,
         1280,
         960,
-        true);
+        false);
 
     public static StructArrayPublisher<Pose3d> arrayPublisher = NetworkTableInstance.getDefault()
         .getStructArrayTopic("Camposes", Pose3d.struct).publish();

@@ -14,11 +14,9 @@ import com.revrobotics.spark.SparkMax;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -40,8 +38,8 @@ public class HoodSubsystem extends SubsystemBase {
 
     public void setManualTargetAngle(double manualTargetAngle) {
         HoodSubsystem.manualTargetAngle = manualTargetAngle;
-         HoodSubsystem.finalTargetAngle = manualTargetAngle;
-        
+        HoodSubsystem.finalTargetAngle = manualTargetAngle;
+
     }
 
     public static double getAutoTargetAngle() {
@@ -84,7 +82,7 @@ public class HoodSubsystem extends SubsystemBase {
     private SparkClosedLoopController closedLoopController;
     private RelativeEncoder encoder;
 
-    public boolean showData;
+    public boolean logData;
 
     private int tst;
     private boolean hoodUsingDistance;
@@ -107,7 +105,7 @@ public class HoodSubsystem extends SubsystemBase {
 
     }
 
-    public HoodSubsystem(boolean showData) {
+    public HoodSubsystem(boolean logData) {
         hoodMotor = new SparkMax(Constants.CANIDConstants.hoodMotorID, MotorType.kBrushless);
         closedLoopController = hoodMotor.getClosedLoopController();
         encoder = hoodMotor.getEncoder();
@@ -135,9 +133,7 @@ public class HoodSubsystem extends SubsystemBase {
 
         setHoodUsingDistance(false);
 
-        this.showData = showData;
-        if (showData)
-            SmartDashboard.putData(this);
+        this.logData = logData;
 
         hoodAlert.set(hoodMotor.hasActiveFault() || hoodMotor.hasStickyFault());
     }
@@ -238,33 +234,18 @@ public class HoodSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
 
-        DogLog.log("Hood/CurrentAngle", getHoodAngle());
+        if (logData) {
 
-        DogLog.log("Hood/FinalTargetAngle", finalTargetAngle);
-        DogLog.log("Hood/ManualTargetAngle", manualTargetAngle);
-        DogLog.log("Hood/AutoTargetAngle", autoTargetAngle);
-        DogLog.log("Hood/UseAutoTarget", isHoodUsingDistance());
-        DogLog.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
-        DogLog.log("Hood/AtTarget", isPositionWithinTolerance());
-        DogLog.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
-        DogLog.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
-
+            DogLog.log("Hood/CurrentAngle", getHoodAngle());
+            DogLog.log("Hood/FinalTargetAngle", finalTargetAngle);
+            DogLog.log("Hood/ManualTargetAngle", manualTargetAngle);
+            DogLog.log("Hood/AutoTargetAngle", autoTargetAngle);
+            DogLog.log("Hood/UseAutoTarget", isHoodUsingDistance());
+            DogLog.log("Hood/AngleError", finalTargetAngle - getHoodAngle());
+            DogLog.log("Hood/AtTarget", isPositionWithinTolerance());
+            DogLog.log("Hood/FwdSoftLimit", hoodMotor.getForwardSoftLimit().isReached());
+            DogLog.log("Hood/RevSoftLimit", hoodMotor.getReverseSoftLimit().isReached());
+        }
     }
 
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null",
-                null);
-        builder.addDoubleProperty("Current Angle", () -> encoder.getPosition(), null);
-
-        builder.addDoubleProperty("Manual Target Angle", () -> manualTargetAngle, null);
-        builder.addDoubleProperty("Auto Target Angle", () -> autoTargetAngle, null);
-        builder.addDoubleProperty("Final Target Angle", () -> finalTargetAngle, null);
-        builder.addBooleanProperty("Use Distance For Angle", () -> isHoodUsingDistance(), null);
-        builder.addDoubleProperty("Motor Amps", () -> hoodMotor.getOutputCurrent(), null);
-        builder.addDoubleProperty("Motor Output Volts", () -> hoodMotor.getAppliedOutput() * 12, null);
-        builder.addBooleanProperty("MaxTravelLimitReached", (() -> getForwardSoftLimit(hoodMotor)), null);
-        builder.addBooleanProperty("MinTravelLimitReached", (() -> getReverseSoftLimit(hoodMotor)), null);
-
-    }
 }

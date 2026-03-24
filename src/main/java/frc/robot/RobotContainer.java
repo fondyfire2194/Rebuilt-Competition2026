@@ -6,7 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
-import java.util.Set;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule;
@@ -16,19 +15,15 @@ import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
+
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.shuffleboard.EventImportance;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
@@ -42,8 +37,6 @@ import frc.robot.subsystems.Intake4BarArmSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LimelightVision;
 import frc.robot.subsystems.TripleShooterSubsystem;
-import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.ShootingData;
 
 public class RobotContainer {
@@ -98,13 +91,12 @@ public class RobotContainer {
 
         // public final PowerDistribution pdh;
 
-        private boolean showShooterData = false;
-        private boolean showHoodData = false;
-        private boolean showFeederData = false;
-        private boolean showIntakeData = false;
-        private boolean showIntakeArmData = false;
-
-        private boolean showLLData = false;
+        private boolean logShooterData = true;
+        private boolean logHoodData = false;
+        private boolean logFeederData = true;
+        private boolean logIntakeData = true;
+        private boolean logIntakeArmData = true;
+        private boolean logLLData = false;
 
         private Trigger driverFiveSecondWarningEndShootTrigger;
         private Trigger driverFiveSecondWarningEndPickupTrigger;
@@ -120,12 +112,12 @@ public class RobotContainer {
 
         public RobotContainer() {
 
-                m_shooter = new TripleShooterSubsystem(showShooterData);
-                m_hood = new HoodSubsystem(showHoodData);
-                m_feeder = new FeederSubsystem(showFeederData);
-                m_intake = new IntakeSubsystem(showIntakeData);
-                m_intakeArm = new Intake4BarArmSubsystem(showIntakeArmData);
-                m_llv = new LimelightVision(showLLData);
+                m_shooter = new TripleShooterSubsystem(logShooterData);
+                m_hood = new HoodSubsystem(logHoodData);
+                m_feeder = new FeederSubsystem(logFeederData);
+                m_intake = new IntakeSubsystem(logIntakeData);
+                m_intakeArm = new Intake4BarArmSubsystem(logIntakeArmData);
+                m_llv = new LimelightVision(logLLData);
                 m_leds = new AddressableLEDSubsystem();
                 // pdh = new PowerDistribution(CANIDConstants.pdh, ModuleType.kRev);
                 registerNamedCommands();
@@ -181,14 +173,15 @@ public class RobotContainer {
 
                 driver.leftTrigger().whileTrue(
                                 Commands.parallel(
-                                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, false),
+                                                new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain,m_intake, false),
                                                 Commands.sequence(Commands.waitSeconds(5),
                                                                 m_intakeArm.helpShootCommand(1))));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
                                                 m_intakeArm.intakeArmToIntakeAngleCommand(),
-                                                m_intake.startIntakeCommand()))
+                                                m_intake.runIntakeAtVelocityCommand()))
+                                // m_intake.startIntakeCommand()))
                                 .onFalse(
                                                 m_intake.stopIntakeCommand());
 
@@ -378,7 +371,7 @@ public class RobotContainer {
                                 Commands.deadline(Commands.waitSeconds(10),
                                                 new ShootCommand(m_shooter, m_hood,
                                                                 m_feeder,
-                                                                drivetrain, false),
+                                                                drivetrain, m_intake, false),
                                                 Commands.sequence(
                                                                 Commands.waitSeconds(2),
                                                                 m_intakeArm.helpShootCommand(
@@ -393,17 +386,11 @@ public class RobotContainer {
 
         private void registerEventTriggers() {
 
-                EventTrigger startShooters = new EventTrigger("START_SHOOTERS");
-                startShooters.onTrue(m_shooter.runAllVelocityVoltageCommand());
-
                 EventTrigger runIntake = new EventTrigger("RUN_INTAKE");
                 runIntake.onTrue(
                                 Commands.sequence(
                                                 m_intakeArm.intakeArmToIntakeAngleCommand(),
                                                 m_intake.startIntakeCommand()));
-
-                EventTrigger endIntake = new EventTrigger("END_INTAKE");
-                endIntake.onTrue(m_intake.stopIntakeCommand());
 
         }
 
@@ -432,10 +419,10 @@ public class RobotContainer {
 
                                                 .andThen(
                                                                 Commands.deadline(
-                                                                                Commands.waitSeconds(8),
+                                                                                Commands.waitSeconds(15),
                                                                                 new ShootCommand(m_shooter, m_hood,
                                                                                                 m_feeder, drivetrain,
-                                                                                                true),
+                                                                                                m_intake, true),
                                                                                 Commands.sequence(
                                                                                                 Commands.waitSeconds(5),
                                                                                                 m_intakeArm.helpShootCommand(

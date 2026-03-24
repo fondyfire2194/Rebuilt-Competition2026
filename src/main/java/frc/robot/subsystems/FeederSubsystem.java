@@ -4,23 +4,19 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -32,16 +28,16 @@ public class FeederSubsystem extends SubsystemBase {
   /** Creates a new FeederSubsystem. */
 
   public SparkMax feederBeltMotor;
+  public SparkClosedLoopController beltClosedLoopController;
 
   public SparkMax feederRollerMotor;
 
-  private SparkClosedLoopController closedLoopController;
-  private RelativeEncoder encoder;
+  private SparkClosedLoopController rollerClosedLoopController;
 
   private double feederRollerPowerSim;
   private double feederBeltPowerSim;
 
-  private boolean showData;
+  private boolean logData;
 
   private final Alert feederAlert = new Alert(
       "Feeder Fault",
@@ -56,7 +52,7 @@ public class FeederSubsystem extends SubsystemBase {
 
   public double beltInitialShootTime = 5.;
 
-  public FeederSubsystem(boolean showData) {
+  public FeederSubsystem(boolean logData) {
     feederBeltMotor = new SparkMax(Constants.CANIDConstants.feederBeltID, MotorType.kBrushless);
     feederRollerMotor = new SparkMax(Constants.CANIDConstants.feederRollerID, MotorType.kBrushless);
     /*
@@ -74,50 +70,35 @@ public class FeederSubsystem extends SubsystemBase {
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
-    closedLoopController = feederRollerMotor.getClosedLoopController();
+    rollerClosedLoopController = feederRollerMotor.getClosedLoopController();
 
     feederBeltMotor.configure(
         Configs.Feeder.feederBeltConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
-    this.showData = showData;
-    if (showData)
-      SmartDashboard.putData(this);
+    beltClosedLoopController = feederBeltMotor.getClosedLoopController();
+
+    this.logData = logData;
 
     feederAlert.set(feederBeltMotor.hasActiveFault() || feederBeltMotor.hasStickyFault()
         || feederRollerMotor.hasActiveFault() || feederRollerMotor.hasStickyFault());
   }
 
   @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType("Feeder");
-    builder.addDoubleProperty("Belt Motor RPM", () -> feederBeltMotor.getEncoder().getVelocity(), null);
-    builder.addDoubleProperty("Belt Motor Amps", () -> feederBeltMotor.getOutputCurrent(), null);
-    builder.addDoubleProperty("Belt Motor Sim", () -> feederBeltPowerSim, null);
-    builder.addBooleanProperty("Belt Motor Fault", () -> feederBeltMotor.hasActiveFault(), null);
-
-    builder.addDoubleProperty("Roller Motor RPM", () -> feederRollerMotor.getEncoder().getVelocity(), null);
-    builder.addDoubleProperty("Roller Motor Amps", () -> feederRollerMotor.getOutputCurrent(), null);
-    builder.addBooleanProperty("Roller Motor Fault", () -> feederRollerMotor.hasActiveFault(), null);
-
-  }
-
-  @Override
   public void periodic() {
-    
 
+    if (logData) {
       // This method will be called once per scheduler run
       DogLog.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
-      DogLog.log("Feeder/RollerTargetRPM", closedLoopController.getSetpoint());
+      DogLog.log("Feeder/RollerTargetRPM", rollerClosedLoopController.getSetpoint());
       DogLog.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
       DogLog.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
 
       DogLog.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
       DogLog.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
       DogLog.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
-    
-
+    }
   }
 
   public void runFeederRollerMotor(double power) {
@@ -126,11 +107,12 @@ public class FeederSubsystem extends SubsystemBase {
   }
 
   public void runFeederRollerAtVelocity() {
-    closedLoopController.setSetpoint(FeederSetpoints.kRollerShootRPM, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    rollerClosedLoopController.setSetpoint(FeederSetpoints.kRollerShootRPM, ControlType.kVelocity,
+        ClosedLoopSlot.kSlot0);
   }
 
   public void stopFeederRollerMotor() {
-    closedLoopController.setSetpoint(0, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    rollerClosedLoopController.setSetpoint(0, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
     feederRollerMotor.set(0);
     feederRollerPowerSim = 0;
   }
@@ -191,6 +173,10 @@ public class FeederSubsystem extends SubsystemBase {
   public void runFeederBeltMotor(double power) {
     feederBeltMotor.set(power);
     feederBeltPowerSim = power;
+  }
+
+  public void runFeederBeltAtVelocity() {
+    beltClosedLoopController.setSetpoint(FeederSetpoints.kBeltShootRPM, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
   }
 
   public void stopFeederBeltMotor() {

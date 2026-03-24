@@ -6,14 +6,15 @@ package frc.robot.subsystems;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -27,15 +28,16 @@ import frc.robot.Constants.IntakeSetpoints;
 public class IntakeSubsystem extends SubsystemBase {
   // Initialize intake SPARK. We will use open loop control for this.
   private SparkMax intakeMotor = new SparkMax(Constants.CANIDConstants.intakeID, MotorType.kBrushless);
+  private SparkClosedLoopController intakeClosedLoopController;
   private double intakePowerSim;
-  public boolean showData;
+  public boolean logData;
 
   private final Alert intakeAlert = new Alert(
       "Intake Fault",
       AlertType.kError);
 
   /** Creates a new IntakeSubsystem. */
-  public IntakeSubsystem(boolean showData) {
+  public IntakeSubsystem(boolean logData) {
     /*
      * Apply the appropriate configurations to the SPARKs.
      *
@@ -50,28 +52,15 @@ public class IntakeSubsystem extends SubsystemBase {
         Configs.Intake.intakeConfig,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-    this.showData = showData;
-    if (showData)
-      SmartDashboard.putData(this);
+    this.logData = logData;
 
     intakeAlert.set(intakeMotor.hasActiveFault() || intakeMotor.hasStickyFault());
+
+    intakeClosedLoopController = intakeMotor.getClosedLoopController();
   }
 
   public Command clearIntakeStickyFaultsCommand() {
     return Commands.runOnce(() -> intakeMotor.clearFaults());
-  }
-
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType("Intake");
-
-    builder.addDoubleProperty("SimPower", () -> intakePowerSim, null);
-    builder.addDoubleProperty("Amps", () -> intakeMotor.getOutputCurrent(), null);
-    builder.addDoubleProperty("RPM", () -> intakeMotor.getEncoder().getVelocity(), null);
-    builder.addDoubleProperty("Volts Out", () -> intakeMotor.getAppliedOutput() * 12., null);
-    builder.addBooleanProperty("Running", () -> intakeRunning(), null);
-    builder.addBooleanProperty("Fault", () -> intakeMotor.hasActiveFault(), null);
-
   }
 
   /** Set the intake motor power in the range of [-1, 1]. */
@@ -80,7 +69,7 @@ public class IntakeSubsystem extends SubsystemBase {
     intakePowerSim = power;
   }
 
-  private void stopIntakeMotor() {
+  public void stopIntakeMotor() {
     intakeMotor.set(0);
     intakePowerSim = 0;
   }
@@ -91,6 +80,14 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public Command stopIntakeCommand() {
     return Commands.runOnce(() -> stopIntakeMotor());
+  }
+
+  public void runIntakeAtVelocity() {
+    intakeClosedLoopController.setSetpoint(IntakeSetpoints.kIntakeRPM, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+  }
+
+  public Command runIntakeAtVelocityCommand() {
+    return Commands.run(() -> runIntakeAtVelocity());
   }
 
   /**
@@ -141,11 +138,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    
-    DogLog.log("Intake/MotorRPM", intakeMotor.getEncoder().getVelocity());
-    DogLog.log("Intake/MotorAmps", intakeMotor.getOutputCurrent());
-    DogLog.log("Intake/MotorVolts", intakeMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
- 
+    if (logData) {
+      DogLog.log("Intake/MotorRPM", intakeMotor.getEncoder().getVelocity());
+      DogLog.log("Intake/MotorAmps", intakeMotor.getOutputCurrent());
+      DogLog.log("Intake/MotorVolts", intakeMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+    }
   }
 
 }

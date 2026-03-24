@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.ShiftDetectionCommand;
 import frc.robot.commands.AprilTags.LimelightTagsMT1Update;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
@@ -84,9 +83,11 @@ public class Robot extends TimedRobot {
                 frontCamHasHubTag = new BooleanEvent(m_eventLoop,
                                 () -> m_robotContainer.m_llv.getFrontCamSeesHubTags()).debounce(1);
 
-                frontCamHasHubTag.ifHigh(() -> m_robotContainer.m_llv.setViewFinderLLPipelines());
+                // frontCamHasHubTag.ifHigh(() ->
+                // m_robotContainer.m_llv.setViewFinderLLPipelines());
 
-                frontCamHasHubTag.negate().ifHigh(() -> m_robotContainer.m_llv.setDefaultLLPipelines());
+                // frontCamHasHubTag.negate().ifHigh(() ->
+                // m_robotContainer.m_llv.setDefaultLLPipelines());
 
                 autoHasRun = false;
 
@@ -233,20 +234,22 @@ public class Robot extends TimedRobot {
         }
 
         public Command runMT2UpdatesCommand() {
-                return Commands.parallel(
 
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.frontCam,
-                                                m_robotContainer.drivetrain).ignoringDisable(true)
-                                                .withName("FrontMT2"),
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.leftCam,
-                                                m_robotContainer.drivetrain).ignoringDisable(true)
-                                                .withName("LeftMT2"),
-                                new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                                m_robotContainer.m_llv.rightCam,
-                                                m_robotContainer.drivetrain).ignoringDisable(true)
-                                                .withName("RightMT2"));
+                // return Commands.parallel(
+
+                return new LimelightTagsMT2Update(m_robotContainer.m_llv,
+                                m_robotContainer.m_llv.frontCam,
+                                m_robotContainer.drivetrain).ignoringDisable(true)
+                                .withName("FrontMT2");
+
+                // new LimelightTagsMT2Update(m_robotContainer.m_llv,
+                // m_robotContainer.m_llv.leftCam,
+                // m_robotContainer.drivetrain).ignoringDisable(true)
+                // .withName("LeftMT2"),
+                // new LimelightTagsMT2Update(m_robotContainer.m_llv,
+                // m_robotContainer.m_llv.rightCam,
+                // m_robotContainer.drivetrain).ignoringDisable(true)
+                // .withName("RightMT2"));
         }
 
         public Command runFrontMT2UpdatesCommand() {

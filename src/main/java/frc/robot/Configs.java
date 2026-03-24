@@ -51,41 +51,18 @@ public final class Configs {
           .inverted(true)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(0.5)
-          .smartCurrentLimit(40);
-    }
-  }
-
-  public static final class IntakeSlideArm {
-
-    public static final SparkMaxConfig configMotor = new SparkMaxConfig();
-
-    static {
-      // Configure basic settings of the intake motor
-      configMotor
-          .inverted(false)
-          .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(.25)
-          .smartCurrentLimit(60);
-
-      configMotor.encoder
-          .positionConversionFactor(Intake4BarArmSubsystem.positionConversionFactor)
-          .velocityConversionFactor(Intake4BarArmSubsystem.velocityConversionFactor);
-
-      configMotor.closedLoop
+          .closedLoopRampRate(.25)
+          .smartCurrentLimit(80);
+      intakeConfig.closedLoop
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-          // Set PID values for position control. We don't need to pass a closed loop
+          // Set PID values for speed control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
-          .p(0.05)
+          .p(0.00005)
           .i(0)
           .d(0)
-          .outputRange(-1, 1);
-
-      configMotor.softLimit.forwardSoftLimit(Intake4BarArmSubsystem.maxAngle.in(Radians))
-          .reverseSoftLimit(Intake4BarArmSubsystem.minAngle.in(Radians))
-          .forwardSoftLimitEnabled(false)
-          .reverseSoftLimitEnabled(false);
-
-      configMotor.signals.primaryEncoderPositionPeriodMs(10);
+          .outputRange(-1, 1).feedForward
+          // kV is now in Volts, so we multiply by the nominal voltage (12V)
+          .kV(12.0 / 5767, ClosedLoopSlot.kSlot0);
 
     }
   }
@@ -121,7 +98,7 @@ public final class Configs {
           .idleMode(IdleMode.kCoast)
           .smartCurrentLimit(60);
       armConfig2
-          .follow(CANIDConstants.intakeArmID,true);
+          .follow(CANIDConstants.intakeArmID, true);
 
     }
 
@@ -136,7 +113,8 @@ public final class Configs {
       hoodConfig
           .inverted(false)
           .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(5)
+          .openLoopRampRate(5)          
+          .closedLoopRampRate(.25)
           .smartCurrentLimit(40);
 
       hoodConfig.encoder
@@ -170,8 +148,20 @@ public final class Configs {
       feederBeltConfig
           .inverted(true)
           .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(1.)
+          .openLoopRampRate(.25)
+          .closedLoopRampRate(.05)
           .smartCurrentLimit(80);
+      feederBeltConfig.closedLoop
+          .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+          // Set PID values for speed control. We don't need to pass a closed loop
+          // slot, as it will default to slot 0.
+          .p(0.00005)
+          .i(0)
+          .d(0)
+          .outputRange(-1, 1).feedForward
+          // kV is now in Volts, so we multiply by the nominal voltage (12V)
+          .kV(12.0 / 5767, ClosedLoopSlot.kSlot0);
+
     }
 
     public static final SparkMaxConfig feederRollerConfig = new SparkMaxConfig();
@@ -179,12 +169,13 @@ public final class Configs {
       feederRollerConfig
           .inverted(false)
           .idleMode(IdleMode.kCoast)
-          .openLoopRampRate(.1)
+          .openLoopRampRate(.1)          
+          .closedLoopRampRate(.25)
           .smartCurrentLimit(80);
 
       feederRollerConfig.closedLoop
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-          // Set PID values for position control. We don't need to pass a closed loop
+          // Set PID values for speed control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
           .p(0.00005)
           .i(0)

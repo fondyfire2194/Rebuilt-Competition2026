@@ -13,7 +13,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -49,7 +48,7 @@ public class LimelightVision extends SubsystemBase {
   public double lastLeftHeartbeat;
   public double lastRightHeartbeat;
 
-  public int numberOfAprilTagCameras = 4;
+  public int numberOfAprilTagCameras = 1;
 
   public int numberTagsAllowed = 5;
 
@@ -99,14 +98,13 @@ public class LimelightVision extends SubsystemBase {
 
   public boolean useMT1;
 
-  private boolean showData;
+  private boolean logData;
 
   double[] vals = new double[8];
 
   double[] lastHeartbeat = new double[numberOfAprilTagCameras];
 
   public double tagID;
-  private boolean alternate;
 
   Alert frontCameraDisconnected = new Alert("Front Camera Disconnected",
       AlertType.kError);
@@ -159,8 +157,8 @@ public class LimelightVision extends SubsystemBase {
     InternalImuExternalAssist
   }
 
-  public LimelightVision(boolean showData) {
-    this.showData = showData;
+  public LimelightVision(boolean logData) {
+    this.logData = logData;
 
     cameras[0] = CameraConstants.frontCamera;
     cameras[1] = CameraConstants.leftCamera;
@@ -176,7 +174,7 @@ public class LimelightVision extends SubsystemBase {
 
     setCamToRobotOffset(cameras[rightCam]);
 
-    if (showData)
+    if (logData)
       SmartDashboard.putData(this);
 
     frontCameraDisconnected.set(!frontConnected);
@@ -209,24 +207,33 @@ public class LimelightVision extends SubsystemBase {
         break;
 
       case 1:
-        DogLog.log("LLV_LeftCamMT2Pose", mt2Pose[leftCam]);
-        DogLog.log("LLV_LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
-        DogLog.log("LLV_LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
-        DogLog.log("LLV_LeftPipeline#", LimelightHelpers.getCurrentPipelineIndex(leftName));
+        if (CameraConstants.leftCamera.isUsed) {
+          DogLog.log("LLV_LeftCamMT2Pose", mt2Pose[leftCam]);
+          DogLog.log("LLV_LeftCamMT2TagsSeen", mt2TagIDsSeen[leftCam]);
+          DogLog.log("LLV_LeftCam # MT2TagsSeen", numberMT2TagsSeen[leftCam]);
+          DogLog.log("LLV_LeftPipeline#", LimelightHelpers.getCurrentPipelineIndex(leftName));
+        }
         break;
 
       case 2:
-        DogLog.log("LLV_RightCamMT2Pose", mt2Pose[rightCam]);
-        DogLog.log("LLV_RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
-        DogLog.log("LLV_RightCam # MT2TagsSeen", numberMT2TagsSeen[rightCam]);
-        DogLog.log("LLV_RightPipeline#", LimelightHelpers.getCurrentPipelineIndex(rightName));
+        if (CameraConstants.rightCamera.isUsed) {
+          DogLog.log("LLV_RightCamMT2Pose", mt2Pose[rightCam]);
+          DogLog.log("LLV_RightCamMT2TagsSeen", mt2TagIDsSeen[rightCam]);
+          DogLog.log("LLV_RightCam # MT2TagsSeen", numberMT2TagsSeen[rightCam]);
+          DogLog.log("LLV_RightPipeline#", LimelightHelpers.getCurrentPipelineIndex(rightName));
+        }
         break;
 
       case 3:
 
+        double leftHeartbeat = 0;
+        double rightHeartbeat = 0;
+
         double frontHeartbeat = getCameraHeartbeat(frontName);
-        double leftHeartbeat = getCameraHeartbeat(leftName);
-        double rightHeartbeat = getCameraHeartbeat(rightName);
+        if (CameraConstants.leftCamera.isUsed)
+          leftHeartbeat = getCameraHeartbeat(leftName);
+        if (CameraConstants.rightCamera.isUsed)
+          rightHeartbeat = getCameraHeartbeat(rightName);
 
         frontConnected = frontHeartbeat != lastFrontHeartbeat;
         lastFrontHeartbeat = frontHeartbeat;
@@ -295,10 +302,12 @@ public class LimelightVision extends SubsystemBase {
   public void setDefaultLLPipelines() {
     LimelightHelpers.setPipelineIndex(CameraConstants.frontCamera.camname,
         CameraConstants.apriltagPipeline);
-    LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
-        CameraConstants.apriltagPipeline);
-    LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname,
-        CameraConstants.apriltagPipeline);
+    if (CameraConstants.leftCamera.isUsed)
+      LimelightHelpers.setPipelineIndex(CameraConstants.leftCamera.camname,
+          CameraConstants.apriltagPipeline);
+    if (CameraConstants.rightCamera.isUsed)
+      LimelightHelpers.setPipelineIndex(CameraConstants.rightCamera.camname,
+          CameraConstants.apriltagPipeline);
   }
 
   public void setViewFinderLLPipelines() {
@@ -379,59 +388,6 @@ public class LimelightVision extends SubsystemBase {
       LimelightHelpers.setPipelineIndex(leftName, CameraConstants.viewFinderPipeline);
     if (CameraConstants.rightCamera.isLL4)
       LimelightHelpers.setPipelineIndex(rightName, CameraConstants.viewFinderPipeline);
-  }
-
-  private void initSendable(SendableBuilder builder, int cameraIndex) {
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " Pipeline",
-        () -> LimelightHelpers.getCurrentPipelineIndex(cameras[cameraIndex].camname), null);
-    builder.addStringProperty(cameras[cameraIndex].camname + " Pipeline Type",
-        () -> LimelightHelpers.getCurrentPipelineType(cameras[cameraIndex].camname), null);
-    builder.addBooleanProperty(cameras[cameraIndex].camname + " Tag Seen",
-        () -> LimelightHelpers.getTV(cameras[cameraIndex].camname), null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " Number MT2 Tags Seen",
-        () -> numberMT2TagsSeen[cameraIndex], null);
-    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT1TagIDsSeen", () -> mt1TagIDsSeen[cameraIndex],
-        null);
-    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT2TagIDsSeen", () -> mt2TagIDsSeen[cameraIndex],
-        null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " MT2TDistance", () -> mt2distToCamera[cameraIndex], null);
-
-  }
-
-  private void initSendableLL4(SendableBuilder builder, int cameraIndex) {
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " Pipeline",
-        () -> LimelightHelpers.getCurrentPipelineIndex(cameras[cameraIndex].camname), null);
-    builder.addStringProperty(cameras[cameraIndex].camname + " Pipeline Type",
-        () -> LimelightHelpers.getCurrentPipelineType(cameras[cameraIndex].camname), null);
-    builder.addBooleanProperty(cameras[cameraIndex].camname + " Tag Seen",
-        () -> LimelightHelpers.getTV(cameras[cameraIndex].camname), null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " IMU Yaw", () -> getIMUYaw(), null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " IMU Robot Yaw", () -> getIMUDataRobotYaw(), null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " IMU Pitch", () -> getIMUPitch(), null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " IMU Roll", () -> getIMURoll(), null);
-    builder.addStringProperty(cameras[cameraIndex].camname + " IMU Mode",
-        () -> getIMUModeName(cameras[cameraIndex].camname), null);
-
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " Number MT2 Tags Seen",
-        () -> numberMT2TagsSeen[cameraIndex], null);
-    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT1TagIDsSeen", () -> mt1TagIDsSeen[cameraIndex],
-        null);
-    builder.addDoubleArrayProperty(cameras[cameraIndex].camname + " MT2TagIDsSeen", () -> mt2TagIDsSeen[cameraIndex],
-        null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " MT2TDistance", () -> mt2distToCamera[cameraIndex], null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + "  Temperature", () -> vals[0], null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " CPU", () -> vals[1], null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " Ram", () -> vals[2], null);
-    builder.addDoubleProperty(cameras[cameraIndex].camname + " FPS", () -> vals[2], null);
-
-  }
-
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    initSendable(builder, 0);
-    initSendableLL4(builder, 1);
-    initSendableLL4(builder, 2);
-
   }
 
   /**

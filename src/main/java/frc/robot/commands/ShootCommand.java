@@ -12,6 +12,7 @@ import frc.robot.Constants.FeederSetpoints;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.HoodSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
@@ -21,6 +22,7 @@ public class ShootCommand extends Command {
   private final HoodSubsystem m_hood;
   private final FeederSubsystem m_feeder;
   private final CommandSwerveDrivetrain m_swerve;
+  private final IntakeSubsystem m_intake;
   private boolean m_bypassAlign;
   private Timer beltTimer = new Timer();
   private boolean okToShoot;
@@ -28,12 +30,13 @@ public class ShootCommand extends Command {
   private int shootRunning;
 
   public ShootCommand(TripleShooterSubsystem shooter, HoodSubsystem hood, FeederSubsystem feeder,
-      CommandSwerveDrivetrain swerve, boolean bypassAlign) {
+      CommandSwerveDrivetrain swerve,IntakeSubsystem intake, boolean bypassAlign) {
     // Use addRequirements() here to declare subsystem dependencies.
     m_shooter = shooter;
     m_hood = hood;
     m_feeder = feeder;
     m_swerve = swerve;
+    m_intake=intake;
     m_bypassAlign = bypassAlign;
   }
 
@@ -43,20 +46,21 @@ public class ShootCommand extends Command {
     okToShoot = false;
     beltTimer.start();
     lookForPulse = false;
-    shootRunning=0;
+    shootRunning = 0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-shootRunning++;
+    shootRunning++;
     m_shooter.runAllVelocityVoltage();
+    m_intake.runIntakeAtVelocity();
 
     DogLog.log("Shoot/OKTOShoot", okToShoot);
     DogLog.log("Shoot/ShootersAtSpeed", m_shooter.allVelocityInTolerance());
     DogLog.log("Shoot/HoodAtTarget", m_hood.isPositionWithinTolerance());
     DogLog.log("Shoot/Aligned", m_swerve.alignedToTarget);
- DogLog.log("Shoot/Running", shootRunning);
+    DogLog.log("Shoot/Running", shootRunning);
 
     m_shooter.bypassShootInterlocks = m_bypassAlign;
 
@@ -89,9 +93,10 @@ shootRunning++;
 
         m_feeder.pulse = false;// force no belt reverse pulse
 
-        if (!m_feeder.pulse)
-          m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
-        else
+        if (!m_feeder.pulse) {
+         m_feeder.runFeederBeltAtVelocity();
+        //  m_feeder.runFeederBeltMotor(FeederSetpoints.kFeedBeltSetpoint);
+        } else
           m_feeder.pulseBelt();
       }
     }
@@ -103,6 +108,7 @@ shootRunning++;
   public void end(boolean interrupted) {
     m_feeder.stopFeederBeltMotor();
     m_feeder.stopFeederRollerMotor();
+    m_intake.stopIntakeMotor();
     okToShoot = false;
 
   }
