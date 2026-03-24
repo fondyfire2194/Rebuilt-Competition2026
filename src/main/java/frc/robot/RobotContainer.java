@@ -183,8 +183,6 @@ public class RobotContainer {
                                 Commands.sequence(
                                                 setForAutoShootValues(),
                                                 m_shooter.runAllVelocityVoltageCommand()))
-                                // .whileTrue(new DriveWithShootOnTheMove(drivetrain, m_hood, m_shooter, drive,
-                                // driver));
                                 .whileTrue(new AlignTargetOdometry(drivetrain, m_shooter, m_hood, drive,
                                                 driver, 1));
 
@@ -192,7 +190,6 @@ public class RobotContainer {
                                 Commands.parallel(
                                                 setForAutoShootValues(),
                                                 stopShootersFeedersIntake(),
-                                                m_shooter.endShootCommand(),
                                                 m_intakeArm.intakeArmToClearAngleCommand()));
 
                 driver.y().onTrue(m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)));
@@ -425,6 +422,7 @@ public class RobotContainer {
                 return Commands.sequence(
                                 m_hood.setManualTargetCommand(HoodSubsystem.kMinPosition.in(Degrees)),
                                 m_shooter.stopAllShootersCommand(),
+                                m_shooter.endShootCommand(),
                                 m_feeder.stopFeederRollerCommand(),
                                 m_feeder.stopFeederBeltCommand(),
                                 m_intake.stopIntakeCommand());
