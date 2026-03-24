@@ -78,7 +78,7 @@ public final class Configs {
       armConfig1
           .inverted(true)
           .idleMode(IdleMode.kCoast)
-          .smartCurrentLimit(40);
+          .smartCurrentLimit(60);
 
       armConfig1.encoder
           .positionConversionFactor(Intake4BarArmSubsystem.positionConversionFactor)
