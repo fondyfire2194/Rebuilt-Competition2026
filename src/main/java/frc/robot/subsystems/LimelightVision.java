@@ -110,10 +110,10 @@ public class LimelightVision extends SubsystemBase {
 
   Alert frontCameraDisconnected = new Alert("Front Camera Disconnected",
       AlertType.kError);
-  Alert leftCameraDisconnected = new Alert("Left Camera Disconnected",
-      AlertType.kError);
-  Alert rightCameraDisconnected = new Alert("Right Camera Disconnected",
-      AlertType.kError);
+  // Alert leftCameraDisconnected = new Alert("Left Camera Disconnected",
+  // AlertType.kError);
+  // Alert rightCameraDisconnected = new Alert("Right Camera Disconnected",
+  // AlertType.kError);
 
   private int logStep;
 
@@ -179,8 +179,8 @@ public class LimelightVision extends SubsystemBase {
       setCamToRobotOffset(cameras[rightCam]);
 
     frontCameraDisconnected.set(!frontConnected);
-    leftCameraDisconnected.set(!leftConnected);
-    rightCameraDisconnected.set(!rightConnected);
+    // leftCameraDisconnected.set(!leftConnected);
+    // rightCameraDisconnected.set(!rightConnected);
 
   }
 
@@ -252,10 +252,10 @@ public class LimelightVision extends SubsystemBase {
 
             if (frontConnected && frontCameraDisconnected.get())
               frontCameraDisconnected.close();
-            if (leftConnected && leftCameraDisconnected.get())
-              leftCameraDisconnected.close();
-            if (rightConnected && rightCameraDisconnected.get())
-              rightCameraDisconnected.close();
+            // if (leftConnected && leftCameraDisconnected.get())
+            // leftCameraDisconnected.close();
+            // if (rightConnected && rightCameraDisconnected.get())
+            // rightCameraDisconnected.close();
           }
           break;
 

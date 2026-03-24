@@ -80,20 +80,20 @@ public class RobotContainer {
 
         private final FeederSubsystem m_feeder;
 
-        private final IntakeSubsystem m_intake;
+        final IntakeSubsystem m_intake;
 
-        private final Intake4BarArmSubsystem m_intakeArm;
+        final Intake4BarArmSubsystem m_intakeArm;
 
         public final LimelightVision m_llv;
 
         // public final PowerDistribution pdh;
 
         private boolean logShooterData = true;
-        private boolean logHoodData = false;
+        private boolean logHoodData = true;
         private boolean logFeederData = true;
         private boolean logIntakeData = true;
         private boolean logIntakeArmData = true;
-        private boolean logLLData = false;
+        private boolean logLLData = true;
 
         private Trigger collisionTrigger;
 
@@ -413,7 +413,6 @@ public class RobotContainer {
                 return Commands.parallel(
                                 m_shooter.setShootUsingDistanceCommand(false),
                                 m_hood.setHoodUsingDistanceCommand(false));
-
         }
 
         public Command stopShootersFeedersIntake() {

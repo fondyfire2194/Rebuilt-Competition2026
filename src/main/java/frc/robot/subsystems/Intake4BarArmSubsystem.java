@@ -22,7 +22,10 @@ import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -71,7 +74,7 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   public Angle midDownAngle = Degree.of(60);
 
   public Angle nextUpAngle = midUpAngle;
- public Angle nextDownAngle = midDownAngle;
+  public Angle nextDownAngle = midDownAngle;
 
   private Current stallCurrent = Amps.of(15);
 
@@ -79,6 +82,16 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
   public boolean logData;
   private boolean alternate;
+
+  private Timer faultCheckTimer;
+
+  private final Alert intakeArmAlert = new Alert(
+      "Intake Arm Fault",
+      AlertType.kError);
+  private final Alert intakeArmCanbusAlert = new Alert(
+      "Intake Arm Loss of Canbus",
+      AlertType.kError);
+  private double faultCheckTime = 5.2;
 
   public Intake4BarArmSubsystem(boolean logData) {
 
@@ -107,6 +120,9 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
 
     this.logData = logData;
 
+    faultCheckTimer = new Timer();
+    faultCheckTimer.start();
+    
     intakeArmMotor.getEncoder().setPosition(homeAngle.in(Radians));
 
     kp = DogLog.tunable("IntakeArm/PGain", 8., newKp -> m_controller.setP(newKp));
@@ -125,28 +141,43 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
     return motor.getReverseSoftLimit().isReached();
   }
 
+  public boolean checkIntakeArmCanFault() {
+    return intakeArmMotor.getFaults().can;
+  }
+
   public void periodic() {
-    if (logData) {
-      if (alternate) {
-        DogLog.log("IntakeArm/TargetAngle", Units.radiansToDegrees(m_controller.getGoal().position));
 
-        DogLog.log("IntakeArm/CurrentAngle", getIntakeArmAngle().in(Degrees));
-        DogLog.log("IntakeArm/Encoder", intakeArmMotor.getEncoder().getPosition());
-        DogLog.log("IntakeArm/EncoderVel", intakeArmMotor.getEncoder().getVelocity());
-        DogLog.log("IntakeArm/MotorVolts", intakeArmMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
-        DogLog.log("IntakeArm/FwdSoftLimit", intakeArmMotor.getForwardSoftLimit().isReached());
-        DogLog.log("IntakeArm/RevSoftLimit", intakeArmMotor.getReverseSoftLimit().isReached());
-      } else {
-        DogLog.log("IntakeArm/FollowerEncoder", intakeArmMotorFollower.getEncoder().getPosition());
-        DogLog.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
-        DogLog.log("IntakeArm/AngleError", m_controller.getPositionError());
-        DogLog.log("IntakeArm/AtTarget", m_controller.atGoal());
-        DogLog.log("IntakeArm/LeaderAmps", intakeArmMotor.getOutputCurrent());
-        DogLog.log("IntakeArm/FollowerAmps", intakeArmMotorFollower.getOutputCurrent());
+    if (faultCheckTimer.get() > faultCheckTime) {
+      intakeArmAlert.set(intakeArmMotor.hasActiveFault() || intakeArmMotor.hasStickyFault());
+      intakeArmCanbusAlert.set(checkIntakeArmCanFault());
+      faultCheckTimer.restart();
+    }
+
+    else {
+
+      if (logData)
+
+      {
+        if (alternate) {
+          DogLog.log("IntakeArm/TargetAngle", Units.radiansToDegrees(m_controller.getGoal().position));
+
+          DogLog.log("IntakeArm/CurrentAngle", getIntakeArmAngle().in(Degrees));
+          DogLog.log("IntakeArm/Encoder", intakeArmMotor.getEncoder().getPosition());
+          DogLog.log("IntakeArm/EncoderVel", intakeArmMotor.getEncoder().getVelocity());
+          DogLog.log("IntakeArm/MotorVolts", intakeArmMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+          DogLog.log("IntakeArm/FwdSoftLimit", intakeArmMotor.getForwardSoftLimit().isReached());
+          DogLog.log("IntakeArm/RevSoftLimit", intakeArmMotor.getReverseSoftLimit().isReached());
+        } else {
+          DogLog.log("IntakeArm/FollowerEncoder", intakeArmMotorFollower.getEncoder().getPosition());
+          DogLog.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
+          DogLog.log("IntakeArm/AngleError", m_controller.getPositionError());
+          DogLog.log("IntakeArm/AtTarget", m_controller.atGoal());
+          DogLog.log("IntakeArm/LeaderAmps", intakeArmMotor.getOutputCurrent());
+          DogLog.log("IntakeArm/FollowerAmps", intakeArmMotorFollower.getOutputCurrent());
+        }
+
+        alternate = !alternate;
       }
-
-      alternate = !alternate;
-
     }
   }
 
@@ -166,11 +197,11 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
   public Command helpShootCommand(double pauseBetween, Angle angleChange) {
     return Commands.sequence(
         intakeArmToNextMidDownAngleCommand(),
-         setNextDownAngleCommand(angleChange),
+        setNextDownAngleCommand(angleChange),
         Commands.waitSeconds(pauseBetween),
         intakeArmToNextMidUpAngleCommand(),
         setNextUpAngleCommand(angleChange),
-        
+
         Commands.waitSeconds(pauseBetween))
         .repeatedly();
   }
@@ -205,7 +236,7 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
     return Commands.runOnce(() -> setNextUpAngle(angleChange));
   }
 
-   public void setNextDownAngle(Angle angleChange) {
+  public void setNextDownAngle(Angle angleChange) {
     Angle temp = nextDownAngle.minus(angleChange);
     if (temp.in(Degrees) > 40)
       nextDownAngle = temp;
@@ -219,11 +250,11 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
     return Commands.runOnce(
         () -> m_controller.setGoal(nextUpAngle.in(Radians)));
   }
- public Command intakeArmToNextMidDownAngleCommand() {
+
+  public Command intakeArmToNextMidDownAngleCommand() {
     return Commands.runOnce(
         () -> m_controller.setGoal(nextDownAngle.in(Radians)));
   }
-
 
   public Command positionIntakeArmCommand() {
     return Commands.run(() -> positionIntakeArm(), this);

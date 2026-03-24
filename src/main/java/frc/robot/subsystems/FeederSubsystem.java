@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -39,10 +40,21 @@ public class FeederSubsystem extends SubsystemBase {
 
   private boolean logData;
 
-  private final Alert feederAlert = new Alert(
-      "Feeder Fault",
+  private final Alert feederBeltAlert = new Alert(
+      "Feeder Belt Fault",
+      AlertType.kError);
+  private final Alert feederRollerAlert = new Alert(
+      "Feeder Roller Fault",
+      AlertType.kError);
+  private final Alert feederBeltCanbusAlert = new Alert(
+      "Feeder Belt Loss of Canbus",
+      AlertType.kError);
+  private final Alert feederRollerCanbusAlert = new Alert(
+      "Feeder Roller Loss of Canbus",
       AlertType.kError);
 
+  private Timer faultCheckTimer;
+  private double faultCheckTime = 5.1;
   public boolean pulse;
 
   public double beltStartPulseTime = 2.;
@@ -82,29 +94,49 @@ public class FeederSubsystem extends SubsystemBase {
 
     this.logData = logData;
 
-    feederAlert.set(feederBeltMotor.hasActiveFault() || feederBeltMotor.hasStickyFault()
-        || feederRollerMotor.hasActiveFault() || feederRollerMotor.hasStickyFault());
+    
+    faultCheckTimer = new Timer();
+    faultCheckTimer.start();
+
   }
 
   @Override
   public void periodic() {
 
-    if (logData) {
+    if (faultCheckTimer.get() > faultCheckTime) {
+      feederBeltAlert.set(feederBeltMotor.hasActiveFault() || feederBeltMotor.hasStickyFault());
+      feederRollerAlert.set(feederRollerMotor.hasActiveFault() || feederRollerMotor.hasStickyFault());
 
-      if (alternate) {
-        DogLog.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
-        DogLog.log("Feeder/RollerTargetRPM", rollerClosedLoopController.getSetpoint());
-        DogLog.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
-        DogLog.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
-   
-      } else {
-        DogLog.log("Feeder/BeltTargetRPM", beltClosedLoopController.getSetpoint());
-        DogLog.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
-        DogLog.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
-        DogLog.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+      feederBeltCanbusAlert.set(checkFeederBeltCanFault());
+      feederRollerCanbusAlert.set(checkFeederRollerCanFault());
+      faultCheckTimer.restart();
+
+    } else {
+      if (logData) {
+
+        if (alternate) {
+          DogLog.log("Feeder/RollerRPM", feederRollerMotor.getEncoder().getVelocity());
+          DogLog.log("Feeder/RollerTargetRPM", rollerClosedLoopController.getSetpoint());
+          DogLog.log("Feeder/RollerAmps", feederRollerMotor.getOutputCurrent());
+          DogLog.log("Feeder/RollerVolts", feederRollerMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+
+        } else {
+          DogLog.log("Feeder/BeltTargetRPM", beltClosedLoopController.getSetpoint());
+          DogLog.log("Feeder/BeltRPM", feederBeltMotor.getEncoder().getVelocity());
+          DogLog.log("Feeder/BeltAmps", feederBeltMotor.getOutputCurrent());
+          DogLog.log("Feeder/BeltVolts", feederBeltMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
+        }
+        alternate = !alternate;
       }
-      alternate = !alternate;
     }
+  }
+
+  public boolean checkFeederBeltCanFault() {
+    return feederBeltMotor.getFaults().can;
+  }
+
+  public boolean checkFeederRollerCanFault() {
+    return feederRollerMotor.getFaults().can;
   }
 
   public void runFeederRollerMotor(double power) {

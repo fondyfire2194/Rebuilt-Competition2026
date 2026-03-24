@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.PersistMode;
-import com.revrobotics.REVLibError;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -18,6 +17,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -31,10 +31,15 @@ public class IntakeSubsystem extends SubsystemBase {
   private SparkClosedLoopController intakeClosedLoopController;
   private double intakePowerSim;
   public boolean logData;
+  private Timer faultCheckTimer;
 
   private final Alert intakeAlert = new Alert(
       "Intake Fault",
       AlertType.kError);
+  private final Alert intakeCanbusAlert = new Alert(
+      "Intake Loss of Canbus",
+      AlertType.kError);
+  private double faultCheckTime = 5;
 
   /** Creates a new IntakeSubsystem. */
   public IntakeSubsystem(boolean logData) {
@@ -53,9 +58,8 @@ public class IntakeSubsystem extends SubsystemBase {
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
     this.logData = logData;
-
-    intakeAlert.set(intakeMotor.hasActiveFault() || intakeMotor.hasStickyFault());
-
+    faultCheckTimer = new Timer();
+    faultCheckTimer.start();
     intakeClosedLoopController = intakeMotor.getClosedLoopController();
   }
 
@@ -144,10 +148,15 @@ public class IntakeSubsystem extends SubsystemBase {
       DogLog.log("Intake/MotorAmps", intakeMotor.getOutputCurrent());
       DogLog.log("Intake/MotorVolts", intakeMotor.getAppliedOutput() * RobotController.getBatteryVoltage());
     }
+    if (faultCheckTimer.get() > faultCheckTime) {
+      intakeAlert.set(intakeMotor.hasActiveFault() || intakeMotor.hasStickyFault());
+      intakeCanbusAlert.set(checkIntakeCanFault());
+      faultCheckTimer.restart();
+    }
   }
 
-  public boolean pingSparkMax() {
-    return intakeMotor.clearFaults() == REVLibError.kCANDisconnected;
+  public boolean checkIntakeCanFault() {
+    return intakeMotor.getFaults().can;
   }
 
 }
