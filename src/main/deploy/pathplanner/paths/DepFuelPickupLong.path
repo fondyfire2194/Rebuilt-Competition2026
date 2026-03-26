@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 9.2,
-        "y": 4.524
+        "y": 2.8
       },
       "prevControl": {
-        "x": 9.186922708750068,
-        "y": 4.773657734615942
+        "x": 9.2,
+        "y": 2.55
       },
       "nextControl": null,
       "isLocked": false,
@@ -32,10 +32,10 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.037122969837586936,
+      "minWaypointRelativePos": 0.02528089887640449,
       "maxWaypointRelativePos": 1.0,
       "constraints": {
-        "maxVelocity": 2.0,
+        "maxVelocity": 1.8,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,

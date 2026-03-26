@@ -13,13 +13,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "OPFuelPickupMid"
+            "pathName": "OutFuelPickupShort"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickupBumpOutpostMid"
+            "pathName": "PickupBumpOutpostShort"
           }
         },
         {

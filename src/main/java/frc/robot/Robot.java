@@ -11,39 +11,20 @@ import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.event.BooleanEvent;
 import edu.wpi.first.wpilibj.event.EventLoop;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.commands.AprilTags.LimelightTagsMT1Update;
 import frc.robot.commands.AprilTags.LimelightTagsMT2Update;
 import frc.robot.utils.AllianceUtil;
-import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LoopEvents;
 
 public class Robot extends TimedRobot {
         private Command m_autonomousCommand;
         private final EventLoop m_eventLoop = new EventLoop();
-
-        private BooleanEvent frontCamHasHubTag;
-
-        NetworkTableInstance inst = NetworkTableInstance.getDefault();
-
-        // private final NetworkTable hubPoseTable = inst.getTable("HubPoses");
-
-        // private final StructPublisher<Pose2d> hubPoseRed =
-        // hubPoseTable.getStructTopic("HubPoseRed", Pose2d.struct)
-        // .publish();
-        // private final StructPublisher<Pose2d> hubPoseBlue =
-        // hubPoseTable.getStructTopic("HubPoseBlue", Pose2d.struct)
-        // .publish();
 
         private final RobotContainer m_robotContainer;
         private LoopEvents loopEvents;
@@ -62,9 +43,6 @@ public class Robot extends TimedRobot {
 
         @Override
         public void robotInit() {
-                // hubPoseRed.set(FieldConstants.redHubPose);
-                // hubPoseBlue.set(FieldConstants.blueHubPose);
-                // // inst.flush();
 
                 DogLog.setOptions(
                                 new DogLogOptions()
@@ -79,15 +57,6 @@ public class Robot extends TimedRobot {
                 loopEvents = new LoopEvents(m_robotContainer.drivetrain, m_robotContainer.m_shooter, m_eventLoop);
                 loopEvents.init();
 
-                frontCamHasHubTag = new BooleanEvent(m_eventLoop,
-                                () -> m_robotContainer.m_llv.getFrontCamSeesHubTags()).debounce(1);
-
-                // frontCamHasHubTag.ifHigh(() ->
-                // m_robotContainer.m_llv.setViewFinderLLPipelines());
-
-                // frontCamHasHubTag.negate().ifHigh(() ->
-                // m_robotContainer.m_llv.setDefaultLLPipelines());
-
                 autoHasRun = false;
 
                 m_robotContainer.m_llv.setDefaultLLPipelines();
@@ -97,14 +66,11 @@ public class Robot extends TimedRobot {
                  * reset useM!i and set useMT2
                  * If the front camera sees a hub tag, then the Viewfinder pipeline is set on
                  * the left and right cameras
-                 * This is set back when the front camera doesn't see a hub tag.
-                 * This allows the left and right cameras to add their results to the robot pose
-                 * vision measurement.
                  * 
                  */
                 CommandScheduler.getInstance().schedule(
                                 runFrontMT1UpdatesCommand(),
-                                runMT2UpdatesCommand());
+                                runFrontMT2UpdatesCommand());
                 m_robotContainer.m_llv.useMT1 = true;
         }
 
@@ -143,13 +109,10 @@ public class Robot extends TimedRobot {
                 m_robotContainer.setForAutoShootValues();
 
                 m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-                SmartDashboard.putString("AutoName", m_autonomousCommand.getName());
                 if (m_autonomousCommand != null) {
                         CommandScheduler.getInstance().schedule(m_autonomousCommand);
                 }
-                // CommandScheduler.getInstance().schedule(
-                // new CollisionDetectionCommand(m_robotContainer.drivetrain));
-
+        
         }
 
         @Override
@@ -160,10 +123,6 @@ public class Robot extends TimedRobot {
         public void autonomousExit() {
                 autoHasRun = true;
 
-                if (DriverStation.isFMSAttached()) {
-                        LimelightHelpers.triggerRewindCapture(m_robotContainer.m_llv.leftName, 20);
-                        LimelightHelpers.triggerRewindCapture(m_robotContainer.m_llv.rightName, 20);
-                }
         }
 
         @Override
@@ -191,10 +150,6 @@ public class Robot extends TimedRobot {
         @Override
         public void teleopExit() {
 
-                if (DriverStation.isFMSAttached()) {
-                        LimelightHelpers.triggerRewindCapture(m_robotContainer.m_llv.leftName, 130);
-                        LimelightHelpers.triggerRewindCapture(m_robotContainer.m_llv.rightName, 130);
-                }
         }
 
         @Override
@@ -216,30 +171,6 @@ public class Robot extends TimedRobot {
 
         }
 
-        public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
-                double XDiff = targetPose.getX() - robotPose.getX();
-                double YDiff = targetPose.getY() - robotPose.getY();
-                return Units.radiansToDegrees(Math.atan2(YDiff, XDiff));
-        }
-
-        public Command runMT2UpdatesCommand() {
-
-                // return Commands.parallel(
-
-                return new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                                m_robotContainer.m_llv.frontCam,
-                                m_robotContainer.drivetrain).ignoringDisable(true)
-                                .withName("FrontMT2");
-
-                // new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                // m_robotContainer.m_llv.leftCam,
-                // m_robotContainer.drivetrain).ignoringDisable(true)
-                // .withName("LeftMT2"),
-                // new LimelightTagsMT2Update(m_robotContainer.m_llv,
-                // m_robotContainer.m_llv.rightCam,
-                // m_robotContainer.drivetrain).ignoringDisable(true)
-                // .withName("RightMT2"));
-        }
 
         public Command runFrontMT2UpdatesCommand() {
                 return new LimelightTagsMT2Update(m_robotContainer.m_llv,
