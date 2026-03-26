@@ -7,8 +7,6 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
-import java.util.function.LongFunction;
-
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -17,7 +15,6 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -76,7 +73,7 @@ public class LimelightVision extends SubsystemBase {
 
   public int presetLimit = 50;
 
-  public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d(), new Pose2d() };
+  public Pose2d[] mt2Pose = { new Pose2d(), new Pose2d() };
 
   public double[] mt2ambiguity = new double[numberOfAprilTagCameras];
 
@@ -110,10 +107,10 @@ public class LimelightVision extends SubsystemBase {
 
   Alert frontCameraDisconnected = new Alert("Front Camera Disconnected",
       AlertType.kError);
-  // Alert leftCameraDisconnected = new Alert("Left Camera Disconnected",
-  // AlertType.kError);
-  // Alert rightCameraDisconnected = new Alert("Right Camera Disconnected",
-  // AlertType.kError);
+  Alert leftCameraDisconnected = new Alert("Left Camera Disconnected",
+      AlertType.kError);
+  Alert rightCameraDisconnected = new Alert("Right Camera Disconnected",
+      AlertType.kError);
 
   private int logStep;
 
@@ -207,6 +204,9 @@ public class LimelightVision extends SubsystemBase {
           break;
 
         case 1:
+          DogLog.log("LLV_FrontCamDist", mt2distToCamera);
+          DogLog.log("LLV_FrontCamAmbiguity", mt2ambiguity[frontCam]);
+          DogLog.log("LLV_FrontCamDReject", mt2RejectUpdate[frontCam]);
 
           DogLog.log("LLV_FrontCamUseMT1", useMT1);
           DogLog.log("LLV_FrontCamUseMT2", useMT2);
@@ -238,24 +238,27 @@ public class LimelightVision extends SubsystemBase {
           double rightHeartbeat = 0;
           if (logData) {
             double frontHeartbeat = getCameraHeartbeat(frontName);
-            if (CameraConstants.leftCamera.isUsed)
+            if (CameraConstants.leftCamera.isUsed) {
               leftHeartbeat = getCameraHeartbeat(leftName);
-            if (CameraConstants.rightCamera.isUsed)
+              leftConnected = leftHeartbeat != lastLeftHeartbeat;
+              lastLeftHeartbeat = leftHeartbeat;
+              if (leftConnected && leftCameraDisconnected.get())
+                leftCameraDisconnected.close();
+            }
+            if (CameraConstants.rightCamera.isUsed) {
               rightHeartbeat = getCameraHeartbeat(rightName);
-
+              rightConnected = rightHeartbeat != lastRightHeartbeat;
+              lastRightHeartbeat = rightHeartbeat;
+              if (rightConnected && rightCameraDisconnected.get())
+                rightCameraDisconnected.close();
+            }
+            
             frontConnected = frontHeartbeat != lastFrontHeartbeat;
             lastFrontHeartbeat = frontHeartbeat;
-            leftConnected = leftHeartbeat != lastLeftHeartbeat;
-            lastLeftHeartbeat = leftHeartbeat;
-            rightConnected = rightHeartbeat != lastRightHeartbeat;
-            lastRightHeartbeat = rightHeartbeat;
 
             if (frontConnected && frontCameraDisconnected.get())
               frontCameraDisconnected.close();
-            // if (leftConnected && leftCameraDisconnected.get())
-            // leftCameraDisconnected.close();
-            // if (rightConnected && rightCameraDisconnected.get())
-            // rightCameraDisconnected.close();
+
           }
           break;
 

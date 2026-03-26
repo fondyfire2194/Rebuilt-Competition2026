@@ -70,7 +70,7 @@ public class Robot extends TimedRobot {
                                 new DogLogOptions()
                                                 .withNtPublish(true)
                                                 .withCaptureNt(false)
-                                                .withCaptureDs(false)
+                                                .withCaptureDs(true)
                                                 .withLogExtras(false)
                                                 .withUseLogThread(false)
                                                 .withLogEntryQueueCapacity(2000));

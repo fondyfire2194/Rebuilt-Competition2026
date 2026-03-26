@@ -338,6 +338,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
       shooterAlert.set(leftMotor.getFaultField().asSupplier().get() != 0
           || middleMotor.getFaultField().asSupplier().get() != 0
           || rightMotor.getFaultField().asSupplier().get() != 0);
+           faultCheckTimer.restart();
     } else {
       if (logData) {
         if (alternate) {

@@ -160,7 +160,6 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
       {
         if (alternate) {
           DogLog.log("IntakeArm/TargetAngle", Units.radiansToDegrees(m_controller.getGoal().position));
-
           DogLog.log("IntakeArm/CurrentAngle", getIntakeArmAngle().in(Degrees));
           DogLog.log("IntakeArm/Encoder", intakeArmMotor.getEncoder().getPosition());
           DogLog.log("IntakeArm/EncoderVel", intakeArmMotor.getEncoder().getVelocity());
@@ -169,7 +168,6 @@ public class Intake4BarArmSubsystem extends SubsystemBase {
           DogLog.log("IntakeArm/RevSoftLimit", intakeArmMotor.getReverseSoftLimit().isReached());
         } else {
           DogLog.log("IntakeArm/FollowerEncoder", intakeArmMotorFollower.getEncoder().getPosition());
-          DogLog.log("IntakeArm/TargetAngle", m_controller.getGoal().position);
           DogLog.log("IntakeArm/AngleError", m_controller.getPositionError());
           DogLog.log("IntakeArm/AtTarget", m_controller.atGoal());
           DogLog.log("IntakeArm/LeaderAmps", intakeArmMotor.getOutputCurrent());

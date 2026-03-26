@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepBmpPickupShort"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.1
+            "pathName": "DepBmpToFuel_V2"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickupBmpDepShort"
+            "pathName": "FuelPickupMid"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "PickupBmpDepMid"
           }
         },
         {

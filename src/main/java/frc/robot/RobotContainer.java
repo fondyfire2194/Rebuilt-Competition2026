@@ -245,9 +245,8 @@ public class RobotContainer {
                 codriver.rightBumper().and(codriver.povUp()).whileTrue(m_intakeArm.helpShootCommand(1, Degrees.of(2)));
 
                 codriver.rightBumper().and(codriver.povDown())
-                                .onTrue(
-                                                clearRevStickyFaultsCommand()
-                                                                .andThen(clearShooterStickyFaultsCommand()));
+                                .onTrue(clearRevStickyFaultsCommand()
+                                                .alongWith(clearShooterStickyFaultsCommand()));
 
                 codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
 

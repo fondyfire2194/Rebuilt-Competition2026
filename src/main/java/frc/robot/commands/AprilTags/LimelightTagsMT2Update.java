@@ -22,7 +22,7 @@ public class LimelightTagsMT2Update extends Command {
     private final double AMBIGUITY_CUTOFF = 0.7;
     private final double DISTANCE_CUTOFF = 4.0;
     private final double DISTANCE_STDDEVS_SCALAR = 2;
-    private final double HUB_STDDEVS_SCALAR = 1;
+    private final double HUB_STDDEVS_SCALAR = 4;
 
     private final double ROTATION_RATE_CUTOFF = 720;
 

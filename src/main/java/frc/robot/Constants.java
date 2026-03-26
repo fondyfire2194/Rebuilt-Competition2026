@@ -332,7 +332,7 @@ public final class Constants {
     public static final double kJogIntake = 0.25;
     public static final double kIntake = .99;
     public static final double kExtake = -0.9;
-    public static final double kIntakeRPM = 4000;
+    public static final double kIntakeRPM = 4800;
   }
 
   public static final class FeederSetpoints {
@@ -342,8 +342,8 @@ public final class Constants {
     public static final double kFeedRollerJogSetpoint = 0.5;
     public static final double kFeedBeltJogSetpoint = 0.5;
 
-    public static double kRollerShootRPM = 4500;
-    public static double kBeltShootRPM = 3800;
+    public static double kRollerShootRPM = 4800;
+    public static double kBeltShootRPM = 4500;
     public static double rollerSpeedToStartBelt = 3500;
 
   }
