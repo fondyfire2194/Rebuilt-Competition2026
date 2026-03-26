@@ -13,13 +13,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "FuelPickupMid"
+            "pathName": "FuelPickupLong"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickupBmpDepMid"
+            "pathName": "PickupBmpDepLong"
           }
         },
         {

@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepBmpToFuel"
+            "pathName": "OutBmpToFuel"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "FuelPickupMid"
+            "pathName": "OPFuelPickupLong"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickupBmpDepMid"
+            "pathName": "PickupBumpOutpostLong"
           }
         },
         {
