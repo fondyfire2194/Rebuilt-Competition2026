@@ -252,7 +252,7 @@ public class LimelightVision extends SubsystemBase {
               if (rightConnected && rightCameraDisconnected.get())
                 rightCameraDisconnected.close();
             }
-            
+
             frontConnected = frontHeartbeat != lastFrontHeartbeat;
             lastFrontHeartbeat = frontHeartbeat;
 
@@ -285,6 +285,17 @@ public class LimelightVision extends SubsystemBase {
         cam.camPose.getZ(),
         Units.radiansToDegrees(cam.camPose.getRotation().getX()),
         Units.radiansToDegrees(cam.camPose.getRotation().getY()),
+        Units.radiansToDegrees(cam.camPose.getRotation().getZ()));
+  }
+
+  public void setCamToRobotOffsetInvertPitch(Cameras cam) {
+    LimelightHelpers.setCameraPose_RobotSpace(
+        cam.camname,
+        cam.camPose.getX(),
+        cam.camPose.getY(),
+        cam.camPose.getZ(),
+        Units.radiansToDegrees(cam.camPose.getRotation().getX()),
+        -Units.radiansToDegrees(cam.camPose.getRotation().getY()),
         Units.radiansToDegrees(cam.camPose.getRotation().getZ()));
   }
 

@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
 import frc.robot.commands.AutoAlignHub;
@@ -278,6 +279,13 @@ public class RobotContainer {
                                                 (Commands.runOnce(() -> m_llv.useMT2 = false))));
 
                 codriver.leftTrigger().and(codriver.povDown()).whileTrue(m_intake.jogIntakeCommand());
+
+                codriver.leftTrigger().and(codriver.a()).onTrue(
+                                Commands.runOnce(() -> m_llv.setCamToRobotOffset(CameraConstants.frontCamera)));
+                                
+                codriver.leftTrigger().and(codriver.y()).onTrue(
+                                Commands.runOnce(() -> m_llv
+                                                .setCamToRobotOffsetInvertPitch(CameraConstants.frontCamera)));
 
         }
 
