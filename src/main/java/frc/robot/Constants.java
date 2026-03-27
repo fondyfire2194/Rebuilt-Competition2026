@@ -193,7 +193,7 @@ public final class Constants {
       public static final double width = Units.inchesToMeters(73.0);
       public static final double height = Units.inchesToMeters(6.513);
       public static final double depth = Units.inchesToMeters(44.4);
-      public static final double yMid = FieldConstants.fieldWidth/2 + Units.inchesToMeters(73/2);
+      public static final double yMid = FieldConstants.fieldWidth / 2 + Units.inchesToMeters(73 / 2);
 
       // Relevant reference points on alliance side
       public static final Translation2d nearLeftCorner = new Translation2d(LinesVertical.hubCenter + width / 2,
@@ -343,8 +343,8 @@ public final class Constants {
     public static final double kFeedBeltJogSetpoint = 0.5;
 
     public static double kRollerShootRPM = 4800;
-    public static double kBeltShootRPM = 4500;
-    public static double rollerSpeedToStartBelt = 3500;
+    public static double kBeltShootRPM = 2500;
+    public static double rollerSpeedToStartBelt = kRollerShootRPM * .75;
 
   }
 

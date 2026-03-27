@@ -7,25 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "OutBmpToFuel"
+            "pathName": "DepBmpToFuel"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "OutFuelPickupLong"
+            "pathName": "DepFuelPickupMid"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickupBumpOutpostLong"
+            "pathName": "PickupBmpDepMidV2"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "ALIGN"
+            "name": "ALIGN_AND_SHOOT"
           }
         },
         {

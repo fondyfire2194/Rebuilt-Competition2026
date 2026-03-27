@@ -13,25 +13,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "OutFuelPickupLong"
+            "pathName": "OutFuelPickupMid"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "PickupBumpOutpostLong"
+            "pathName": "PickupBumpOutpostMidV2"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "ALIGN"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "SHOOT"
+            "name": "ALIGN_AND_SHOOT"
           }
         }
       ]

@@ -282,7 +282,7 @@ public class RobotContainer {
 
                 codriver.leftTrigger().and(codriver.a()).onTrue(
                                 Commands.runOnce(() -> m_llv.setCamToRobotOffset(CameraConstants.frontCamera)));
-                                
+
                 codriver.leftTrigger().and(codriver.y()).onTrue(
                                 Commands.runOnce(() -> m_llv
                                                 .setCamToRobotOffsetInvertPitch(CameraConstants.frontCamera)));
@@ -340,6 +340,9 @@ public class RobotContainer {
         }
 
         private void registerNamedCommands() {
+                
+                NamedCommands.registerCommand("ALIGN",
+                                new AutoAlignHub(drivetrain, m_shooter, m_hood, true, 2));
 
                 NamedCommands.registerCommand("SHOOT",
 
@@ -354,8 +357,21 @@ public class RobotContainer {
                                                                                 Degrees.of(2))))
                                                 .andThen(stopShootersFeedersIntake()));
 
-                NamedCommands.registerCommand("ALIGN_AND_START_SHOOT",
-                                new AutoAlignHub(drivetrain, m_shooter, m_hood, 2));
+                NamedCommands.registerCommand("ALIGN_AND_SHOOT",
+
+                                Commands.deadline(Commands.waitSeconds(10),
+
+                                                new AutoAlignHub(drivetrain, m_shooter, m_hood, false, 2),
+
+                                                new ShootCommand(m_shooter, m_hood,
+                                                                m_feeder,
+                                                                drivetrain, m_intake, false),
+                                                Commands.sequence(
+                                                                Commands.waitSeconds(4),
+                                                                m_intakeArm.helpShootCommand(
+                                                                                .75,
+                                                                                Degrees.of(2))))
+                                                .andThen(stopShootersFeedersIntake()));
 
         }
 

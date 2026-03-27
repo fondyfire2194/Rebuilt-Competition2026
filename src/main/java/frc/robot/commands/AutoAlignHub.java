@@ -35,17 +35,20 @@ public class AutoAlignHub extends Command {
   private double distanceToTarget;
   private double targetDegrees;
   private double lastTargetDegrees;
+  private boolean m_endWhenAligned;
 
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
   private int alignedCounter;
 
   public AutoAlignHub(
-      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, HoodSubsystem hood, double toleranceDegrees) {
+      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, HoodSubsystem hood, boolean endWhenAligned,
+      double toleranceDegrees) {
 
     m_swerve = swerve;
     m_shooter = shooter;
     m_hood = hood;
     m_toleranceDegrees = toleranceDegrees;
+    m_endWhenAligned = endWhenAligned;
     addRequirements(m_swerve);
   }
 
@@ -75,7 +78,7 @@ public class AutoAlignHub extends Command {
     distanceToTarget = targetPose.getTranslation()
         .getDistance(robotPose.getTranslation());
 
-   // distanceToTarget = 2.;
+    // distanceToTarget = 2.;
     m_shooter.setAutoSetTargetRPM(ShootingData.shooterSpeedMap.get(distanceToTarget));
 
     m_hood.setAutoTargetAngle(ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
@@ -132,7 +135,7 @@ public class AutoAlignHub extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return m_swerve.alignedToTarget && alignedCounter > 25;
+    return m_endWhenAligned && m_swerve.alignedToTarget && alignedCounter > 25;
   }
 
   public double getAngleDegreesToTarget(Pose2d targetPose, Pose2d robotPose) {
