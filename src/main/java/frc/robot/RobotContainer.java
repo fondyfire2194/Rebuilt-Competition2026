@@ -340,15 +340,16 @@ public class RobotContainer {
         }
 
         private void registerNamedCommands() {
-                
+
                 NamedCommands.registerCommand("ALIGN",
                                 new AutoAlignHub(drivetrain, m_shooter, m_hood, true, 2));
 
                 NamedCommands.registerCommand("SHOOT",
 
-                                Commands.deadline(Commands.waitSeconds(10),
-                                                new ShootCommand(m_shooter, m_hood,
-                                                                m_feeder,
+                                Commands.deadline(
+
+                                                Commands.waitSeconds(12),
+                                                new ShootCommand(m_shooter, m_hood, m_feeder,
                                                                 drivetrain, m_intake, false),
                                                 Commands.sequence(
                                                                 Commands.waitSeconds(4),
@@ -358,11 +359,9 @@ public class RobotContainer {
                                                 .andThen(stopShootersFeedersIntake()));
 
                 NamedCommands.registerCommand("ALIGN_AND_SHOOT",
-
-                                Commands.deadline(Commands.waitSeconds(10),
-
+                                Commands.deadline(
+                                                Commands.waitSeconds(10),
                                                 new AutoAlignHub(drivetrain, m_shooter, m_hood, false, 2),
-
                                                 new ShootCommand(m_shooter, m_hood,
                                                                 m_feeder,
                                                                 drivetrain, m_intake, false),
