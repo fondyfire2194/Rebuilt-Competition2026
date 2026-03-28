@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.HoodSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.TripleShooterSubsystem;
 import frc.robot.utils.AllianceUtil;
 import frc.robot.utils.ShootingData;
@@ -27,6 +28,7 @@ public class AutoAlignHub extends Command {
   private final CommandSwerveDrivetrain m_swerve;
   private final TripleShooterSubsystem m_shooter;
   private final HoodSubsystem m_hood;
+  private final IntakeSubsystem m_intake;
   private final double m_toleranceDegrees;
   private SwerveRequest.FieldCentric drive;
   public Pose2d targetPose = new Pose2d();
@@ -41,12 +43,13 @@ public class AutoAlignHub extends Command {
   private int alignedCounter;
 
   public AutoAlignHub(
-      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, HoodSubsystem hood, boolean endWhenAligned,
-      double toleranceDegrees) {
+      CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, HoodSubsystem hood,
+      IntakeSubsystem intake, boolean endWhenAligned, double toleranceDegrees) {
 
     m_swerve = swerve;
     m_shooter = shooter;
     m_hood = hood;
+    m_intake=intake;
     m_toleranceDegrees = toleranceDegrees;
     m_endWhenAligned = endWhenAligned;
     addRequirements(m_swerve);
@@ -82,6 +85,10 @@ public class AutoAlignHub extends Command {
     m_shooter.setAutoSetTargetRPM(ShootingData.shooterSpeedMap.get(distanceToTarget));
 
     m_hood.setAutoTargetAngle(ShootingData.hoodAngleMap.get(distanceToTarget).getDegrees());
+
+    m_shooter.runAllVelocityVoltage();
+    
+    m_intake.runIntakeAtVelocity();
 
     targetDegrees = getAngleDegreesToTarget(targetPose, m_swerve.getState().Pose);
 

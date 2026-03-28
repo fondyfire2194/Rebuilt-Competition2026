@@ -27,12 +27,6 @@
           "data": {
             "name": "ALIGN_AND_SHOOT"
           }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "SHOOT"
-          }
         }
       ]
     }

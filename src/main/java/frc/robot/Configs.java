@@ -172,14 +172,14 @@ public final class Configs {
           .inverted(false)
           .idleMode(IdleMode.kCoast)
           .openLoopRampRate(.1)
-          .closedLoopRampRate(.1)
+          .closedLoopRampRate(.75)
           .smartCurrentLimit(80);
 
       feederRollerConfig.closedLoop
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
           // Set PID values for speed control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
-          .p(0.001)
+          .p(0.005)
           .i(0)
           .d(0)
           .outputRange(-1, 1);

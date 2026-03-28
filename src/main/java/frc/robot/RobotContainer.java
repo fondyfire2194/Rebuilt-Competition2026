@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.CameraConstants;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.commands.AlignTargetOdometry;
+import frc.robot.commands.AutoAlignAndShoot;
 import frc.robot.commands.AutoAlignHub;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
@@ -342,15 +343,14 @@ public class RobotContainer {
         private void registerNamedCommands() {
 
                 NamedCommands.registerCommand("ALIGN",
-                                new AutoAlignHub(drivetrain, m_shooter, m_hood, true, 2));
+                                new AutoAlignHub(drivetrain, m_shooter, m_hood, m_intake, true, 2));
 
-                NamedCommands.registerCommand("SHOOT",
+                NamedCommands.registerCommand("ALIGN_AND_SHOOT",
 
                                 Commands.deadline(
-
                                                 Commands.waitSeconds(12),
-                                                new ShootCommand(m_shooter, m_hood, m_feeder,
-                                                                drivetrain, m_intake, false),
+                                                new AutoAlignAndShoot(drivetrain, m_shooter, m_hood, m_intake, m_feeder,
+                                                                2),
                                                 Commands.sequence(
                                                                 Commands.waitSeconds(4),
                                                                 m_intakeArm.helpShootCommand(
@@ -358,12 +358,12 @@ public class RobotContainer {
                                                                                 Degrees.of(2))))
                                                 .andThen(stopShootersFeedersIntake()));
 
-                NamedCommands.registerCommand("ALIGN_AND_SHOOT",
+                NamedCommands.registerCommand("SHOOT",
+
                                 Commands.deadline(
-                                                Commands.waitSeconds(10),
-                                                new AutoAlignHub(drivetrain, m_shooter, m_hood, false, 2),
-                                                new ShootCommand(m_shooter, m_hood,
-                                                                m_feeder,
+
+                                                Commands.waitSeconds(12),
+                                                new ShootCommand(m_shooter, m_hood, m_feeder,
                                                                 drivetrain, m_intake, false),
                                                 Commands.sequence(
                                                                 Commands.waitSeconds(4),

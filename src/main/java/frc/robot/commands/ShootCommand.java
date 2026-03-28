@@ -54,7 +54,9 @@ public class ShootCommand extends Command {
   @Override
   public void execute() {
     shootRunning++;
+
     m_shooter.runAllVelocityVoltage();
+    
     m_intake.runIntakeAtVelocity();
 
     DogLog.log("Shoot/OKTOShoot", okToShoot);
