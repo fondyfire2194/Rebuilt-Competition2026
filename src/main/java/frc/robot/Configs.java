@@ -155,7 +155,7 @@ public final class Configs {
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
           // Set PID values for speed control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
-          .p(0.001)
+          .p(0.0001)
           .i(0)
           .d(0)
           .outputRange(-1, 1);
@@ -179,7 +179,7 @@ public final class Configs {
           .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
           // Set PID values for speed control. We don't need to pass a closed loop
           // slot, as it will default to slot 0.
-          .p(0.01)
+          .p(0.001)
           .i(0)
           .d(0)
           .outputRange(-1, 1);
