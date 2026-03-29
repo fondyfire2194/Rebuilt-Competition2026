@@ -11,7 +11,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.CANBus;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -26,7 +25,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.generated.TunerConstants;
@@ -341,11 +339,10 @@ public final class Constants {
 
     public static final double kFeedRollerJogSetpoint = 0.5;
     public static final double kFeedBeltJogSetpoint = 0.5;
-
-    public static double kRollerShootRPM = 4800;
-    public static double kBeltShootRPM = 2500;
-    public static double rollerSpeedToStartBelt = kRollerShootRPM * .75;
-
+    // shooter at 3000 rpm with 4 inch roller gives 600 inches per second
+    public static double kBeltShootRPM = 3600;// with 3:1 reduction gives 20 rps * PI * 2"= 120 inches per second
+    public static double kRollerShootRPM = 3600;// 60 rps *PI * 2 = 360 inches per second
+    public static double rollerSpeedToStartBelt = kRollerShootRPM * .8;
   }
 
   public static final class HoodSetpoints {

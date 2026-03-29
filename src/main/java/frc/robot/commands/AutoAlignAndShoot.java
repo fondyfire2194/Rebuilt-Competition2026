@@ -47,6 +47,7 @@ public class AutoAlignAndShoot extends Command {
   private boolean okToShoot;
 
   private int shootRunning;
+  private boolean oKStartBelt;
 
   public AutoAlignAndShoot(CommandSwerveDrivetrain swerve, TripleShooterSubsystem shooter, HoodSubsystem hood,
       IntakeSubsystem intake, FeederSubsystem feeder, double toleranceDegrees) {
@@ -69,12 +70,12 @@ public class AutoAlignAndShoot extends Command {
         .withRotationalDeadband(RobotConstants.MaxAngularRate * 0.1) // Add a 10% deadband
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     targetPose = AllianceUtil.getHubPose();
-
     m_swerve.isAligning = true;
     elapsedTime = new Timer();
     elapsedTime.reset();
     elapsedTime.start();
     alignedCounter = 0;
+    oKStartBelt = false;
     m_swerve.alignedToTarget = false;
   }
 
@@ -122,18 +123,16 @@ public class AutoAlignAndShoot extends Command {
       } else
         alignedCounter = 0;
 
-      m_swerve.alignedToTarget = alignedCounter >= 25;
+      m_swerve.alignedToTarget = alignedCounter >= 10;
 
       DogLog.log("Align/AlignedToHub", m_swerve.alignedToTarget);
       DogLog.log("Align/AlignError", m_swerve.m_alignTargetPID.getError());
       DogLog.log("Align/AlignDistance", distanceToTarget);
       DogLog.log("Align/AlignAngle", targetDegrees);
-      DogLog.log("Align/HoodAngle", HoodSubsystem.autoTargetAngle);
-      DogLog.log("Align/ShootSpeed", m_shooter.autoSetTargetRPM);
-      DogLog.log("Align/TargetPose", targetPose);
       DogLog.log("Align/AccumIntegral", m_swerve.m_alignTargetPID.getAccumulatedError());
       DogLog.log("Align/RotationVal", rotationVal);
     }
+
     if (m_swerve.alignedToTarget) {
 
       m_shooter.runAllVelocityVoltage();
@@ -148,8 +147,12 @@ public class AutoAlignAndShoot extends Command {
           m_feeder.runFeederRollerAtVelocity();
 
           if (Math.abs(m_feeder.feederRollerMotor.getEncoder().getVelocity()) > FeederSetpoints.rollerSpeedToStartBelt)
+            oKStartBelt = true;
+
+          if (oKStartBelt)
             m_feeder.runFeederBeltAtVelocity();
         }
+
         DogLog.log("Shoot/OKTOShoot", okToShoot);
         DogLog.log("Shoot/ShootersAtSpeed", m_shooter.allVelocityInTolerance());
         DogLog.log("Shoot/HoodAtTarget", m_hood.isPositionWithinTolerance());

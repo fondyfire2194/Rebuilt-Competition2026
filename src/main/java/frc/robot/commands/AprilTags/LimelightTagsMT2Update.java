@@ -4,6 +4,8 @@
 
 package frc.robot.commands.AprilTags;
 
+import java.util.Arrays;
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -57,9 +59,9 @@ public class LimelightTagsMT2Update extends Command {
         m_llv.mt2Pose[m_cameraIndex] = mt2.pose;
 
         m_llv.numberMT2TagsSeen[m_cameraIndex] = 0;
-        for (int i = 0; i < m_llv.mt2TagIDsSeen.length - 1; i++) {
-            m_llv.mt2TagIDsSeen[m_cameraIndex][i] = 0;
-        }
+
+        Arrays.fill(m_llv.mt2TagIDsSeen[m_cameraIndex], 0.);
+
         if (mt2.rawFiducials.length > 0) {
             m_llv.mt2ambiguity[m_cameraIndex] = mt2.rawFiducials[0].ambiguity;
             m_llv.numberMT2TagsSeen[m_cameraIndex] = mt2.tagCount;
@@ -73,8 +75,7 @@ public class LimelightTagsMT2Update extends Command {
             m_llv.mt2NearPoseCount[m_cameraIndex] = 0;
         m_llv.mt2LastPoseSeen[m_cameraIndex] = mt2.pose;
 
-        rejectMT2Update = m_cameraIndex != 0 ||
-                mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
+        rejectMT2Update = mt2.tagCount == 0 || !inFieldCheck(m_llv.mt2Pose[m_cameraIndex])
                 || Math.abs(m_swerve.getPigeon2().getAngularVelocityXDevice()
                         .getValueAsDouble()) > ROTATION_RATE_CUTOFF
                 || (mt2.tagCount == 1 && mt2.rawFiducials[0].ambiguity > AMBIGUITY_CUTOFF)

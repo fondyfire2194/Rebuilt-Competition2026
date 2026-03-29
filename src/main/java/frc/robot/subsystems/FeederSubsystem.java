@@ -26,7 +26,20 @@ import frc.robot.Constants;
 import frc.robot.Constants.FeederSetpoints;
 
 public class FeederSubsystem extends SubsystemBase {
-  /** Creates a new FeederSubsystem. */
+  /** Creates a new FeederSubsystem.
+   * 
+   * Feeder belt has a 3:1 reduction from a Neo motor and has 2 inch dia rollers
+   * Feeder roller is 1:1 from a Neo motor and has 2 in dia rollers
+   * Shooter is 1:1 from Kraken X60 and has a 4" diameter roller
+   * 
+   * Shooter speed typical is 3000 rpm or 50 revs per second so 50 * PI * 4 or 200 PI inches per second 
+   * For rollers to provide 50% of that, 50 * PI * 2, rollers need to run same speed as shooter or 3000 rpm
+   * For belt to provide 50% of rollers, need 25 * PI * 2 or 1500 rpm but with 3:1 reduction meand 4500 rpm
+   * Belt 3600 rpm gives belt roller 1200 rpm so 20 * PI * 2 or 40 * PI inches per second or 20% shooter speed
+   * 
+   * 
+   * 
+   */
 
   public SparkMax feederBeltMotor;
   public SparkClosedLoopController beltClosedLoopController;
