@@ -169,8 +169,8 @@ public class RobotContainer {
                                 Commands.parallel(
                                                 new ShootCommand(m_shooter, m_hood, m_feeder, drivetrain, m_intake,
                                                                 false),
-                                                Commands.sequence(Commands.waitSeconds(5),
-                                                                m_intakeArm.helpShootCommand(.75, Degrees.of(2)))));
+                                                Commands.sequence(Commands.waitSeconds(6),
+                                                                m_intakeArm.helpShootCommand(.5, Degrees.of(2)))));
 
                 driver.rightTrigger().whileTrue(
                                 Commands.parallel(
@@ -250,7 +250,8 @@ public class RobotContainer {
                                 .onTrue(clearRevStickyFaultsCommand()
                                                 .alongWith(clearShooterStickyFaultsCommand()));
 
-                codriver.rightTrigger().and(codriver.povUp()).whileTrue(m_feeder.jogFeederBeltCommand());
+                codriver.rightTrigger().and(codriver.povUp())
+                                .whileTrue(m_feeder.jogFeederBeltCommand());
 
                 codriver.rightTrigger().and(codriver.povDown()).onTrue(
                                 m_feeder.runBeltsAndRollersCommand());
