@@ -80,6 +80,7 @@ public class AutoAlignAndShoot extends Command {
         .withRotationalDeadband(RobotConstants.MaxAngularRate * 0.1) // Add a 10% deadband
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     targetPose = AllianceUtil.getHubPose();
+    m_shooter.clearShotsCount();
     m_swerve.isAligning = true;
     elapsedTime = new Timer();
     elapsedTime.reset();

@@ -35,6 +35,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Configs;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.CanbusConstants;
@@ -116,6 +117,8 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public double finalSetTargetRPM;
 
+  private int logStep;
+
   private AngularAcceleration targetAcceleration = RotationsPerSecondPerSecond.of(500);
 
   private int tst = 0;
@@ -140,8 +143,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
     this.shooterIsRunning = false;
   }
 
-  private boolean alternate;
-
   public boolean isShootUsingDistance() {
     return shootUsingDistance;
   }
@@ -158,6 +159,15 @@ public class TripleShooterSubsystem extends SubsystemBase {
         Commands.runOnce(() -> finalSetTargetRPM = isShootUsingDistance() ? autoSetTargetRPM : manualSetTargetRPM));
 
   }
+
+  public Trigger leftShotTrigger;
+  public int leftShotsCount;
+  public Trigger middleShotTrigger;
+  public int middleShotsCount;
+  public Trigger rightShotTrigger;
+  public int rightShotsCount;
+
+  private double shotAmpsLevel = 50;
 
   public TripleShooterSubsystem(boolean logData) {
     this.logData = logData;
@@ -184,6 +194,12 @@ public class TripleShooterSubsystem extends SubsystemBase {
     faultCheckTimer = new Timer();
     faultCheckTimer.start();
 
+    leftShotTrigger = new Trigger(() -> getAmpsAboveShotLevel(leftMotor));
+    leftShotTrigger.onTrue(Commands.runOnce(() -> leftShotsCount++));
+    middleShotTrigger = new Trigger(() -> getAmpsAboveShotLevel(middleMotor));
+    middleShotTrigger.onTrue(Commands.runOnce(() -> middleShotsCount++));
+    rightShotTrigger = new Trigger(() -> getAmpsAboveShotLevel(rightMotor));
+    rightShotTrigger.onTrue(Commands.runOnce(() -> rightShotsCount++));
   }
 
   public void runVelocityVoltage(TalonFX motor) {
@@ -331,6 +347,20 @@ public class TripleShooterSubsystem extends SubsystemBase {
         Commands.runOnce(() -> rightMotor.clearStickyFaults()));
   }
 
+  public boolean getAmpsAboveShotLevel(TalonFX motor) {
+    return motor.getStatorCurrent().getValueAsDouble() > shotAmpsLevel;
+  }
+
+  public void clearShotsCount() {
+    leftShotsCount = 0;
+    middleShotsCount = 0;
+    rightShotsCount = 0;
+  }
+
+  public int getShotsCount() {
+    return leftShotsCount + middleShotsCount + rightShotsCount;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -339,35 +369,63 @@ public class TripleShooterSubsystem extends SubsystemBase {
           || middleMotor.getFaultField().asSupplier().get() != 0
           || rightMotor.getFaultField().asSupplier().get() != 0);
       faultCheckTimer.restart();
+
     } else {
       if (logData) {
-        if (alternate) {
-          DogLog.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
-          DogLog.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
-          DogLog.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
+        logStep++;
 
-          DogLog.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
-          DogLog.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
-          DogLog.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
-          DogLog.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
-          DogLog.log("Shooter/UseDistForRPM", isShootUsingDistance());
+        switch (logStep) {
+          case 0:
+            DogLog.log("Shooter/LeftRPM", leftMotor.getVelocity().getValue().in(RPM));
+            DogLog.log("Shooter/MiddleRPM", middleMotor.getVelocity().getValue().in(RPM));
+            DogLog.log("Shooter/RightRPM", rightMotor.getVelocity().getValue().in(RPM));
+            break;
 
+          case 1:
+            DogLog.log("Shooter/LeftAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
+            DogLog.log("Shooter/MiddleAmps", middleMotor.getStatorCurrent().getValue().in(Amps));
+            DogLog.log("Shooter/RightAmps", rightMotor.getStatorCurrent().getValue().in(Amps));
+            break;
+
+          case 2:
+            DogLog.log("Shooter/LeftVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
+            DogLog.log("Shooter/MiddleVolts", middleMotor.getMotorVoltage().getValue().in(Volts));
+            DogLog.log("Shooter/RightVolts", rightMotor.getMotorVoltage().getValue().in(Volts));
+            break;
+
+          case 3:
+            DogLog.log("Shooter/LeftMotorAtSpeed", isVelocityWithinTolerance(leftMotor));
+            DogLog.log("Shooter/MiddleMotorAtSpeed", isVelocityWithinTolerance(middleMotor));
+            DogLog.log("Shooter/RightMotorAtSpeed", isVelocityWithinTolerance(rightMotor));
+            DogLog.log("Shooter/AllMotorsAtSpeed", allVelocityInTolerance());
+            break;
+
+          case 4:
+            DogLog.log("Shooter/UseDistForRPM", isShootUsingDistance());
+            DogLog.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
+            DogLog.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
+            DogLog.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
+            break;
+
+          case 5:
+            DogLog.log("Shooter/ShotsCountTotal", getShotsCount());
+            DogLog.log("Shooter/ShotsCountLeft", leftShotsCount);
+            DogLog.log("Shooter/ShotsCountMiddle", middleShotsCount);
+            DogLog.log("Shooter/ShotsCountRight", rightShotsCount);
+            break;
+
+          case 6:
+            logStep = -1;
+            break;
+
+          default:
+            logStep = -1;
+            break;
         }
-        if (!alternate) {
 
-          DogLog.log("Shooter/FinalTargetRPM", finalSetTargetRPM);
-          DogLog.log("Shooter/AutoTargetRPM", autoSetTargetRPM);
-          DogLog.log("Shooter/ManualTargetRPM", manualSetTargetRPM);
-          DogLog.log("Shooter/LeftAmps", leftMotor.getStatorCurrent().getValue().in(Amps));
-          DogLog.log("Shooter/MiddleAmps", middleMotor.getStatorCurrent().getValue().in(Amps));
-          DogLog.log("Shooter/RightAmps", rightMotor.getStatorCurrent().getValue().in(Amps));
-          DogLog.log("Shooter/LeftVolts", leftMotor.getMotorVoltage().getValue().in(Volts));
-          DogLog.log("Shooter/MilddleVolts", middleMotor.getMotorVoltage().getValue().in(Volts));
-          DogLog.log("Shooter/RightVolts", rightMotor.getMotorVoltage().getValue().in(Volts));
-        }
-        alternate = !alternate;
       }
     }
+
   }
 
   public void setDistanceToHub(double distance) {
