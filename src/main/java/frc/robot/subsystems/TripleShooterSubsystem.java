@@ -202,7 +202,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
             .withAcceleration(targetAcceleration)
             .withSlot(0)
             .withEnableFOC(true));
-
   }
 
   public Command runVelocityVoltageCommand(TalonFX motor) {
@@ -239,10 +238,11 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   public void stopAllVelocityVoltage() {
     shooterIsRunning = false;
-    stopVelocityVoltage(leftMotor);
-    stopVelocityVoltage(middleMotor);
-    stopVelocityVoltage(rightMotor);
     disableAllShooters();
+    // stopVelocityVoltage(leftMotor);
+    // stopVelocityVoltage(middleMotor);
+    // stopVelocityVoltage(rightMotor);
+
   }
 
   public Command stopAllShootersCommand() {
@@ -338,7 +338,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
       shooterAlert.set(leftMotor.getFaultField().asSupplier().get() != 0
           || middleMotor.getFaultField().asSupplier().get() != 0
           || rightMotor.getFaultField().asSupplier().get() != 0);
-           faultCheckTimer.restart();
+      faultCheckTimer.restart();
     } else {
       if (logData) {
         if (alternate) {
