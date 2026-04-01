@@ -46,7 +46,7 @@ public class ShootCommand extends Command {
     oKStartBelt = false;
     shootRunning = 0;
     m_shooter.resetEndShoot();
-    m_shooter.clearShotsCount();
+   
   }
 
   // Called every time the scheduler runs while the command is scheduled.

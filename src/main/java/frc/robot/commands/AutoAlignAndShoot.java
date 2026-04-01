@@ -13,7 +13,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FeederSetpoints;
@@ -37,7 +36,6 @@ public class AutoAlignAndShoot extends Command {
   private SwerveRequest.FieldCentric drive;
   public Pose2d targetPose = new Pose2d();
   private double rotationVal;
-  private Timer elapsedTime;
   private double distanceToTarget;
   private double targetDegrees;
   private double lastTargetDegrees;
@@ -49,13 +47,12 @@ public class AutoAlignAndShoot extends Command {
   private int shootRunning;
   private boolean oKStartBelt;
   private boolean slowBelt;
-   public double beltSlowdownTime = 2.;
+  public double beltSlowdownTime = 2.;
   public double beltSlowTime = .5;
 
   public double beltEndSlowTime = beltSlowdownTime + beltSlowTime;
 
   public double beltInitialShootTime = 5.;
-
 
   private Timer beltTimer = new Timer();
 
@@ -80,11 +77,7 @@ public class AutoAlignAndShoot extends Command {
         .withRotationalDeadband(RobotConstants.MaxAngularRate * 0.1) // Add a 10% deadband
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     targetPose = AllianceUtil.getHubPose();
-    m_shooter.clearShotsCount();
     m_swerve.isAligning = true;
-    elapsedTime = new Timer();
-    elapsedTime.reset();
-    elapsedTime.start();
     alignedCounter = 0;
     oKStartBelt = false;
     okToShoot = false;

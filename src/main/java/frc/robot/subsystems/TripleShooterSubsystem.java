@@ -160,15 +160,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
   }
 
-  public Trigger leftShotTrigger;
-  public int leftShotsCount;
-  public Trigger middleShotTrigger;
-  public int middleShotsCount;
-  public Trigger rightShotTrigger;
-  public int rightShotsCount;
-
-  private double shotAmpsLevel = 50;
-
   public TripleShooterSubsystem(boolean logData) {
     this.logData = logData;
     leftMotor = new TalonFX(CANIDConstants.leftShooterID, CanbusConstants.kCANivoreCANBus);
@@ -193,13 +184,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
 
     faultCheckTimer = new Timer();
     faultCheckTimer.start();
-
-    leftShotTrigger = new Trigger(() -> getAmpsAboveShotLevel(leftMotor));
-    leftShotTrigger.onTrue(Commands.runOnce(() -> leftShotsCount++));
-    middleShotTrigger = new Trigger(() -> getAmpsAboveShotLevel(middleMotor));
-    middleShotTrigger.onTrue(Commands.runOnce(() -> middleShotsCount++));
-    rightShotTrigger = new Trigger(() -> getAmpsAboveShotLevel(rightMotor));
-    rightShotTrigger.onTrue(Commands.runOnce(() -> rightShotsCount++));
   }
 
   public void runVelocityVoltage(TalonFX motor) {
@@ -347,20 +331,6 @@ public class TripleShooterSubsystem extends SubsystemBase {
         Commands.runOnce(() -> rightMotor.clearStickyFaults()));
   }
 
-  public boolean getAmpsAboveShotLevel(TalonFX motor) {
-    return motor.getStatorCurrent().getValueAsDouble() > shotAmpsLevel;
-  }
-
-  public void clearShotsCount() {
-    leftShotsCount = 0;
-    middleShotsCount = 0;
-    rightShotsCount = 0;
-  }
-
-  public int getShotsCount() {
-    return leftShotsCount + middleShotsCount + rightShotsCount;
-  }
-
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -408,10 +378,7 @@ public class TripleShooterSubsystem extends SubsystemBase {
             break;
 
           case 5:
-            DogLog.log("Shooter/ShotsCountTotal", getShotsCount());
-            DogLog.log("Shooter/ShotsCountLeft", leftShotsCount);
-            DogLog.log("Shooter/ShotsCountMiddle", middleShotsCount);
-            DogLog.log("Shooter/ShotsCountRight", rightShotsCount);
+            logStep = -1;
             break;
 
           case 6:

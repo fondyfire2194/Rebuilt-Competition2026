@@ -49,7 +49,9 @@ public class TunerConstants {
         // The remote sensor feedback type to use for the steer motors;
         // When not Pro-licensed, Fused*/Sync* automatically fall back to Remote*
 
-        private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.FusedCANcoder;
+        // private static final SteerFeedbackType kSteerFeedbackType =
+        // SteerFeedbackType.FusedCANcoder;
+        private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.RemoteCANcoder;
 
         // The stator current at which the wheels start to slip;
         // This needs to be tuned to your individual robot
@@ -88,7 +90,7 @@ public class TunerConstants {
 
         private static final double kDriveGearRatio = 7.03125;
         private static final double kSteerGearRatio = 26.09090909090909;
-        private static final Distance kWheelRadius = Inches.of(2.3);//was 2.4
+        private static final Distance kWheelRadius = Inches.of(2.3);// was 2.4
 
         private static final boolean kInvertLeftSide = false;
         private static final boolean kInvertRightSide = true;
